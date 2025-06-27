@@ -1,6 +1,9 @@
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
 
 function Recipes() {
+  const navigate = useNavigate()
+
   const sampleRecipes = [
     {
       id: 1,
@@ -56,7 +59,26 @@ function Recipes() {
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '2rem' }}>
         {sampleRecipes.map(recipe => (
-          <div key={recipe.id} style={{ border: '1px solid #eee', borderRadius: 8, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+          <div 
+            key={recipe.id} 
+            onClick={() => navigate(`/recipes/${recipe.id}`)}
+            style={{ 
+              border: '1px solid #eee', 
+              borderRadius: 8, 
+              overflow: 'hidden', 
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+              cursor: 'pointer',
+              transition: 'transform 0.2s, box-shadow 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.transform = 'translateY(-4px)'
+              e.target.style.boxShadow = '0 4px 16px rgba(0,0,0,0.15)'
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = 'translateY(0)'
+              e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)'
+            }}
+          >
             <img src={recipe.image} alt={recipe.name} style={{ width: '100%', height: 200, objectFit: 'cover' }} />
             <div style={{ padding: '1rem' }}>
               <h3 style={{ margin: '0 0 0.5rem 0' }}>{recipe.name}</h3>
