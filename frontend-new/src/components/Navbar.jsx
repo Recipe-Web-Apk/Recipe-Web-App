@@ -6,6 +6,7 @@ function Navbar() {
       <div style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>Recipe Buddy</div>
       <div style={{ display: 'flex', gap: '1.5rem' }}>
         <Link to="/">Home</Link>
+        <Link to="/recipes">Recipes</Link>
         <Link to="/login">Login</Link>
         <Link to="/register">Register</Link>
       </div>
