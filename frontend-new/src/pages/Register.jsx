@@ -3,7 +3,6 @@ import React, { useState } from 'react'
 function Register() {
   const [form, setForm] = useState({ username: '', email: '', password: '', confirm: '' })
   const [errors, setErrors] = useState({})
-  const [touched, setTouched] = useState({})
 
   function validate(values) {
     const newErrors = {}
@@ -16,29 +15,20 @@ function Register() {
     return newErrors
   }
 
-  function handleChange(e) {
-    setForm({ ...form, [e.target.name]: e.target.value })
-    setTouched({ ...touched, [e.target.name]: true })
-  }
-
-  function handleBlur(e) {
-    setTouched({ ...touched, [e.target.name]: true })
-  }
-
   function handleSubmit(e) {
     e.preventDefault()
     const validation = validate(form)
     setErrors(validation)
-    if (Object.keys(validation).length === 0) {
-      alert(`Username: ${form.username}\nEmail: ${form.email}\nPassword: ${form.password}`)
-    }
+    if (Object.keys(validation).length > 0) return
+    alert('Register form submitted (no authentication logic)')
   }
 
-  React.useEffect(() => {
-    setErrors(validate(form))
-  }, [form])
+  function handleChange(e) {
+    setForm({ ...form, [e.target.name]: e.target.value })
+    setErrors({ ...errors, [e.target.name]: '' })
+  }
 
-  const isValid = Object.keys(errors).length === 0 && Object.values(touched).length === 4 && Object.values(touched).every(Boolean)
+  const isValid = Object.keys(validate(form)).length === 0 && Object.values(form).every(Boolean)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
@@ -50,40 +40,36 @@ function Register() {
           placeholder="Username"
           value={form.username}
           onChange={handleChange}
-          onBlur={handleBlur}
           style={{ padding: '0.7rem', fontSize: '1rem', border: '1px solid #ccc', borderRadius: 4 }}
         />
-        {touched.username && errors.username && <div style={{ color: 'red', fontSize: '0.95rem', marginTop: '-0.5rem' }}>{errors.username}</div>}
+        {errors.username && <div style={{ color: 'red', fontSize: '0.95rem', marginTop: '-0.5rem' }}>{errors.username}</div>}
         <input
           type="email"
           name="email"
           placeholder="Email"
           value={form.email}
           onChange={handleChange}
-          onBlur={handleBlur}
           style={{ padding: '0.7rem', fontSize: '1rem', border: '1px solid #ccc', borderRadius: 4 }}
         />
-        {touched.email && errors.email && <div style={{ color: 'red', fontSize: '0.95rem', marginTop: '-0.5rem' }}>{errors.email}</div>}
+        {errors.email && <div style={{ color: 'red', fontSize: '0.95rem', marginTop: '-0.5rem' }}>{errors.email}</div>}
         <input
           type="password"
           name="password"
           placeholder="Password"
           value={form.password}
           onChange={handleChange}
-          onBlur={handleBlur}
           style={{ padding: '0.7rem', fontSize: '1rem', border: '1px solid #ccc', borderRadius: 4 }}
         />
-        {touched.password && errors.password && <div style={{ color: 'red', fontSize: '0.95rem', marginTop: '-0.5rem' }}>{errors.password}</div>}
+        {errors.password && <div style={{ color: 'red', fontSize: '0.95rem', marginTop: '-0.5rem' }}>{errors.password}</div>}
         <input
           type="password"
           name="confirm"
           placeholder="Confirm Password"
           value={form.confirm}
           onChange={handleChange}
-          onBlur={handleBlur}
           style={{ padding: '0.7rem', fontSize: '1rem', border: '1px solid #ccc', borderRadius: 4 }}
         />
-        {touched.confirm && errors.confirm && <div style={{ color: 'red', fontSize: '0.95rem', marginTop: '-0.5rem' }}>{errors.confirm}</div>}
+        {errors.confirm && <div style={{ color: 'red', fontSize: '0.95rem', marginTop: '-0.5rem' }}>{errors.confirm}</div>}
         <button type="submit" disabled={!isValid} style={{ padding: '0.7rem', fontSize: '1rem', borderRadius: 4, background: isValid ? '#222' : '#aaa', color: '#fff', border: 'none', cursor: isValid ? 'pointer' : 'not-allowed' }}>
           Register
         </button>
