@@ -53,7 +53,10 @@ function Recipes() {
     <div style={{ padding: '2rem', maxWidth: 1200, margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <h1>Recipes</h1>
-        <button style={{ padding: '0.7rem 1.5rem', background: '#222', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
+        <button 
+          onClick={() => navigate('/recipes/create')}
+          style={{ padding: '0.7rem 1.5rem', background: '#222', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}
+        >
           Add Recipe
         </button>
       </div>
