@@ -1,4 +1,5 @@
 import React from 'react'
+import './CalorieRangeInput.css'
 
 function CalorieRangeInput({ minCalories, maxCalories, setMinCalories, setMaxCalories, errors, setErrors }) {
   function handleMinChange(value) {
@@ -16,13 +17,13 @@ function CalorieRangeInput({ minCalories, maxCalories, setMinCalories, setMaxCal
   }
 
   return (
-    <div>
-      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+    <div className="calorie-range-input">
+      <label className="calorie-range-label">
         Calorie Range *
       </label>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-        <div>
-          <label style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.9rem', color: '#666' }}>
+      <div className="calorie-inputs-grid">
+        <div className="calorie-input-group">
+          <label className="calorie-input-sub-label">
             Min Calories
           </label>
           <input
@@ -30,17 +31,12 @@ function CalorieRangeInput({ minCalories, maxCalories, setMinCalories, setMaxCal
             value={minCalories}
             onChange={(e) => handleMinChange(e.target.value)}
             min="0"
-            style={{ 
-              width: '100%', 
-              padding: '0.7rem', 
-              border: '1px solid #ccc', 
-              borderRadius: 4 
-            }}
+            className="calorie-input"
             placeholder="0"
           />
         </div>
-        <div>
-          <label style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.9rem', color: '#666' }}>
+        <div className="calorie-input-group">
+          <label className="calorie-input-sub-label">
             Max Calories
           </label>
           <input
@@ -48,18 +44,13 @@ function CalorieRangeInput({ minCalories, maxCalories, setMinCalories, setMaxCal
             value={maxCalories}
             onChange={(e) => handleMaxChange(e.target.value)}
             min="0"
-            style={{ 
-              width: '100%', 
-              padding: '0.7rem', 
-              border: '1px solid #ccc', 
-              borderRadius: 4 
-            }}
+            className="calorie-input"
             placeholder="1000"
           />
         </div>
       </div>
       {errors.calories && (
-        <div style={{ color: '#ff4444', fontSize: '0.9rem', marginTop: '0.3rem' }}>
+        <div className="calorie-error">
           {errors.calories}
         </div>
       )}

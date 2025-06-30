@@ -1,0 +1,44 @@
+.calorie-range-input {
+  /* Container styles */
+}
+
+.calorie-range-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+
+.calorie-inputs-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.calorie-input-group {
+  /* Individual input group styles */
+}
+
+.calorie-input-sub-label {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.calorie-input {
+  width: 100%;
+  padding: 0.7rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.calorie-input:focus {
+  outline: none;
+  border-color: #222;
+}
+
+.calorie-error {
+  color: #ff4444;
+  font-size: 0.9rem;
+  margin-top: 0.3rem;
+} 
