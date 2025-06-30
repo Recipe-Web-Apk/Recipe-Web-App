@@ -4,18 +4,20 @@ function Login() {
   const [form, setForm] = useState({ username: '', password: '' })
   const [error, setError] = useState('')
 
-  function handleChange(e) {
-    setForm({ ...form, [e.target.name]: e.target.value })
-    setError('')
-  }
-
   function handleSubmit(e) {
     e.preventDefault()
+    // Placeholder: No authentication logic
     if (!form.username || !form.password) {
       setError('Both fields are required')
       return
     }
-    alert(`Username: ${form.username}\nPassword: ${form.password}`)
+    setError('')
+    alert('Login form submitted (no authentication logic)')
+  }
+
+  function handleChange(e) {
+    setForm({ ...form, [e.target.name]: e.target.value })
+    setError('')
   }
 
   return (
@@ -41,7 +43,7 @@ function Login() {
         <button type="submit" style={{ padding: '0.7rem', fontSize: '1rem', borderRadius: 4, background: '#222', color: '#fff', border: 'none' }}>
           Login
         </button>
-        {error && <div style={{ color: 'red', fontSize: '0.95rem', marginTop: '-0.5rem' }}>{error}</div>}
+        {error && <div style={{ color: 'red', fontSize: '0.95rem', marginTop: '0.5rem' }}>{error}</div>}
       </form>
     </div>
   )
