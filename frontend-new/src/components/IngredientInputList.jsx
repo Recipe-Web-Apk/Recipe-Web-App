@@ -1,4 +1,5 @@
 import React from 'react'
+import './IngredientInputList.css'
 
 function IngredientInputList({ ingredients, setIngredients, errors, setErrors }) {
   function addIngredient() {
@@ -31,38 +32,26 @@ function IngredientInputList({ ingredients, setIngredients, errors, setErrors })
   }
 
   return (
-    <div>
-      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+    <div className="ingredient-input-list">
+      <label className="ingredient-input-label">
         Ingredients (minimum 4) *
       </label>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+      <div className="ingredient-inputs-container">
         {ingredients.map((ingredient, index) => (
-          <div key={index} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <div key={index} className="ingredient-input-row">
             <input
               type="text"
               value={ingredient}
               onChange={(e) => handleIngredientChange(index, e.target.value)}
               onKeyPress={(e) => handleKeyPress(e, index)}
-              style={{ 
-                flex: 1, 
-                padding: '0.7rem', 
-                border: '1px solid #ccc', 
-                borderRadius: 4 
-              }}
+              className="ingredient-input"
               placeholder={`Ingredient ${index + 1}`}
             />
             {ingredients.length > 4 && (
               <button
                 type="button"
                 onClick={() => removeIngredient(index)}
-                style={{ 
-                  padding: '0.7rem 1rem', 
-                  background: '#ff4444', 
-                  color: '#fff', 
-                  border: 'none', 
-                  borderRadius: 4, 
-                  cursor: 'pointer' 
-                }}
+                className="btn-remove-ingredient"
               >
                 Remove
               </button>
@@ -70,28 +59,20 @@ function IngredientInputList({ ingredients, setIngredients, errors, setErrors })
           </div>
         ))}
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
+      <div className="ingredient-actions">
         <button
           type="button"
           onClick={addIngredient}
-          style={{ 
-            padding: '0.3rem 0.8rem', 
-            background: '#4CAF50', 
-            color: '#fff', 
-            border: 'none', 
-            borderRadius: 4, 
-            cursor: 'pointer',
-            fontSize: '0.9rem'
-          }}
+          className="btn-add-ingredient"
         >
           + Add Ingredient
         </button>
-        <span style={{ fontSize: '0.9rem', color: '#666' }}>
+        <span className="ingredient-count">
           {ingredients.length}/∞ ingredients
         </span>
       </div>
       {errors.ingredients && (
-        <div style={{ color: '#ff4444', fontSize: '0.9rem', marginTop: '0.3rem' }}>
+        <div className="ingredient-error">
           {errors.ingredients}
         </div>
       )}
