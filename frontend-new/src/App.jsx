@@ -5,6 +5,7 @@ import Register from './pages/Register';
 import Login from './pages/Login';
 import Recipes from './pages/Recipes';
 import RecipeDetail from './pages/RecipeDetail';
+import RecipeForm from './pages/RecipeForm';
 import Navbar from './components/Navbar';
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/recipes" element={<Recipes />} />
         <Route path="/recipes/:id" element={<RecipeDetail />} />
+        <Route path="/recipes/create" element={<RecipeForm />} />
       </Routes>
     </Router>
   );
