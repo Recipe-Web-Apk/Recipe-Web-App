@@ -12,7 +12,15 @@ console.log('SPOONACULAR_API_KEY:', process.env.SPOONACULAR_API_KEY ? 'Present' 
 console.log('NODE_ENV:', process.env.NODE_ENV);
 
 const app = express();
-app.use(cors());
+
+// CORS configuration
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+
 app.use(express.json());
 // app.use('/api/auth', authRoutes);
 // app.use('/api/recipe', recipeRoutes);

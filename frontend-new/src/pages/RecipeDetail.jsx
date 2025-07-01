@@ -1,395 +1,309 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { 
+  FiClock, 
+  FiUsers, 
+  FiTarget, 
+  FiHeart, 
+  FiShare2, 
+  FiArrowLeft,
+  FiCheck,
+  FiChevronDown,
+  FiChevronUp
+} from 'react-icons/fi'
+import SimilarRecipes from '../components/SimilarRecipes'
+import './RecipeDetail.css'
 
 function RecipeDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const [recipe, setRecipe] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [saved, setSaved] = useState(false)
+  const [checkedIngredients, setCheckedIngredients] = useState([])
+  const [expandedInstructions, setExpandedInstructions] = useState(true)
+  const [showShareToast, setShowShareToast] = useState(false)
 
-  const sampleRecipes = {
-    1: {
-      id: 1,
-      name: 'Spaghetti Carbonara',
-      image: 'https://via.placeholder.com/600x400/FF6B6B/FFFFFF?text=Carbonara',
-      cookTime: '25 minutes',
-      prepTime: '10 minutes',
-      totalTime: '35 minutes',
-      calories: 650,
-      difficulty: 'Medium',
-      servings: 4,
-      author: 'Chef Mario',
-      ingredients: [
-        '400g spaghetti',
-        '200g pancetta or guanciale',
-        '4 large eggs',
-        '100g Pecorino Romano cheese',
-        '100g Parmigiano-Reggiano',
-        'Black pepper',
-        'Salt for pasta water'
-      ],
-      instructions: [
-        'Bring a large pot of salted water to boil and cook spaghetti according to package directions.',
-        'While pasta cooks, cut pancetta into small cubes and cook in a large skillet until crispy.',
-        'In a bowl, whisk together eggs, grated cheeses, and plenty of black pepper.',
-        'Drain pasta, reserving 1 cup of pasta water.',
-        'Add hot pasta to the skillet with pancetta, remove from heat.',
-        'Quickly stir in egg mixture, adding pasta water as needed for creamy consistency.',
-        'Serve immediately with extra cheese and black pepper.'
-      ],
-      tags: ['Italian', 'Pasta', 'Quick Meal', 'Dinner']
-    },
-    2: {
-      id: 2,
-      name: 'Chicken Stir Fry',
-      image: 'https://via.placeholder.com/600x400/4ECDC4/FFFFFF?text=Stir+Fry',
-      cookTime: '15 minutes',
-      prepTime: '10 minutes',
-      totalTime: '25 minutes',
-      calories: 450,
-      difficulty: 'Easy',
-      servings: 4,
-      author: 'Chef Sarah',
-      ingredients: [
-        '500g chicken breast, sliced',
-        '2 cups mixed vegetables',
-        '3 tbsp soy sauce',
-        '2 tbsp oyster sauce',
-        '1 tbsp ginger, minced',
-        '2 cloves garlic, minced',
-        '2 tbsp vegetable oil',
-        'Salt and pepper to taste'
-      ],
-      instructions: [
-        'Heat oil in a wok or large skillet over high heat.',
-        'Add chicken and stir-fry until golden brown, about 5 minutes.',
-        'Add ginger and garlic, stir for 30 seconds.',
-        'Add vegetables and stir-fry for 3-4 minutes.',
-        'Add soy sauce and oyster sauce, stir to combine.',
-        'Cook for 2 more minutes until everything is well coated.',
-        'Season with salt and pepper, serve hot.'
-      ],
-      tags: ['Asian', 'Quick Meal', 'Healthy', 'Dinner']
-    },
-    3: {
-      id: 3,
-      name: 'Beef Tacos',
-      image: 'https://via.placeholder.com/600x400/45B7D1/FFFFFF?text=Tacos',
-      cookTime: '20 minutes',
-      prepTime: '15 minutes',
-      totalTime: '35 minutes',
-      calories: 550,
-      difficulty: 'Easy',
-      servings: 6,
-      author: 'Chef Carlos',
-      ingredients: [
-        '500g ground beef',
-        '1 onion, diced',
-        '2 cloves garlic, minced',
-        '1 packet taco seasoning',
-        '12 taco shells',
-        'Shredded lettuce',
-        'Diced tomatoes',
-        'Shredded cheese',
-        'Sour cream',
-        'Salsa'
-      ],
-      instructions: [
-        'Brown ground beef in a large skillet over medium heat.',
-        'Add onion and garlic, cook until softened.',
-        'Add taco seasoning and water according to package directions.',
-        'Simmer for 5 minutes until thickened.',
-        'Warm taco shells according to package directions.',
-        'Fill shells with beef mixture and top with desired toppings.',
-        'Serve immediately with salsa and sour cream.'
-      ],
-      tags: ['Mexican', 'Family Meal', 'Quick', 'Dinner']
-    },
-    4: {
-      id: 4,
-      name: 'Vegetable Curry',
-      image: 'https://via.placeholder.com/600x400/96CEB4/FFFFFF?text=Curry',
-      cookTime: '30 minutes',
-      prepTime: '15 minutes',
-      totalTime: '45 minutes',
-      calories: 380,
-      difficulty: 'Medium',
-      servings: 4,
-      author: 'Chef Priya',
-      ingredients: [
-        '2 cups mixed vegetables',
-        '1 onion, diced',
-        '2 cloves garlic, minced',
-        '1 tbsp ginger, minced',
-        '2 tbsp curry powder',
-        '1 can coconut milk',
-        '1 cup vegetable broth',
-        '2 tbsp vegetable oil',
-        'Salt and pepper to taste'
-      ],
-      instructions: [
-        'Heat oil in a large pot over medium heat.',
-        'Add onion, garlic, and ginger, sauté until fragrant.',
-        'Add curry powder and stir for 1 minute.',
-        'Add vegetables and stir to coat with spices.',
-        'Pour in coconut milk and vegetable broth.',
-        'Simmer for 20-25 minutes until vegetables are tender.',
-        'Season with salt and pepper, serve with rice.'
-      ],
-      tags: ['Indian', 'Vegetarian', 'Spicy', 'Dinner']
-    },
-    5: {
-      id: 5,
-      name: 'Grilled Salmon',
-      image: 'https://via.placeholder.com/600x400/FFEAA7/FFFFFF?text=Salmon',
-      cookTime: '10 minutes',
-      prepTime: '5 minutes',
-      totalTime: '15 minutes',
-      calories: 420,
-      difficulty: 'Easy',
-      servings: 2,
-      author: 'Chef Michael',
-      ingredients: [
-        '2 salmon fillets',
-        '2 tbsp olive oil',
-        '1 lemon, sliced',
-        '2 sprigs fresh dill',
-        'Salt and pepper to taste',
-        'Garlic powder'
-      ],
-      instructions: [
-        'Preheat grill to medium-high heat.',
-        'Brush salmon with olive oil and season with salt, pepper, and garlic powder.',
-        'Place salmon on grill, skin-side down.',
-        'Grill for 4-5 minutes, then flip carefully.',
-        'Grill for another 4-5 minutes until cooked through.',
-        'Garnish with lemon slices and fresh dill.',
-        'Serve immediately with your favorite sides.'
-      ],
-      tags: ['Seafood', 'Healthy', 'Quick', 'Dinner']
-    },
-    6: {
-      id: 6,
-      name: 'Chocolate Cake',
-      image: 'https://via.placeholder.com/600x400/DDA0DD/FFFFFF?text=Cake',
-      cookTime: '30 minutes',
-      prepTime: '20 minutes',
-      totalTime: '50 minutes',
-      calories: 350,
-      difficulty: 'Hard',
-      servings: 12,
-      author: 'Chef Emma',
-      ingredients: [
-        '2 cups all-purpose flour',
-        '1 3/4 cups sugar',
-        '3/4 cup cocoa powder',
-        '1 1/2 tsp baking soda',
-        '1 1/2 tsp baking powder',
-        '1 tsp salt',
-        '2 eggs',
-        '1 cup milk',
-        '1/2 cup vegetable oil',
-        '2 tsp vanilla extract',
-        '1 cup hot water'
-      ],
-      instructions: [
-        'Preheat oven to 350°F (175°C) and grease two 9-inch round cake pans.',
-        'In a large bowl, whisk together flour, sugar, cocoa, baking soda, baking powder, and salt.',
-        'Add eggs, milk, oil, and vanilla to the dry ingredients.',
-        'Beat on medium speed for 2 minutes.',
-        'Stir in hot water (batter will be very thin).',
-        'Pour batter into prepared pans.',
-        'Bake for 30-35 minutes until a toothpick comes out clean.',
-        'Cool in pans for 10 minutes, then remove to wire racks.',
-        'Frost with your favorite chocolate frosting.'
-      ],
-      tags: ['Dessert', 'Baking', 'Chocolate', 'Sweet']
+  useEffect(() => {
+    fetchRecipeDetails()
+    // Check if recipe is saved in localStorage
+    const savedRecipes = JSON.parse(localStorage.getItem('savedRecipes') || '[]')
+    setSaved(savedRecipes.includes(parseInt(id)))
+  }, [id])
+
+  async function fetchRecipeDetails() {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      const response = await fetch(`http://localhost:5000/api/spoonacular/recipe/${id}`)
+      const data = await response.json()
+      
+      if (response.ok) {
+        setRecipe(data)
+      } else {
+        setError(data.error || 'Failed to fetch recipe details')
+      }
+    } catch (error) {
+      console.error('Error fetching recipe:', error)
+      setError('Network error. Please try again.')
+    } finally {
+      setLoading(false)
     }
   }
 
-  const recipe = sampleRecipes[id]
+  function handleSaveRecipe() {
+    const savedRecipes = JSON.parse(localStorage.getItem('savedRecipes') || '[]')
+    
+    if (saved) {
+      // Remove from saved
+      const updatedRecipes = savedRecipes.filter(recipeId => recipeId !== parseInt(id))
+      localStorage.setItem('savedRecipes', JSON.stringify(updatedRecipes))
+      setSaved(false)
+    } else {
+      // Add to saved
+      savedRecipes.push(parseInt(id))
+      localStorage.setItem('savedRecipes', JSON.stringify(savedRecipes))
+      setSaved(true)
+    }
+  }
 
-  if (!recipe) {
+  async function handleShareRecipe() {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: recipe.title,
+          text: `Check out this recipe: ${recipe.title}`,
+          url: window.location.href,
+        })
+      } catch (error) {
+        console.log('Error sharing:', error)
+      }
+    } else {
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(window.location.href)
+      setShowShareToast(true)
+      setTimeout(() => setShowShareToast(false), 2000)
+    }
+  }
+
+  function toggleIngredient(index) {
+    setCheckedIngredients(prev => 
+      prev.includes(index) 
+        ? prev.filter(i => i !== index)
+        : [...prev, index]
+    )
+  }
+
+  function getDifficulty() {
+    if (!recipe) return 'Medium'
+    const time = recipe.readyInMinutes
+    if (time <= 30) return 'Easy'
+    if (time <= 60) return 'Medium'
+    return 'Hard'
+  }
+
+  if (loading) {
     return (
-      <div style={{ padding: '2rem', textAlign: 'center' }}>
-        <h2>Recipe not found</h2>
-        <button onClick={() => navigate('/recipes')} style={{ padding: '0.5rem 1rem', background: '#222', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
-          Back to Recipes
+      <div className="recipe-detail-loading">
+        <div className="loading-spinner"></div>
+        <p>Loading recipe details...</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="recipe-detail-error">
+        <h2>Error</h2>
+        <p>{error}</p>
+        <button onClick={() => navigate('/recipes')} className="btn-back">
+          <FiArrowLeft /> Back to Recipes
         </button>
       </div>
     )
   }
 
-  function handleSave() {
-    alert('Recipe saved to your collection!')
-  }
-
-  function handleShare() {
-    navigator.clipboard.writeText(window.location.href)
-    alert('Recipe link copied to clipboard!')
+  if (!recipe) {
+    return (
+      <div className="recipe-detail-error">
+        <h2>Recipe Not Found</h2>
+        <p>The recipe you're looking for doesn't exist.</p>
+        <button onClick={() => navigate('/recipes')} className="btn-back">
+          <FiArrowLeft /> Back to Recipes
+        </button>
+      </div>
+    )
   }
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '2rem' }}>
-      <button 
-        onClick={() => navigate('/recipes')}
-        style={{ 
-          padding: '0.5rem 1rem', 
-          background: '#f0f0f0', 
-          border: 'none', 
-          borderRadius: 4, 
-          cursor: 'pointer',
-          marginBottom: '2rem'
-        }}
-      >
-        ← Back to Recipes
-      </button>
-
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: '1fr 1fr', 
-        gap: '3rem',
-        '@media (max-width: 768px)': {
-          gridTemplateColumns: '1fr'
-        }
-      }}>
-        <div>
-          <img 
-            src={recipe.image} 
-            alt={recipe.name} 
-            style={{ 
-              width: '100%', 
-              height: 'auto', 
-              borderRadius: 8,
-              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-            }} 
-          />
+    <div className="recipe-detail">
+      <div className="recipe-detail-container">
+        {/* Header with Back Button */}
+        <div className="recipe-detail-header">
+          <button onClick={() => navigate(-1)} className="btn-back">
+            <FiArrowLeft /> Back
+          </button>
         </div>
 
-        <div>
-          <h1 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>{recipe.name}</h1>
-          
-          <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
-            {recipe.tags.map(tag => (
-              <span key={tag} style={{ 
-                padding: '0.3rem 0.8rem', 
-                background: '#f0f0f0', 
-                borderRadius: 20, 
-                fontSize: '0.9rem' 
-              }}>
-                {tag}
-              </span>
-            ))}
+        {/* Main Content Grid */}
+        <div className="recipe-detail-content">
+          {/* Left Column - Image and Basic Info */}
+          <div className="recipe-detail-left">
+            <div className="recipe-detail-image-container">
+              <img 
+                src={recipe.image} 
+                alt={recipe.title}
+                className="recipe-detail-image"
+                onError={(e) => {
+                  e.target.src = 'https://via.placeholder.com/600x400/CCCCCC/666666?text=No+Image'
+                }}
+              />
+            </div>
+
+            {/* Recipe Stats with Icons */}
+            <div className="recipe-detail-stats">
+              <div className="stat-item">
+                <FiClock className="stat-icon" />
+                <span className="stat-label">Prep Time</span>
+                <span className="stat-value">{recipe.readyInMinutes} min</span>
+              </div>
+              <div className="stat-item">
+                <FiUsers className="stat-icon" />
+                <span className="stat-label">Servings</span>
+                <span className="stat-value">{recipe.servings}</span>
+              </div>
+              <div className="stat-item">
+                <FiTarget className="stat-icon" />
+                <span className="stat-label">Difficulty</span>
+                <span className="stat-value">{getDifficulty()}</span>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="recipe-actions">
+              <button 
+                onClick={handleSaveRecipe}
+                className={`btn-save ${saved ? 'saved' : ''}`}
+              >
+                <FiHeart className={saved ? 'filled' : ''} />
+                {saved ? 'Saved' : 'Save Recipe'}
+              </button>
+              <button onClick={handleShareRecipe} className="btn-share">
+                <FiShare2 />
+                Share
+              </button>
+            </div>
           </div>
 
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', 
-            gap: '1rem', 
-            marginBottom: '2rem',
-            padding: '1rem',
-            background: '#f8f8f8',
-            borderRadius: 8
-          }}>
-            <div>
-              <div style={{ fontWeight: 'bold', color: '#666' }}>Prep Time</div>
-              <div>{recipe.prepTime}</div>
-            </div>
-            <div>
-              <div style={{ fontWeight: 'bold', color: '#666' }}>Cook Time</div>
-              <div>{recipe.cookTime}</div>
-            </div>
-            <div>
-              <div style={{ fontWeight: 'bold', color: '#666' }}>Total Time</div>
-              <div>{recipe.totalTime}</div>
-            </div>
-            <div>
-              <div style={{ fontWeight: 'bold', color: '#666' }}>Calories</div>
-              <div>{recipe.calories}</div>
-            </div>
-            <div>
-              <div style={{ fontWeight: 'bold', color: '#666' }}>Difficulty</div>
-              <div>{recipe.difficulty}</div>
-            </div>
-            <div>
-              <div style={{ fontWeight: 'bold', color: '#666' }}>Servings</div>
-              <div>{recipe.servings}</div>
-            </div>
-          </div>
+          {/* Right Column - Details */}
+          <div className="recipe-detail-right">
+            <h1 className="recipe-detail-title">{recipe.title}</h1>
 
-          <div style={{ marginBottom: '2rem' }}>
-            <div style={{ fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '0.5rem' }}>By {recipe.author}</div>
-          </div>
+            {/* Tags */}
+            {(recipe.cuisines?.length > 0 || recipe.dishTypes?.length > 0) && (
+              <div className="recipe-tags">
+                {recipe.cuisines?.map((cuisine, index) => (
+                  <span key={index} className="tag cuisine-tag">{cuisine}</span>
+                ))}
+                {recipe.dishTypes?.map((dishType, index) => (
+                  <span key={index} className="tag dish-tag">{dishType}</span>
+                ))}
+              </div>
+            )}
 
-          <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
-            <button 
-              onClick={handleSave}
-              style={{ 
-                padding: '0.7rem 1.5rem', 
-                background: '#222', 
-                color: '#fff', 
-                border: 'none', 
-                borderRadius: 4, 
-                cursor: 'pointer' 
-              }}
-            >
-              Save Recipe
-            </button>
-            <button 
-              onClick={handleShare}
-              style={{ 
-                padding: '0.7rem 1.5rem', 
-                background: '#f0f0f0', 
-                color: '#222', 
-                border: '1px solid #ddd', 
-                borderRadius: 4, 
-                cursor: 'pointer' 
-              }}
-            >
-              Share
-            </button>
-          </div>
+            {/* Summary */}
+            <div className="recipe-detail-summary">
+              <h3>About this recipe</h3>
+              <div 
+                className="summary-content"
+                dangerouslySetInnerHTML={{ __html: recipe.summary }}
+              />
+            </div>
 
-          <div style={{ marginBottom: '2rem' }}>
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', borderBottom: '2px solid #222', paddingBottom: '0.5rem' }}>
-              Ingredients
-            </h2>
-            <ul style={{ listStyle: 'none', padding: 0 }}>
-              {recipe.ingredients.map((ingredient, index) => (
-                <li key={index} style={{ 
-                  padding: '0.5rem 0', 
-                  borderBottom: '1px solid #eee',
-                  display: 'flex',
-                  alignItems: 'center'
-                }}>
-                  <span style={{ 
-                    width: '8px', 
-                    height: '8px', 
-                    background: '#222', 
-                    borderRadius: '50%', 
-                    marginRight: '1rem' 
-                  }}></span>
-                  {ingredient}
-                </li>
-              ))}
-            </ul>
-          </div>
+            {/* Ingredients */}
+            <div className="recipe-detail-section">
+              <h3>Ingredients</h3>
+              <div className="ingredients-container">
+                <ul className="ingredients-list">
+                  {recipe.extendedIngredients?.map((ingredient, index) => (
+                    <li 
+                      key={index} 
+                      className={`ingredient-item ${checkedIngredients.includes(index) ? 'checked' : ''}`}
+                      onClick={() => toggleIngredient(index)}
+                    >
+                      <div className="ingredient-checkbox">
+                        {checkedIngredients.includes(index) && <FiCheck />}
+                      </div>
+                      <span className="ingredient-amount">
+                        {ingredient.amount} {ingredient.unit}
+                      </span>
+                      <span className="ingredient-name">{ingredient.name}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
 
-          <div>
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', borderBottom: '2px solid #222', paddingBottom: '0.5rem' }}>
-              Instructions
-            </h2>
-            <ol style={{ paddingLeft: '1.5rem' }}>
-              {recipe.instructions.map((instruction, index) => (
-                <li key={index} style={{ 
-                  padding: '0.8rem 0', 
-                  lineHeight: '1.6',
-                  borderBottom: '1px solid #f0f0f0'
-                }}>
-                  {instruction}
-                </li>
-              ))}
-            </ol>
+            {/* Instructions */}
+            <div className="recipe-detail-section">
+              <div className="section-header">
+                <h3>Instructions</h3>
+                <button 
+                  onClick={() => setExpandedInstructions(!expandedInstructions)}
+                  className="btn-toggle"
+                >
+                  {expandedInstructions ? <FiChevronUp /> : <FiChevronDown />}
+                </button>
+              </div>
+              <div className={`instructions-content ${expandedInstructions ? 'expanded' : 'collapsed'}`}>
+                {recipe.analyzedInstructions?.[0]?.steps ? (
+                  <ol className="instructions-list">
+                    {recipe.analyzedInstructions[0].steps.map((step, index) => (
+                      <li key={index} className="instruction-step">
+                        <span className="step-number">{index + 1}</span>
+                        <span className="step-text">{step.step}</span>
+                      </li>
+                    ))}
+                  </ol>
+                ) : (
+                  <div 
+                    className="instructions-text"
+                    dangerouslySetInnerHTML={{ __html: recipe.instructions }}
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* Nutrition Information */}
+            {recipe.nutrition?.nutrients && (
+              <div className="recipe-detail-section">
+                <h3>Nutrition Information</h3>
+                <div className="nutrition-grid">
+                  {recipe.nutrition.nutrients.slice(0, 8).map((nutrient, index) => (
+                    <div key={index} className="nutrition-item">
+                      <span className="nutrition-name">{nutrient.name}</span>
+                      <span className="nutrition-value">
+                        {nutrient.amount} {nutrient.unit}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Share Toast */}
+        {showShareToast && (
+          <div className="toast">
+            <p>Link copied to clipboard!</p>
+          </div>
+        )}
+
+        {/* Similar Recipes */}
+        <SimilarRecipes recipeId={id} />
       </div>
     </div>
   )
