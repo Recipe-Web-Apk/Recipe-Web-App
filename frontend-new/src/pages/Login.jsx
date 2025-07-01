@@ -1,50 +1,101 @@
 import React, { useState } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
+import './Login.css'
 
 function Login() {
-  const [form, setForm] = useState({ username: '', password: '' })
+  const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const { login } = useAuth()
+  const navigate = useNavigate()
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
-    // Placeholder: No authentication logic
-    if (!form.username || !form.password) {
+    
+    if (!form.email || !form.password) {
       setError('Both fields are required')
       return
     }
+
+    setLoading(true)
     setError('')
-    alert('Login form submitted (no authentication logic)')
+
+    const result = await login(form.email, form.password)
+    
+    if (result.success) {
+      navigate('/dashboard')
+    } else {
+      setError(result.error)
+    }
+    
+    setLoading(false)
   }
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value })
-    setError('')
+    if (error) setError('')
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
-      <h2 style={{ marginBottom: '2rem' }}>Login</h2>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', minWidth: 300 }}>
-        <input
-          type="text"
-          name="username"
-          placeholder="Username"
-          value={form.username}
-          onChange={handleChange}
-          style={{ padding: '0.7rem', fontSize: '1rem', border: '1px solid #ccc', borderRadius: 4 }}
-        />
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={form.password}
-          onChange={handleChange}
-          style={{ padding: '0.7rem', fontSize: '1rem', border: '1px solid #ccc', borderRadius: 4 }}
-        />
-        <button type="submit" style={{ padding: '0.7rem', fontSize: '1rem', borderRadius: 4, background: '#222', color: '#fff', border: 'none' }}>
-          Login
-        </button>
-        {error && <div style={{ color: 'red', fontSize: '0.95rem', marginTop: '0.5rem' }}>{error}</div>}
-      </form>
+    <div className="auth-container">
+      <div className="auth-card">
+        <h2 className="auth-title">Welcome Back</h2>
+        <p className="auth-subtitle">Sign in to your account</p>
+        
+        <form onSubmit={handleSubmit} className="auth-form">
+          <div className="form-group">
+            <label htmlFor="email" className="form-label">Email</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              placeholder="Enter your email"
+              value={form.email}
+              onChange={handleChange}
+              className="form-input"
+              required
+            />
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor="password" className="form-label">Password</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              placeholder="Enter your password"
+              value={form.password}
+              onChange={handleChange}
+              className="form-input"
+              required
+            />
+          </div>
+          
+          <button 
+            type="submit" 
+            className="auth-button"
+            disabled={loading}
+          >
+            {loading ? 'Signing in...' : 'Sign In'}
+          </button>
+          
+          {error && (
+            <div className="auth-error">
+              {error}
+            </div>
+          )}
+        </form>
+        
+        <div className="auth-footer">
+          <p>
+            Don't have an account?{' '}
+            <Link to="/register" className="auth-link">
+              Sign up here
+            </Link>
+          </p>
+        </div>
+      </div>
     </div>
   )
 }
