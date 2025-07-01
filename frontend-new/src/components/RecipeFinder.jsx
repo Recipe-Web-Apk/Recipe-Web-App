@@ -53,9 +53,22 @@ function RecipeFinder() {
     try {
       const validIngredients = ingredients.filter(ing => ing.trim() !== '')
       const query = validIngredients.join(', ')
+      const url = `http://localhost:5000/api/spoonacular/search?query=${encodeURIComponent(query)}&offset=${isLoadMore ? offset : 0}`
       
-      const response = await fetch(`http://localhost:5000/api/spoonacular/search?query=${encodeURIComponent(query)}&offset=${isLoadMore ? offset : 0}`)
+      console.log('Making request to:', url)
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      
+      console.log('Response status:', response.status)
+      console.log('Response headers:', response.headers)
+      
       const data = await response.json()
+      console.log('Response data:', data)
       
       if (response.ok) {
         const newResults = data.results || []
@@ -70,11 +83,11 @@ function RecipeFinder() {
         setHasMore(newResults.length === 10) // If we got 10 results, there might be more
       } else {
         console.error('API Error:', data)
-        setErrors({ api: 'Failed to fetch recipes. Please try again.' })
+        setErrors({ api: `Failed to fetch recipes: ${data.error || 'Unknown error'}` })
       }
     } catch (error) {
       console.error('Network Error:', error)
-      setErrors({ api: 'Network error. Please check your connection.' })
+      setErrors({ api: `Network error: ${error.message}` })
     } finally {
       setLoading(false)
       setLoadingMore(false)
