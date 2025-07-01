@@ -1,8 +1,15 @@
 import React, { useState } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
+import './Login.css'
 
 function Register() {
   const [form, setForm] = useState({ username: '', email: '', password: '', confirm: '' })
   const [errors, setErrors] = useState({})
+  const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState('')
+  const { register } = useAuth()
+  const navigate = useNavigate()
 
   function validate(values) {
     const newErrors = {}
@@ -10,70 +17,141 @@ function Register() {
     if (!values.email) newErrors.email = 'Email is required'
     else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(values.email)) newErrors.email = 'Email is invalid'
     if (!values.password) newErrors.password = 'Password is required'
+    else if (values.password.length < 6) newErrors.password = 'Password must be at least 6 characters'
     if (!values.confirm) newErrors.confirm = 'Confirm your password'
     else if (values.password !== values.confirm) newErrors.confirm = 'Passwords do not match'
     return newErrors
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
     const validation = validate(form)
     setErrors(validation)
+    
     if (Object.keys(validation).length > 0) return
-    alert('Register form submitted (no authentication logic)')
+
+    setLoading(true)
+    setSuccess('')
+
+    const result = await register(form.email, form.password, form.username)
+    
+    if (result.success) {
+      setSuccess(result.message)
+      setTimeout(() => {
+        navigate('/login')
+      }, 2000)
+    } else {
+      setErrors({ general: result.error })
+    }
+    
+    setLoading(false)
   }
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value })
     setErrors({ ...errors, [e.target.name]: '' })
+    if (success) setSuccess('')
   }
 
   const isValid = Object.keys(validate(form)).length === 0 && Object.values(form).every(Boolean)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
-      <h2 style={{ marginBottom: '2rem' }}>Register</h2>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', minWidth: 300 }}>
-        <input
-          type="text"
-          name="username"
-          placeholder="Username"
-          value={form.username}
-          onChange={handleChange}
-          style={{ padding: '0.7rem', fontSize: '1rem', border: '1px solid #ccc', borderRadius: 4 }}
-        />
-        {errors.username && <div style={{ color: 'red', fontSize: '0.95rem', marginTop: '-0.5rem' }}>{errors.username}</div>}
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={handleChange}
-          style={{ padding: '0.7rem', fontSize: '1rem', border: '1px solid #ccc', borderRadius: 4 }}
-        />
-        {errors.email && <div style={{ color: 'red', fontSize: '0.95rem', marginTop: '-0.5rem' }}>{errors.email}</div>}
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={form.password}
-          onChange={handleChange}
-          style={{ padding: '0.7rem', fontSize: '1rem', border: '1px solid #ccc', borderRadius: 4 }}
-        />
-        {errors.password && <div style={{ color: 'red', fontSize: '0.95rem', marginTop: '-0.5rem' }}>{errors.password}</div>}
-        <input
-          type="password"
-          name="confirm"
-          placeholder="Confirm Password"
-          value={form.confirm}
-          onChange={handleChange}
-          style={{ padding: '0.7rem', fontSize: '1rem', border: '1px solid #ccc', borderRadius: 4 }}
-        />
-        {errors.confirm && <div style={{ color: 'red', fontSize: '0.95rem', marginTop: '-0.5rem' }}>{errors.confirm}</div>}
-        <button type="submit" disabled={!isValid} style={{ padding: '0.7rem', fontSize: '1rem', borderRadius: 4, background: isValid ? '#222' : '#aaa', color: '#fff', border: 'none', cursor: isValid ? 'pointer' : 'not-allowed' }}>
-          Register
-        </button>
-      </form>
+    <div className="auth-container">
+      <div className="auth-card">
+        <h2 className="auth-title">Create Account</h2>
+        <p className="auth-subtitle">Join our recipe community</p>
+        
+        <form onSubmit={handleSubmit} className="auth-form">
+          <div className="form-group">
+            <label htmlFor="username" className="form-label">Username</label>
+            <input
+              type="text"
+              id="username"
+              name="username"
+              placeholder="Choose a username"
+              value={form.username}
+              onChange={handleChange}
+              className="form-input"
+              required
+            />
+            {errors.username && <div className="auth-error">{errors.username}</div>}
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor="email" className="form-label">Email</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              placeholder="Enter your email"
+              value={form.email}
+              onChange={handleChange}
+              className="form-input"
+              required
+            />
+            {errors.email && <div className="auth-error">{errors.email}</div>}
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor="password" className="form-label">Password</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              placeholder="Create a password"
+              value={form.password}
+              onChange={handleChange}
+              className="form-input"
+              required
+            />
+            {errors.password && <div className="auth-error">{errors.password}</div>}
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor="confirm" className="form-label">Confirm Password</label>
+            <input
+              type="password"
+              id="confirm"
+              name="confirm"
+              placeholder="Confirm your password"
+              value={form.confirm}
+              onChange={handleChange}
+              className="form-input"
+              required
+            />
+            {errors.confirm && <div className="auth-error">{errors.confirm}</div>}
+          </div>
+          
+          <button 
+            type="submit" 
+            className="auth-button"
+            disabled={!isValid || loading}
+          >
+            {loading ? 'Creating Account...' : 'Create Account'}
+          </button>
+          
+          {errors.general && (
+            <div className="auth-error">
+              {errors.general}
+            </div>
+          )}
+          
+          {success && (
+            <div className="auth-success">
+              {success}
+            </div>
+          )}
+        </form>
+        
+        <div className="auth-footer">
+          <p>
+            Already have an account?{' '}
+            <Link to="/login" className="auth-link">
+              Sign in here
+            </Link>
+          </p>
+        </div>
+      </div>
     </div>
   )
 }
