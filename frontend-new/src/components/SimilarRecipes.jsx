@@ -57,7 +57,7 @@ function SimilarRecipes({ recipeId }) {
       <div className="similar-recipes-grid">
         {similarRecipes.map((recipe) => (
           <Link 
-            to={`/recipe/${recipe.id}`} 
+            to={`/recipes/${recipe.id}`} 
             key={recipe.id} 
             className="similar-recipe-card"
           >
