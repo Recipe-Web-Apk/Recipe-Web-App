@@ -214,4 +214,73 @@ router.post('/refresh', async (req, res) => {
   }
 });
 
+// Change password
+router.post('/change-password', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' })
+    }
+    const token = authHeader.split(' ')[1]
+    const { currentPassword, newPassword } = req.body
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Current and new password are required' })
+    }
+    // Get user from token
+    const { data: { user }, error } = await supabase.auth.getUser(token)
+    if (error || !user) {
+      return res.status(401).json({ error: 'Invalid token' })
+    }
+    // Authenticate current password
+    const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: currentPassword
+    })
+    if (loginError) {
+      return res.status(401).json({ error: 'Current password is incorrect' })
+    }
+    // Update password
+    const { error: updateError } = await supabase.auth.updateUser({ password: newPassword }, { accessToken: token })
+    if (updateError) {
+      return res.status(400).json({ error: updateError.message })
+    }
+    res.json({ message: 'Password changed successfully' })
+  } catch (err) {
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+// Update profile
+router.post('/update-profile', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' })
+    }
+    const token = authHeader.split(' ')[1]
+    const { username } = req.body
+    if (!username) {
+      return res.status(400).json({ error: 'Username is required' })
+    }
+    // Get user from token
+    const { data: { user }, error } = await supabase.auth.getUser(token)
+    if (error || !user) {
+      return res.status(401).json({ error: 'Invalid token' })
+    }
+    // Update username in users table
+    const { data: profile, error: profileError } = await supabase
+      .from('users')
+      .update({ username })
+      .eq('id', user.id)
+      .select('*')
+      .single()
+    if (profileError) {
+      return res.status(400).json({ error: profileError.message })
+    }
+    res.json({ user: { id: user.id, email: profile.email, username: profile.username } })
+  } catch (err) {
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
 module.exports = router;
