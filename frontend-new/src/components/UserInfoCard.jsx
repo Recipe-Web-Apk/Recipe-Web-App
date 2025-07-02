@@ -1,6 +1,6 @@
 import React from 'react'
 
-function UserInfoCard({ user }) {
+function UserInfoCard({ user, onEditProfile }) {
   return (
     <div style={{
       display: 'flex',
@@ -32,8 +32,12 @@ function UserInfoCard({ user }) {
         <div style={{ fontWeight: 'bold', fontSize: '1.2rem', marginBottom: '0.3rem' }}>{user.username}</div>
         <div style={{ color: '#666', fontSize: '1rem', marginBottom: '0.5rem' }}>{user.email}</div>
         <div style={{ display: 'flex', gap: '0.7rem' }}>
-          <button style={{ padding: '0.4rem 1rem', borderRadius: 4, border: '1px solid #eee', background: '#f7f7f7', color: '#333', cursor: 'pointer' }}>Edit Profile</button>
-          <button style={{ padding: '0.4rem 1rem', borderRadius: 4, border: '1px solid #eee', background: '#f7f7f7', color: '#333', cursor: 'pointer' }}>Change Password</button>
+          <button
+            style={{ padding: '0.4rem 1rem', borderRadius: 4, border: '1px solid #eee', background: '#f7f7f7', color: '#333', cursor: 'pointer' }}
+            onClick={onEditProfile}
+          >
+            Edit Profile
+          </button>
         </div>
       </div>
     </div>

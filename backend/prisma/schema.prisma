@@ -15,10 +15,9 @@ datasource db {
 }
 
 model User {
-  id Int @id @default(autoincrement())
+  id String @id @default(dbgenerated())
   email String @unique
   username String @unique
-  password String
   recipes Recipe[]
   comments Comment[]
   favorites Favorite[]
@@ -32,7 +31,7 @@ model Recipe {
   instructions String
   image String?
   user User @relation(fields: [userId], references: [id])
-  userId Int
+  userId String
   comments Comment[]
   favorites Favorite[]
 }
@@ -43,14 +42,13 @@ model Comment {
   recipe Recipe @relation(fields: [recipeId], references: [id])
   recipeId Int
   user User @relation(fields: [userId], references: [id])
-  userId Int
-
+  userId String
 }
 
 model Favorite {
   id Int @id @default(autoincrement())
   user User @relation(fields: [userId], references: [id])
-  userId Int
+  userId String
   recipe Recipe @relation(fields: [recipeId], references: [id])
   recipeId Int
 }

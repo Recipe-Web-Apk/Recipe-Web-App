@@ -149,6 +149,49 @@ export function AuthProvider({ children }) {
     }
   }
 
+  async function changePassword(currentPassword, newPassword) {
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ currentPassword, newPassword })
+      })
+      const data = await response.json()
+      if (response.ok) {
+        return { success: true }
+      } else {
+        return { success: false, error: data.error }
+      }
+    } catch (error) {
+      return { success: false, error: 'Network error. Please try again.' }
+    }
+  }
+
+  async function updateProfile(username, email) {
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/update-profile', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ username, email })
+      })
+      const data = await response.json()
+      if (response.ok) {
+        setUser(data.user)
+        return { success: true }
+      } else {
+        return { success: false, error: data.error }
+      }
+    } catch (error) {
+      return { success: false, error: 'Network error. Please try again.' }
+    }
+  }
+
   const value = {
     user,
     token,
@@ -157,7 +200,9 @@ export function AuthProvider({ children }) {
     register,
     logout,
     refreshToken,
-    isAuthenticated: !!user
+    isAuthenticated: !!user,
+    changePassword,
+    updateProfile
   }
 
   return (
