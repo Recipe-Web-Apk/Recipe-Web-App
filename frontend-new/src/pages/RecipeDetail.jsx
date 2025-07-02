@@ -37,11 +37,11 @@ function RecipeDetail() {
       setLoading(true)
       setError(null)
       
-      const response = await fetch(`http://localhost:5000/api/spoonacular/recipe/${id}`)
+      const response = await fetch(`http://localhost:5000/api/recipe/${id}`)
       const data = await response.json()
       
       if (response.ok) {
-        setRecipe(data)
+        setRecipe(data.recipe)
       } else {
         setError(data.error || 'Failed to fetch recipe details')
       }
@@ -98,9 +98,9 @@ function RecipeDetail() {
 
   function getDifficulty() {
     if (!recipe) return 'Medium'
-    const time = recipe.readyInMinutes
-    if (time <= 30) return 'Easy'
-    if (time <= 60) return 'Medium'
+    const ingredientCount = recipe.ingredients?.length || 0
+    if (ingredientCount <= 5) return 'Easy'
+    if (ingredientCount <= 10) return 'Medium'
     return 'Hard'
   }
 
@@ -153,7 +153,7 @@ function RecipeDetail() {
           <div className="recipe-detail-left">
             <div className="recipe-detail-image-container">
               <img 
-                src={recipe.image} 
+                src={recipe.image || 'https://via.placeholder.com/600x400/CCCCCC/666666?text=No+Image'} 
                 alt={recipe.title}
                 className="recipe-detail-image"
                 onError={(e) => {
@@ -165,19 +165,19 @@ function RecipeDetail() {
             {/* Recipe Stats with Icons */}
             <div className="recipe-detail-stats">
               <div className="stat-item">
-                <FiClock className="stat-icon" />
-                <span className="stat-label">Prep Time</span>
-                <span className="stat-value">{recipe.readyInMinutes} min</span>
-              </div>
-              <div className="stat-item">
                 <FiUsers className="stat-icon" />
-                <span className="stat-label">Servings</span>
-                <span className="stat-value">{recipe.servings}</span>
+                <span className="stat-label">Author</span>
+                <span className="stat-value">{recipe.user?.username || 'Unknown'}</span>
               </div>
               <div className="stat-item">
                 <FiTarget className="stat-icon" />
                 <span className="stat-label">Difficulty</span>
                 <span className="stat-value">{getDifficulty()}</span>
+              </div>
+              <div className="stat-item">
+                <FiClock className="stat-icon" />
+                <span className="stat-label">Ingredients</span>
+                <span className="stat-value">{recipe.ingredients?.length || 0}</span>
               </div>
             </div>
 
@@ -201,25 +201,10 @@ function RecipeDetail() {
           <div className="recipe-detail-right">
             <h1 className="recipe-detail-title">{recipe.title}</h1>
 
-            {/* Tags */}
-            {(recipe.cuisines?.length > 0 || recipe.dishTypes?.length > 0) && (
-              <div className="recipe-tags">
-                {recipe.cuisines?.map((cuisine, index) => (
-                  <span key={index} className="tag cuisine-tag">{cuisine}</span>
-                ))}
-                {recipe.dishTypes?.map((dishType, index) => (
-                  <span key={index} className="tag dish-tag">{dishType}</span>
-                ))}
-              </div>
-            )}
-
-            {/* Summary */}
+            {/* Description */}
             <div className="recipe-detail-summary">
               <h3>About this recipe</h3>
-              <div 
-                className="summary-content"
-                dangerouslySetInnerHTML={{ __html: recipe.summary }}
-              />
+              <p className="summary-content">{recipe.description}</p>
             </div>
 
             {/* Ingredients */}
@@ -227,7 +212,7 @@ function RecipeDetail() {
               <h3>Ingredients</h3>
               <div className="ingredients-container">
                 <ul className="ingredients-list">
-                  {recipe.extendedIngredients?.map((ingredient, index) => (
+                  {recipe.ingredients?.map((ingredient, index) => (
                     <li 
                       key={index} 
                       className={`ingredient-item ${checkedIngredients.includes(index) ? 'checked' : ''}`}
@@ -236,10 +221,7 @@ function RecipeDetail() {
                       <div className="ingredient-checkbox">
                         {checkedIngredients.includes(index) && <FiCheck />}
                       </div>
-                      <span className="ingredient-amount">
-                        {ingredient.amount} {ingredient.unit}
-                      </span>
-                      <span className="ingredient-name">{ingredient.name}</span>
+                      <span className="ingredient-name">{ingredient}</span>
                     </li>
                   ))}
                 </ul>
@@ -258,40 +240,11 @@ function RecipeDetail() {
                 </button>
               </div>
               <div className={`instructions-content ${expandedInstructions ? 'expanded' : 'collapsed'}`}>
-                {recipe.analyzedInstructions?.[0]?.steps ? (
-                  <ol className="instructions-list">
-                    {recipe.analyzedInstructions[0].steps.map((step, index) => (
-                      <li key={index} className="instruction-step">
-                        <span className="step-number">{index + 1}</span>
-                        <span className="step-text">{step.step}</span>
-                      </li>
-                    ))}
-                  </ol>
-                ) : (
-                  <div 
-                    className="instructions-text"
-                    dangerouslySetInnerHTML={{ __html: recipe.instructions }}
-                  />
-                )}
-              </div>
-            </div>
-
-            {/* Nutrition Information */}
-            {recipe.nutrition?.nutrients && (
-              <div className="recipe-detail-section">
-                <h3>Nutrition Information</h3>
-                <div className="nutrition-grid">
-                  {recipe.nutrition.nutrients.slice(0, 8).map((nutrient, index) => (
-                    <div key={index} className="nutrition-item">
-                      <span className="nutrition-name">{nutrient.name}</span>
-                      <span className="nutrition-value">
-                        {nutrient.amount} {nutrient.unit}
-                      </span>
-                    </div>
-                  ))}
+                <div className="instructions-text">
+                  {recipe.instructions}
                 </div>
               </div>
-            )}
+            </div>
           </div>
         </div>
 

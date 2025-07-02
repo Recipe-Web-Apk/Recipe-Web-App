@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 import BasicInfoSection from '../components/BasicInfoSection'
 import RecipeStatsSection from '../components/RecipeStatsSection'
 import IngredientsSection from '../components/IngredientsSection'
@@ -8,8 +9,10 @@ import FormActions from '../components/FormActions'
 
 function RecipeForm() {
   const navigate = useNavigate()
+  const { token } = useAuth()
   const [loading, setLoading] = useState(false)
   const [imagePreview, setImagePreview] = useState(null)
+  const [submitError, setSubmitError] = useState(null)
   
   const [form, setForm] = useState({
     title: '',
@@ -35,12 +38,6 @@ function RecipeForm() {
     
     if (!form.title.trim()) newErrors.title = 'Recipe title is required'
     if (!form.description.trim()) newErrors.description = 'Description is required'
-    if (!form.difficulty) newErrors.difficulty = 'Please select difficulty level'
-    if (!form.category) newErrors.category = 'Please select a category'
-    if (!form.servings) newErrors.servings = 'Number of servings is required'
-    if (!form.calories) newErrors.calories = 'Calorie count is required'
-    if (!form.cookTime) newErrors.cookTime = 'Cook time is required'
-    if (!form.prepTime) newErrors.prepTime = 'Prep time is required'
     
     const validIngredients = form.ingredients.filter(ing => ing.trim() !== '')
     if (validIngredients.length === 0) newErrors.ingredients = 'At least one ingredient is required'
@@ -110,7 +107,7 @@ function RecipeForm() {
     }
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
     const validationErrors = validateForm()
     
@@ -119,13 +116,49 @@ function RecipeForm() {
       return
     }
 
+    if (!token) {
+      setSubmitError('You must be logged in to create a recipe')
+      return
+    }
+
     setLoading(true)
+    setSubmitError(null)
     
-    setTimeout(() => {
-      alert('Recipe created successfully!')
+    try {
+      const validIngredients = form.ingredients.filter(ing => ing.trim() !== '')
+      const validInstructions = form.instructions.filter(inst => inst.trim() !== '')
+      
+      const recipeData = {
+        title: form.title.trim(),
+        description: form.description.trim(),
+        ingredients: validIngredients,
+        instructions: validInstructions.join('\n\n'),
+        image: imagePreview || null
+      }
+
+      const response = await fetch('http://localhost:5000/api/recipe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(recipeData)
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        alert('Recipe created successfully!')
+        navigate('/recipes')
+      } else {
+        setSubmitError(data.error || 'Failed to create recipe')
+      }
+    } catch (error) {
+      console.error('Error creating recipe:', error)
+      setSubmitError('Network error. Please try again.')
+    } finally {
       setLoading(false)
-      navigate('/recipes')
-    }, 1500)
+    }
   }
 
   function handleCancel() {
@@ -153,6 +186,18 @@ function RecipeForm() {
           Cancel
         </button>
       </div>
+
+      {submitError && (
+        <div style={{ 
+          background: '#ffebee', 
+          color: '#c62828', 
+          padding: '1rem', 
+          borderRadius: 4, 
+          marginBottom: '1rem' 
+        }}>
+          {submitError}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
         <BasicInfoSection 
