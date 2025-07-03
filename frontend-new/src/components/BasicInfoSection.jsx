@@ -99,6 +99,29 @@ function BasicInfoSection({ form, errors, handleChange, imagePreview, handleImag
           </div>
         )}
       </div>
+
+      <div>
+        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+          YouTube Video URL (Optional)
+        </label>
+        <input
+          type="url"
+          name="youtube_url"
+          value={form.youtube_url}
+          onChange={handleChange}
+          style={{ 
+            width: '100%', 
+            padding: '0.7rem', 
+            border: `1px solid ${errors.youtube_url ? '#ff4444' : '#ccc'}`, 
+            borderRadius: 4 
+          }}
+          placeholder="https://www.youtube.com/watch?v=..."
+        />
+        <div style={{ fontSize: '0.9rem', color: '#666', marginTop: '0.3rem' }}>
+          Add a YouTube video link to help users understand the cooking process better
+        </div>
+        {errors.youtube_url && <div style={{ color: '#ff4444', fontSize: '0.9rem', marginTop: '0.3rem' }}>{errors.youtube_url}</div>}
+      </div>
     </>
   )
 }
