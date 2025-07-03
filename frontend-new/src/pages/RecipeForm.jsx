@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { supabase } from '../supabaseClient'
 import BasicInfoSection from '../components/BasicInfoSection'
 import RecipeStatsSection from '../components/RecipeStatsSection'
 import IngredientsSection from '../components/IngredientsSection'
@@ -25,7 +26,8 @@ function RecipeForm() {
     calories: '',
     cookTime: '',
     prepTime: '',
-    tags: ''
+    tags: '',
+    youtube_url: ''
   })
 
   const [errors, setErrors] = useState({})
@@ -128,30 +130,39 @@ function RecipeForm() {
       const validIngredients = form.ingredients.filter(ing => ing.trim() !== '')
       const validInstructions = form.instructions.filter(inst => inst.trim() !== '')
       
+      // Extract user ID from JWT token
+      let userId = null
+      try {
+        const tokenParts = token.split('.')
+        if (tokenParts.length === 3) {
+          const payload = JSON.parse(atob(tokenParts[1]))
+          userId = payload.sub
+        }
+      } catch (error) {
+        console.error('Error parsing token:', error)
+      }
+      
       const recipeData = {
         title: form.title.trim(),
         description: form.description.trim(),
         ingredients: validIngredients,
         instructions: validInstructions.join('\n\n'),
-        image: imagePreview || null
+        image: imagePreview || null,
+        youtube_url: form.youtube_url.trim() || null,
+        user_id: userId
       }
 
-      const response = await fetch('http://localhost:5000/api/recipes', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(recipeData)
-      })
+      const { data, error } = await supabase
+        .from('recipes')
+        .insert([recipeData])
+        .select()
 
-      const data = await response.json()
-
-      if (response.ok) {
+      if (error) {
+        console.error('Supabase error:', error)
+        setSubmitError(error.message || 'Failed to create recipe')
+      } else {
         alert('Recipe created successfully!')
         navigate('/recipes')
-      } else {
-        setSubmitError(data.error || 'Failed to create recipe')
       }
     } catch (error) {
       console.error('Error creating recipe:', error)

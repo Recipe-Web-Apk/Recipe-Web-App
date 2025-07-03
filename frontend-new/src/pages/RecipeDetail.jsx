@@ -9,9 +9,12 @@ import {
   FiArrowLeft,
   FiCheck,
   FiChevronDown,
-  FiChevronUp
+  FiChevronUp,
+  FiPlay,
+  FiYoutube
 } from 'react-icons/fi'
 import SimilarRecipes from '../components/SimilarRecipes'
+import { supabase } from '../supabaseClient'
 import './RecipeDetail.css'
 
 function RecipeDetail() {
@@ -24,6 +27,7 @@ function RecipeDetail() {
   const [checkedIngredients, setCheckedIngredients] = useState([])
   const [expandedInstructions, setExpandedInstructions] = useState(true)
   const [showShareToast, setShowShareToast] = useState(false)
+  const [dataSource, setDataSource] = useState('spoonacular') // Default to spoonacular
 
   useEffect(() => {
     fetchRecipeDetails()
@@ -37,14 +41,40 @@ function RecipeDetail() {
       setLoading(true)
       setError(null)
       
-      const response = await fetch(`http://localhost:5000/api/recipes/${id}`)
-      const data = await response.json()
-      
-      if (response.ok) {
-        setRecipe(data.recipe)
-      } else {
-        setError(data.error || 'Failed to fetch recipe details')
+      // Try Spoonacular first (for explore recipes)
+      try {
+        const response = await fetch(`http://localhost:5000/api/spoonacular/recipe/${id}`)
+        if (response.ok) {
+          const data = await response.json()
+          setRecipe(data)
+          setDataSource('spoonacular')
+          return
+        }
+      } catch (error) {
+        console.log('Spoonacular fetch failed, trying Supabase...')
       }
+      
+      // Try Supabase (for user recipes)
+      try {
+        const { data, error: supabaseError } = await supabase
+          .from('recipes')
+          .select('*')
+          .eq('id', id)
+          .single()
+        
+        if (supabaseError) throw supabaseError
+        
+        if (data) {
+          setRecipe(data)
+          setDataSource('supabase')
+          return
+        }
+      } catch (error) {
+        console.log('Supabase fetch failed')
+      }
+      
+      // If both fail, show error
+      setError('Recipe not found')
     } catch (error) {
       console.error('Error fetching recipe:', error)
       setError('Network error. Please try again.')
@@ -104,6 +134,28 @@ function RecipeDetail() {
     return 'Hard'
   }
 
+  function openYouTubeVideo() {
+    if (recipe.youtube_url) {
+      window.open(recipe.youtube_url, '_blank')
+    }
+  }
+
+  // Extract YouTube video ID from URL
+  function getYouTubeVideoId(url) {
+    if (!url) return null
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
+    const match = url.match(regExp)
+    return (match && match[2].length === 11) ? match[2] : null
+  }
+
+  // Strip HTML tags from text
+  function stripHtml(html) {
+    if (!html) return ''
+    const tmp = document.createElement('div')
+    tmp.innerHTML = html
+    return tmp.textContent || tmp.innerText || ''
+  }
+
   if (loading) {
     return (
       <div className="recipe-detail-loading">
@@ -160,6 +212,20 @@ function RecipeDetail() {
                   e.target.src = 'https://via.placeholder.com/600x400/CCCCCC/666666?text=No+Image'
                 }}
               />
+              
+              {/* YouTube Video Button */}
+              {recipe.youtube_url && (
+                <div className="youtube-video-container">
+                  <button 
+                    onClick={openYouTubeVideo}
+                    className="youtube-video-btn"
+                    title="Watch cooking video"
+                  >
+                    <FiYoutube />
+                    <span>Watch Video</span>
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Recipe Stats with Icons */}
@@ -204,7 +270,7 @@ function RecipeDetail() {
             {/* Description */}
             <div className="recipe-detail-summary">
               <h3>About this recipe</h3>
-              <p className="summary-content">{recipe.description}</p>
+              <p className="summary-content">{stripHtml(recipe.description || recipe.summary)}</p>
             </div>
 
             {/* Ingredients */}
@@ -212,18 +278,38 @@ function RecipeDetail() {
               <h3>Ingredients</h3>
               <div className="ingredients-container">
                 <ul className="ingredients-list">
-                  {recipe.ingredients?.map((ingredient, index) => (
-                    <li 
-                      key={index} 
-                      className={`ingredient-item ${checkedIngredients.includes(index) ? 'checked' : ''}`}
-                      onClick={() => toggleIngredient(index)}
-                    >
-                      <div className="ingredient-checkbox">
-                        {checkedIngredients.includes(index) && <FiCheck />}
-                      </div>
-                      <span className="ingredient-name">{ingredient}</span>
-                    </li>
-                  ))}
+                  {recipe.ingredients?.map((ingredient, index) => {
+                    let ingredientText = ''
+                    if (typeof ingredient === 'string') {
+                      ingredientText = ingredient
+                    } else if (ingredient && typeof ingredient === 'object') {
+                      // Handle Spoonacular API format
+                      if (ingredient.original) {
+                        ingredientText = ingredient.original
+                      } else if (ingredient.name) {
+                        ingredientText = ingredient.name
+                      } else {
+                        ingredientText = JSON.stringify(ingredient)
+                      }
+                    } else {
+                      ingredientText = String(ingredient)
+                    }
+                    
+                    return (
+                      <li 
+                        key={index} 
+                        className={`ingredient-item ${checkedIngredients.includes(index) ? 'checked' : ''}`}
+                        onClick={() => toggleIngredient(index)}
+                      >
+                        <div className="ingredient-checkbox">
+                          {checkedIngredients.includes(index) && <FiCheck />}
+                        </div>
+                        <span className="ingredient-name">
+                          {stripHtml(ingredientText)}
+                        </span>
+                      </li>
+                    )
+                  })}
                 </ul>
               </div>
             </div>
@@ -241,7 +327,7 @@ function RecipeDetail() {
               </div>
               <div className={`instructions-content ${expandedInstructions ? 'expanded' : 'collapsed'}`}>
                 <div className="instructions-text">
-                  {recipe.instructions}
+                  {stripHtml(recipe.instructions)}
                 </div>
               </div>
             </div>
