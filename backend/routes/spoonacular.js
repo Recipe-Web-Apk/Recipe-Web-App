@@ -10,22 +10,52 @@ router.get('/test', (req, res) => {
 
 // Proxy endpoint for searching recipes
 router.get('/search', async (req, res) => {
-  const { query, offset = 0 } = req.query;
+  const { 
+    query, 
+    offset = 0, 
+    sort = 'relevance',
+    cuisine,
+    diet,
+    intolerances,
+    maxReadyTime,
+    minProtein,
+    maxCalories
+  } = req.query;
+  
   if (!query) return res.status(400).json({ error: 'Query is required' });
 
   const SPOONACULAR_API_KEY = process.env.SPOONACULAR_API_KEY;
   console.log('API Key:', SPOONACULAR_API_KEY ? 'Present' : 'Missing');
   console.log('Query:', query);
   console.log('Offset:', offset);
+  console.log('Filters:', { sort, cuisine, diet, intolerances, maxReadyTime, minProtein, maxCalories });
 
   try {
+    // Build params object, only including defined values
+    const params = {
+      query,
+      apiKey: SPOONACULAR_API_KEY,
+      number: 12, // Increased number of results
+      offset: parseInt(offset),
+      addRecipeInformation: true,
+      fillIngredients: true,
+      instructionsRequired: true
+    };
+
+    // Add optional parameters if they exist
+    if (sort && sort !== 'relevance') {
+      params.sort = sort;
+      params.sortDirection = sort === 'time' ? 'asc' : 'desc';
+    }
+    if (cuisine) params.cuisine = cuisine;
+    if (diet) params.diet = diet;
+    if (intolerances) params.intolerances = intolerances;
+    if (maxReadyTime) params.maxReadyTime = parseInt(maxReadyTime);
+    if (minProtein) params.minProtein = parseInt(minProtein);
+    if (maxCalories) params.maxCalories = parseInt(maxCalories);
+
     const response = await axios.get('https://api.spoonacular.com/recipes/complexSearch', {
-      params: {
-        query,
-        apiKey: SPOONACULAR_API_KEY,
-        number: 10, // number of results
-        offset: parseInt(offset),
-      },
+      params
     });
     res.json(response.data);
   } catch (error) {
