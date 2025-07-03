@@ -136,7 +136,7 @@ function RecipeForm() {
         image: imagePreview || null
       }
 
-      const response = await fetch('http://localhost:5000/api/recipe', {
+      const response = await fetch('http://localhost:5000/api/recipes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

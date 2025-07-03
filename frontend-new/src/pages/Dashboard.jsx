@@ -5,20 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 
 function Dashboard() {
   const { user, changePassword, updateProfile } = useAuth()
-  const [savedRecipes, setSavedRecipes] = useState([
-    {
-      id: 1,
-      title: 'Jollof Rice',
-      calories: 450,
-      image: '/images/jollof.jpg'
-    },
-    {
-      id: 2,
-      title: 'Chicken Stew',
-      calories: 520,
-      image: '/images/stew.jpg'
-    }
-  ])
+  const [savedRecipes, setSavedRecipes] = useState([])
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [changeStatus, setChangeStatus] = useState(null)
