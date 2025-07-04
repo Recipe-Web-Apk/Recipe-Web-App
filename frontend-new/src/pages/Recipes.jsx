@@ -101,31 +101,68 @@ function Recipes() {
       }
       let newRecipes = []
       let total = 0
+      
       if (dataSource === 'spoonacular') {
-        const params = new URLSearchParams({
-          query: queryToUse,
-          offset: currentOffset.toString(),
-          sort: sortBy,
-          ...filters
-        })
-        const url = `${SPOONACULAR_ENDPOINTS.SEARCH}?${params}`
-        const response = await fetch(url)
-        const data = await response.json()
-        newRecipes = data.results || []
-        total = data.totalResults || 0
+        // Fetch from both Spoonacular and user-created recipes
+        const [spoonacularRecipes, userRecipes] = await Promise.all([
+          // Fetch Spoonacular recipes
+          (async () => {
+            try {
+              const params = new URLSearchParams({
+                query: queryToUse,
+                offset: currentOffset.toString(),
+                sort: sortBy,
+                ...filters
+              })
+              const url = `${SPOONACULAR_ENDPOINTS.SEARCH}?${params}`
+              const response = await fetch(url)
+              const data = await response.json()
+              return data.results || []
+            } catch (error) {
+              console.error('Error fetching Spoonacular recipes:', error)
+              return []
+            }
+          })(),
+          // Fetch user-created recipes
+          (async () => {
+            try {
+              const { data, error } = await supabase
+                .from('recipes')
+                .select('*')
+                .ilike('title', `%${queryToUse}%`)
+                .order('created_at', { ascending: false })
+              if (error) throw error
+              return data || []
+            } catch (error) {
+              console.error('Error fetching user recipes:', error)
+              return []
+            }
+          })()
+        ])
+
+        // Combine and sort recipes (user recipes first, then Spoonacular)
+        const combinedRecipes = [...userRecipes, ...spoonacularRecipes]
+        
+        // Apply pagination
+        const startIndex = currentOffset
+        const endIndex = startIndex + DEFAULTS.RECIPES_PER_PAGE
+        newRecipes = combinedRecipes.slice(startIndex, endIndex)
+        total = combinedRecipes.length
+        
       } else {
-        // Supabase search for My Recipes
+        // My Recipes mode - only show user-created recipes
         let supabaseQuery = supabase
           .from('recipes')
           .select('*', { count: 'exact' })
           .ilike('title', `%${queryToUse}%`)
           .range(currentOffset, currentOffset + DEFAULTS.RECIPES_PER_PAGE - 1)
-          .order('id', { ascending: false })
+          .order('created_at', { ascending: false })
         const { data, error, count } = await supabaseQuery
         if (error) throw error
         newRecipes = data || []
         total = count || 0
       }
+      
       if (reset) {
         setRecipes(newRecipes)
       } else {
@@ -256,9 +293,14 @@ function Recipes() {
       </div>
       <div className="recipes-header">
         <div>
-          <h1 className="recipes-title">Explore Recipes</h1>
+          <h1 className="recipes-title">
+            {dataSource === 'spoonacular' ? 'Explore Recipes' : 'My Recipes'}
+          </h1>
           <p className="recipes-subtitle">
-            {totalResults > 0 ? `Found ${totalResults} delicious recipes` : 'Discover recipes from around the world'}
+            {dataSource === 'spoonacular' 
+              ? (totalResults > 0 ? `Found ${totalResults} delicious recipes (including yours!)` : 'Discover recipes from around the world and your own creations')
+              : (totalResults > 0 ? `Found ${totalResults} of your recipes` : 'Your personal recipe collection')
+            }
           </p>
         </div>
         {isAuthenticated && (

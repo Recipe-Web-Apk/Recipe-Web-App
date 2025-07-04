@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../supabaseClient'
 import BasicInfoSection from '../components/BasicInfoSection'
@@ -8,12 +8,15 @@ import IngredientsSection from '../components/IngredientsSection'
 import InstructionsSection from '../components/InstructionsSection'
 import FormActions from '../components/FormActions'
 
-function RecipeForm() {
+function EditRecipe() {
+  const { id } = useParams()
   const navigate = useNavigate()
   const { token } = useAuth()
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [imagePreview, setImagePreview] = useState(null)
   const [submitError, setSubmitError] = useState(null)
+  const [recipe, setRecipe] = useState(null)
   
   const [form, setForm] = useState({
     title: '',
@@ -34,6 +37,57 @@ function RecipeForm() {
 
   const difficultyOptions = ['Easy', 'Medium', 'Hard']
   const categoryOptions = ['Breakfast', 'Lunch', 'Dinner', 'Dessert', 'Snack', 'Appetizer']
+
+  useEffect(() => {
+    fetchRecipe()
+  }, [id])
+
+  async function fetchRecipe() {
+    try {
+      setLoading(true)
+      const { data, error } = await supabase
+        .from('recipes')
+        .select('*')
+        .eq('id', id)
+        .single()
+
+      if (error) {
+        console.error('Error fetching recipe:', error)
+        setSubmitError('Recipe not found or you do not have permission to edit it')
+        return
+      }
+
+      setRecipe(data)
+      
+      // Parse ingredients and instructions
+      const ingredients = Array.isArray(data.ingredients) ? data.ingredients : [data.ingredients || '']
+      const instructions = data.instructions ? data.instructions.split('\n\n') : ['']
+      
+      setForm({
+        title: data.title || '',
+        description: data.description || '',
+        ingredients: ingredients.length > 0 ? ingredients : [''],
+        instructions: instructions.length > 0 ? instructions : [''],
+        difficulty: data.difficulty || '',
+        category: data.category || '',
+        servings: data.servings || '',
+        calories: data.calories || '',
+        cookTime: data.cookTime || '',
+        prepTime: data.prepTime || '',
+        tags: data.tags || '',
+        youtube_url: data.youtube_url || ''
+      })
+
+      if (data.image) {
+        setImagePreview(data.image)
+      }
+    } catch (error) {
+      console.error('Error fetching recipe:', error)
+      setSubmitError('Failed to load recipe')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   function validateForm() {
     const newErrors = {}
@@ -119,28 +173,16 @@ function RecipeForm() {
     }
 
     if (!token) {
-      setSubmitError('You must be logged in to create a recipe')
+      setSubmitError('You must be logged in to edit a recipe')
       return
     }
 
-    setLoading(true)
+    setSaving(true)
     setSubmitError(null)
     
     try {
       const validIngredients = form.ingredients.filter(ing => ing.trim() !== '')
       const validInstructions = form.instructions.filter(inst => inst.trim() !== '')
-      
-      // Extract user ID from JWT token
-      let userId = null
-      try {
-        const tokenParts = token.split('.')
-        if (tokenParts.length === 3) {
-          const payload = JSON.parse(atob(tokenParts[1]))
-          userId = payload.sub
-        }
-      } catch (error) {
-        console.error('Error parsing token:', error)
-      }
       
       const recipeData = {
         title: form.title.trim(),
@@ -149,7 +191,6 @@ function RecipeForm() {
         instructions: validInstructions.join('\n\n'),
         image: imagePreview || null,
         youtube_url: form.youtube_url.trim() || null,
-        user_id: userId,
         prepTime: form.prepTime ? parseInt(form.prepTime) : null,
         cookTime: form.cookTime ? parseInt(form.cookTime) : null,
         servings: form.servings ? parseInt(form.servings) : null,
@@ -161,28 +202,48 @@ function RecipeForm() {
 
       const { data, error } = await supabase
         .from('recipes')
-        .insert([recipeData])
+        .update(recipeData)
+        .eq('id', id)
         .select()
 
       if (error) {
         console.error('Supabase error:', error)
-        setSubmitError(error.message || 'Failed to create recipe')
+        setSubmitError(error.message || 'Failed to update recipe')
       } else {
-        alert('Recipe created successfully!')
-        navigate('/recipes')
+        alert('Recipe updated successfully!')
+        navigate('/dashboard')
       }
     } catch (error) {
-      console.error('Error creating recipe:', error)
+      console.error('Error updating recipe:', error)
       setSubmitError('Network error. Please try again.')
     } finally {
-      setLoading(false)
+      setSaving(false)
     }
   }
 
   function handleCancel() {
     if (window.confirm('Are you sure you want to cancel? All changes will be lost.')) {
-      navigate('/recipes')
+      navigate('/dashboard')
     }
+  }
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '2rem' }}>
+        <div style={{ fontSize: '1.1rem', color: '#666' }}>Loading recipe...</div>
+      </div>
+    )
+  }
+
+  if (submitError && !recipe) {
+    return (
+      <div style={{ textAlign: 'center', padding: '2rem' }}>
+        <div style={{ color: '#ff4444', fontSize: '1.1rem', marginBottom: '1rem' }}>{submitError}</div>
+        <button onClick={() => navigate('/dashboard')} style={{ padding: '0.5rem 1rem' }}>
+          Back to Dashboard
+        </button>
+      </div>
+    )
   }
 
   const isValid = Object.keys(validateForm()).length === 0
@@ -190,7 +251,7 @@ function RecipeForm() {
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: '2rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <h1>Create New Recipe</h1>
+        <h1>Edit Recipe</h1>
         <button 
           onClick={handleCancel}
           style={{ 
@@ -250,14 +311,13 @@ function RecipeForm() {
 
         <FormActions 
           isValid={isValid}
-          loading={loading}
+          loading={saving}
           handleCancel={handleCancel}
-          submitText="Create Recipe"
-          loadingText="Creating..."
+          submitText="Update Recipe"
         />
       </form>
     </div>
   )
 }
 
-export default RecipeForm 
+export default EditRecipe 

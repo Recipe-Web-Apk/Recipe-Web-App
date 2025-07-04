@@ -1,6 +1,6 @@
 import React from 'react'
 
-function FormActions({ isValid, loading, handleCancel }) {
+function FormActions({ isValid, loading, handleCancel, submitText = 'Create Recipe', loadingText = 'Creating...' }) {
   return (
     <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
       <button
@@ -29,7 +29,7 @@ function FormActions({ isValid, loading, handleCancel }) {
           cursor: isValid && !loading ? 'pointer' : 'not-allowed' 
         }}
       >
-        {loading ? 'Creating...' : 'Create Recipe'}
+        {loading ? loadingText : submitText}
       </button>
     </div>
   )
