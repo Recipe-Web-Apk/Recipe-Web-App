@@ -7,6 +7,7 @@ import Login from './pages/Login';
 import Recipes from './pages/Recipes';
 import RecipeDetail from './pages/RecipeDetail';
 import RecipeForm from './pages/RecipeForm';
+import EditRecipe from './pages/EditRecipe';
 import Dashboard from './pages/Dashboard';
 import Navbar from './components/Navbar';
 
@@ -22,6 +23,7 @@ function App() {
           <Route path="/recipes" element={<Recipes />} />
           <Route path="/recipes/:id" element={<RecipeDetail />} />
           <Route path="/recipes/create" element={<RecipeForm />} />
+          <Route path="/recipes/edit/:id" element={<EditRecipe />} />
           <Route path="/dashboard" element={<Dashboard />} />
         </Routes>
       </Router>

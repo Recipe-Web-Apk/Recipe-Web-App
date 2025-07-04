@@ -11,7 +11,9 @@ import {
   FiChevronDown,
   FiChevronUp,
   FiPlay,
-  FiYoutube
+  FiYoutube,
+  FiCalendar,
+  FiZap
 } from 'react-icons/fi'
 import SimilarRecipes from '../components/SimilarRecipes'
 import { supabase } from '../supabaseClient'
@@ -230,20 +232,43 @@ function RecipeDetail() {
 
             {/* Recipe Stats with Icons */}
             <div className="recipe-detail-stats">
+              {/* First Row */}
               <div className="stat-item">
                 <FiUsers className="stat-icon" />
-                <span className="stat-label">Author</span>
-                <span className="stat-value">{recipe.user?.username || 'Unknown'}</span>
+                <span className="stat-label">Servings</span>
+                <span className="stat-value">{recipe.servings || recipe.yield || 'N/A'}</span>
+              </div>
+              <div className="stat-item">
+                <FiZap className="stat-icon" />
+                <span className="stat-label">Calories</span>
+                <span className="stat-value">{recipe.calories || recipe.nutrition?.nutrients?.find(n => n.name === 'Calories')?.amount || 'N/A'}</span>
+              </div>
+              <div className="stat-item">
+                <FiClock className="stat-icon" />
+                <span className="stat-label">Total Time</span>
+                <span className="stat-value">
+                  {(() => {
+                    const totalTime = (recipe.prepTime || 0) + (recipe.cookTime || 0) + (recipe.readyInMinutes || 0)
+                    return totalTime > 0 ? `${totalTime} min` : 'N/A'
+                  })()}
+                </span>
+              </div>
+              
+              {/* Second Row */}
+              <div className="stat-item">
+                <FiCalendar className="stat-icon" />
+                <span className="stat-label">Prep Time</span>
+                <span className="stat-value">{recipe.prepTime ? `${recipe.prepTime} min` : 'N/A'}</span>
+              </div>
+              <div className="stat-item">
+                <FiClock className="stat-icon" />
+                <span className="stat-label">Cook Time</span>
+                <span className="stat-value">{recipe.cookTime ? `${recipe.cookTime} min` : 'N/A'}</span>
               </div>
               <div className="stat-item">
                 <FiTarget className="stat-icon" />
                 <span className="stat-label">Difficulty</span>
                 <span className="stat-value">{getDifficulty()}</span>
-              </div>
-              <div className="stat-item">
-                <FiClock className="stat-icon" />
-                <span className="stat-label">Ingredients</span>
-                <span className="stat-value">{recipe.ingredients?.length || 0}</span>
               </div>
             </div>
 
@@ -272,6 +297,27 @@ function RecipeDetail() {
               <h3>About this recipe</h3>
               <p className="summary-content">{stripHtml(recipe.description || recipe.summary)}</p>
             </div>
+
+            {/* Recipe Details */}
+            {(recipe.category || recipe.cuisine || recipe.diet || recipe.tags) && (
+              <div className="recipe-detail-section">
+                <h3>Recipe Details</h3>
+                <div className="recipe-tags">
+                  {recipe.category && (
+                    <span className="tag category-tag">{recipe.category}</span>
+                  )}
+                  {recipe.cuisine && (
+                    <span className="tag cuisine-tag">{recipe.cuisine}</span>
+                  )}
+                  {recipe.diet && (
+                    <span className="tag diet-tag">{recipe.diet}</span>
+                  )}
+                  {recipe.tags && recipe.tags.split(',').map((tag, index) => (
+                    <span key={index} className="tag">{tag.trim()}</span>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Ingredients */}
             <div className="recipe-detail-section">
@@ -331,6 +377,25 @@ function RecipeDetail() {
                 </div>
               </div>
             </div>
+
+            {/* Nutrition Information */}
+            {recipe.nutrition?.nutrients && (
+              <div className="recipe-detail-section">
+                <h3>Nutrition Information</h3>
+                <div className="nutrition-grid">
+                  {recipe.nutrition.nutrients
+                    .filter(nutrient => ['Calories', 'Protein', 'Fat', 'Carbohydrates', 'Fiber', 'Sugar'].includes(nutrient.name))
+                    .map((nutrient, index) => (
+                      <div key={index} className="nutrition-item">
+                        <span className="nutrition-name">{nutrient.name}</span>
+                        <span className="nutrition-value">
+                          {Math.round(nutrient.amount)}{nutrient.unit}
+                        </span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
