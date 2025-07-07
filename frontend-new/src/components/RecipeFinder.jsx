@@ -1,195 +1,66 @@
-import React, { useState } from 'react'
-import IngredientInputList from './IngredientInputList'
-import CalorieRangeInput from './CalorieRangeInput'
-import SearchResults from './SearchResults'
-import './RecipeFinder.css'
+import React, { useState } from 'react';
+import './RecipeFinder.css';
 
-function RecipeFinder() {
-  const [ingredients, setIngredients] = useState(['', '', '', ''])
-  const [minCalories, setMinCalories] = useState('')
-  const [maxCalories, setMaxCalories] = useState('')
-  const [errors, setErrors] = useState({})
-  const [loading, setLoading] = useState(false)
-  const [searchPerformed, setSearchPerformed] = useState(false)
-  const [results, setResults] = useState([])
-  const [offset, setOffset] = useState(0)
-  const [hasMore, setHasMore] = useState(true)
-  const [loadingMore, setLoadingMore] = useState(false)
+function RecipeFinder({ isOpen, onClose, onSearch }) {
+  const [query, setQuery] = useState('');
+  const [diet, setDiet] = useState('');
+  const [error, setError] = useState('');
 
-  function validateForm() {
-    const newErrors = {}
-    
-    const validIngredients = ingredients.filter(ing => ing.trim() !== '')
-    if (validIngredients.length < 4) {
-      newErrors.ingredients = 'Please enter at least 4 ingredients'
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!query.trim()) {
+      setError('Please enter a search term.');
+      return;
     }
-    
-    if (!minCalories || !maxCalories) {
-      newErrors.calories = 'Please enter both minimum and maximum calories'
-    } else if (parseInt(minCalories) > parseInt(maxCalories)) {
-      newErrors.calories = 'Minimum calories cannot be greater than maximum calories'
-    }
-    
-    return newErrors
-  }
+    setError('');
+    onSearch({ query, diet });
+  };
 
-  async function searchRecipes(isLoadMore = false) {
-    const validationErrors = validateForm()
-    
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors)
-      return
-    }
-
-    if (isLoadMore) {
-      setLoadingMore(true)
-    } else {
-      setLoading(true)
-      setSearchPerformed(true)
-      setOffset(0)
-      setResults([])
-    }
-    
-    try {
-      const validIngredients = ingredients.filter(ing => ing.trim() !== '')
-      const query = validIngredients.join(', ')
-      const url = `http://localhost:5000/api/spoonacular/search?query=${encodeURIComponent(query)}&offset=${isLoadMore ? offset : 0}`
-      
-      console.log('Making request to:', url)
-      
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-      
-      console.log('Response status:', response.status)
-      console.log('Response headers:', response.headers)
-      
-      const data = await response.json()
-      console.log('Response data:', data)
-      
-      if (response.ok) {
-        const newResults = data.results || []
-        
-        if (isLoadMore) {
-          setResults(prev => [...prev, ...newResults])
-        } else {
-          setResults(newResults)
-        }
-        
-        setOffset(isLoadMore ? offset + 10 : 10)
-        setHasMore(newResults.length === 10) // If we got 10 results, there might be more
-      } else {
-        console.error('API Error:', data)
-        setErrors({ api: `Failed to fetch recipes: ${data.error || 'Unknown error'}` })
-      }
-    } catch (error) {
-      console.error('Network Error:', error)
-      setErrors({ api: `Network error: ${error.message}` })
-    } finally {
-      setLoading(false)
-      setLoadingMore(false)
-    }
-  }
-
-  function loadMore() {
-    searchRecipes(true)
-  }
-
-  function clearForm() {
-    setIngredients(['', '', '', ''])
-    setMinCalories('')
-    setMaxCalories('')
-    setErrors({})
-    setSearchPerformed(false)
-    setResults([])
-    setOffset(0)
-    setHasMore(true)
-  }
-
-  const isValid = Object.keys(validateForm()).length === 0
+  if (!isOpen) return null;
 
   return (
-    <div className="recipe-finder">
-      <div className="recipe-finder-container">
-        <h2 className="recipe-finder-title">
-          Recipe Finder
-        </h2>
-        <p className="recipe-finder-description">
-          Enter at least 4 ingredients and a calorie range to discover recipes tailored to your needs.
-        </p>
-
-        <div className="recipe-finder-form">
-          <div className="recipe-finder-form-content">
-            <IngredientInputList 
-              ingredients={ingredients}
-              setIngredients={setIngredients}
-              errors={errors}
-              setErrors={setErrors}
+    <div className="recipe-finder-modal" role="dialog" aria-modal="true" aria-label="Recipe Finder">
+      <div className="recipe-finder-content">
+        <button className="recipe-finder-close" onClick={onClose} aria-label="Close Recipe Finder">×</button>
+        <h2 className="recipe-finder-title">Find a Recipe</h2>
+        <form className="recipe-finder-form" onSubmit={handleSubmit} autoComplete="off">
+          <div>
+            <label className="recipe-finder-label" htmlFor="finder-query">Search</label>
+            <input
+              id="finder-query"
+              className="recipe-finder-input"
+              type="text"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder="e.g. pasta, chicken, vegan..."
+              autoFocus
             />
-
-            <CalorieRangeInput 
-              minCalories={minCalories}
-              maxCalories={maxCalories}
-              setMinCalories={setMinCalories}
-              setMaxCalories={setMaxCalories}
-              errors={errors}
-              setErrors={setErrors}
-            />
-
-            <div className="recipe-finder-actions">
-              <button
-                onClick={clearForm}
-                className="btn-clear"
-              >
-                Clear
-              </button>
-              <button
-                onClick={() => searchRecipes(false)}
-                disabled={!isValid || loading}
-                className="btn-search"
-              >
-                {loading ? 'Searching...' : 'Find Recipes'}
-              </button>
-            </div>
           </div>
-        </div>
-
-        {errors.api && (
-          <div className="error-message">
-            {errors.api}
-          </div>
-        )}
-
-        {loading && (
-          <div className="loading-message">
-            <div className="loading-message-text">
-              Searching for recipes...
-            </div>
-          </div>
-        )}
-
-        <SearchResults 
-          results={results}
-          searchPerformed={searchPerformed}
-        />
-
-        {hasMore && results.length > 0 && (
-          <div className="load-more-container">
-            <button
-              onClick={loadMore}
-              disabled={loadingMore}
-              className="btn-load-more"
+          <div>
+            <label className="recipe-finder-label" htmlFor="finder-diet">Diet (optional)</label>
+            <select
+              id="finder-diet"
+              className="recipe-finder-select"
+              value={diet}
+              onChange={e => setDiet(e.target.value)}
             >
-              {loadingMore ? 'Loading...' : 'Load More Recipes'}
-            </button>
+              <option value="">Any</option>
+              <option value="vegetarian">Vegetarian</option>
+              <option value="vegan">Vegan</option>
+              <option value="gluten free">Gluten Free</option>
+              <option value="ketogenic">Ketogenic</option>
+              <option value="pescatarian">Pescatarian</option>
+            </select>
           </div>
-        )}
+          {error && <div className="recipe-finder-error">{error}</div>}
+          <div className="recipe-finder-actions">
+            <button type="button" className="recipe-finder-btn" onClick={onClose}>Cancel</button>
+            <button type="submit" className="recipe-finder-btn">Search</button>
+          </div>
+        </form>
       </div>
     </div>
-  )
+  );
 }
 
-export default RecipeFinder 
+export default RecipeFinder; 
