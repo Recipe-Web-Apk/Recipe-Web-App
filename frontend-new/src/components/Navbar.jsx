@@ -1,45 +1,52 @@
-import { Link } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
-import './Navbar.css'
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import './Navbar.css';
 
-function Navbar() {
-  const { user, logout, isAuthenticated } = useAuth()
+function Navbar({ user, onLogout }) {
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  const handleLogout = () => {
-    logout()
-  }
+  const handleHamburger = () => setMenuOpen((open) => !open);
+  const closeMenu = () => setMenuOpen(false);
 
   return (
     <nav className="navbar">
-      <div className="navbar-brand">
-        <Link to="/" className="navbar-logo">
-          Recipe Buddy
+      <Link to="/" className="navbar-logo" onClick={closeMenu}>
+        RecipeApp
+      </Link>
+      <button className="navbar-hamburger" onClick={handleHamburger} aria-label="Toggle navigation">
+        <span aria-hidden="true">☰</span>
+      </button>
+      <div className={`navbar-links${menuOpen ? ' open' : ''}`}>
+        <Link to="/" className="navbar-link" onClick={closeMenu}>
+          Home
         </Link>
+        <Link to="/recipes" className="navbar-link" onClick={closeMenu}>
+          Recipes
+        </Link>
+        <Link to="/explore" className="navbar-link" onClick={closeMenu}>
+          Explore
+        </Link>
+        {user && (
+          <Link to="/dashboard" className="navbar-link" onClick={closeMenu}>
+            Dashboard
+          </Link>
+        )}
       </div>
-      
-      <div className="navbar-menu">
-        <Link to="/" className="navbar-link">Home</Link>
-        <Link to="/recipes" className="navbar-link">Recipes</Link>
-        
-        {isAuthenticated ? (
+      <div className="navbar-actions">
+        {user ? (
           <>
-            <Link to="/dashboard" className="navbar-link">Dashboard</Link>
-            <div className="navbar-user">
-              <span className="navbar-username">Hi, {user?.username}</span>
-              <button onClick={handleLogout} className="navbar-logout">
-                Logout
-              </button>
-            </div>
+            <span className="navbar-link" style={{ cursor: 'default', opacity: 0.8 }}>{user.email}</span>
+            <button className="navbar-btn" onClick={onLogout}>Logout</button>
           </>
         ) : (
-          <div className="navbar-auth">
-            <Link to="/login" className="navbar-link">Login</Link>
-            <Link to="/register" className="navbar-button">Sign Up</Link>
-          </div>
+          <>
+            <Link to="/login" className="navbar-btn">Login</Link>
+            <Link to="/register" className="navbar-btn">Sign Up</Link>
+          </>
         )}
       </div>
     </nav>
-  )
+  );
 }
 
-export default Navbar 
+export default Navbar; 
