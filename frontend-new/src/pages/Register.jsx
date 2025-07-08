@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import './Login.css'
+import './Register.css'
 
 function Register() {
   const [form, setForm] = useState({ username: '', email: '', password: '', confirm: '' })
@@ -56,14 +56,14 @@ function Register() {
   const isValid = Object.keys(validate(form)).length === 0 && Object.values(form).every(Boolean)
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <h2 className="auth-title">Create Account</h2>
-        <p className="auth-subtitle">Join our recipe community</p>
+    <div className="register-container">
+      <div className="register-card">
+        <h2 className="register-title">Create Account</h2>
+        <p className="register-subtitle">Join our recipe community</p>
         
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-group">
-            <label htmlFor="username" className="form-label">Username</label>
+        <form onSubmit={handleSubmit} className="register-form">
+          <div className="register-form-group">
+            <label htmlFor="username" className="register-label">Username</label>
             <input
               type="text"
               id="username"
@@ -71,14 +71,14 @@ function Register() {
               placeholder="Choose a username"
               value={form.username}
               onChange={handleChange}
-              className="form-input"
+              className="register-input"
               required
             />
-            {errors.username && <div className="auth-error">{errors.username}</div>}
+            {errors.username && <div className="register-error">{errors.username}</div>}
           </div>
           
-          <div className="form-group">
-            <label htmlFor="email" className="form-label">Email</label>
+          <div className="register-form-group">
+            <label htmlFor="email" className="register-label">Email</label>
             <input
               type="email"
               id="email"
@@ -86,14 +86,14 @@ function Register() {
               placeholder="Enter your email"
               value={form.email}
               onChange={handleChange}
-              className="form-input"
+              className="register-input"
               required
             />
-            {errors.email && <div className="auth-error">{errors.email}</div>}
+            {errors.email && <div className="register-error">{errors.email}</div>}
           </div>
           
-          <div className="form-group">
-            <label htmlFor="password" className="form-label">Password</label>
+          <div className="register-form-group">
+            <label htmlFor="password" className="register-label">Password</label>
             <input
               type="password"
               id="password"
@@ -101,14 +101,14 @@ function Register() {
               placeholder="Create a password"
               value={form.password}
               onChange={handleChange}
-              className="form-input"
+              className="register-input"
               required
             />
-            {errors.password && <div className="auth-error">{errors.password}</div>}
+            {errors.password && <div className="register-error">{errors.password}</div>}
           </div>
           
-          <div className="form-group">
-            <label htmlFor="confirm" className="form-label">Confirm Password</label>
+          <div className="register-form-group">
+            <label htmlFor="confirm" className="register-label">Confirm Password</label>
             <input
               type="password"
               id="confirm"
@@ -116,37 +116,37 @@ function Register() {
               placeholder="Confirm your password"
               value={form.confirm}
               onChange={handleChange}
-              className="form-input"
+              className="register-input"
               required
             />
-            {errors.confirm && <div className="auth-error">{errors.confirm}</div>}
+            {errors.confirm && <div className="register-error">{errors.confirm}</div>}
           </div>
           
           <button 
             type="submit" 
-            className="auth-button"
+            className="register-button"
             disabled={!isValid || loading}
           >
             {loading ? 'Creating Account...' : 'Create Account'}
           </button>
           
           {errors.general && (
-            <div className="auth-error">
+            <div className="register-error">
               {errors.general}
             </div>
           )}
           
           {success && (
-            <div className="auth-success">
+            <div className="register-success">
               {success}
             </div>
           )}
         </form>
         
-        <div className="auth-footer">
+        <div className="register-footer">
           <p>
             Already have an account?{' '}
-            <Link to="/login" className="auth-link">
+            <Link to="/login" className="register-link">
               Sign in here
             </Link>
           </p>

@@ -7,6 +7,7 @@ import RecipeStatsSection from '../components/RecipeStatsSection'
 import IngredientsSection from '../components/IngredientsSection'
 import InstructionsSection from '../components/InstructionsSection'
 import FormActions from '../components/FormActions'
+import './EditRecipe.css'
 
 function EditRecipe() {
   const { id } = useParams()
@@ -249,9 +250,9 @@ function EditRecipe() {
   const isValid = Object.keys(validateForm()).length === 0
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: '2rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <h1>Edit Recipe</h1>
+    <div className="edit-recipe-page">
+      <div className="edit-recipe-container">
+        <h1 className="edit-recipe-title">Edit Recipe</h1>
         <button 
           onClick={handleCancel}
           style={{ 
@@ -264,58 +265,106 @@ function EditRecipe() {
         >
           Cancel
         </button>
+
+        {submitError && <div className="edit-recipe-error">{submitError}</div>}
+
+        <form className="edit-recipe-form" onSubmit={handleSubmit}>
+          {/* Title */}
+          <label className="edit-recipe-label" htmlFor="title">Title</label>
+          <input
+            className="edit-recipe-input"
+            id="title"
+            name="title"
+            type="text"
+            value={form.title}
+            onChange={handleChange}
+            disabled={saving}
+            aria-invalid={!!errors.title}
+            aria-describedby={errors.title ? 'title-error' : undefined}
+          />
+          {errors.title && <div className="edit-recipe-error" id="title-error">{errors.title}</div>}
+
+          {/* Description */}
+          <label className="edit-recipe-label" htmlFor="description">Description</label>
+          <textarea
+            className="edit-recipe-textarea"
+            id="description"
+            name="description"
+            value={form.description}
+            onChange={handleChange}
+            disabled={saving}
+            aria-invalid={!!errors.description}
+            aria-describedby={errors.description ? 'description-error' : undefined}
+          />
+          {errors.description && <div className="edit-recipe-error" id="description-error">{errors.description}</div>}
+
+          {/* Ingredients */}
+          <IngredientsSection
+            ingredients={form.ingredients}
+            onIngredientChange={handleIngredientChange}
+            onAddIngredient={addIngredient}
+            onRemoveIngredient={removeIngredient}
+            error={errors.ingredients}
+            disabled={saving}
+          />
+
+          {/* Instructions */}
+          <InstructionsSection
+            instructions={form.instructions}
+            onInstructionChange={handleInstructionChange}
+            onAddInstruction={addInstruction}
+            onRemoveInstruction={removeInstruction}
+            error={errors.instructions}
+            disabled={saving}
+          />
+
+          {/* Stats */}
+          <RecipeStatsSection
+            form={form}
+            onChange={handleChange}
+            difficultyOptions={difficultyOptions}
+            categoryOptions={categoryOptions}
+            disabled={saving}
+          />
+
+          {/* YouTube URL */}
+          <label className="edit-recipe-label" htmlFor="youtube_url">YouTube Video URL</label>
+          <input
+            className="edit-recipe-input"
+            id="youtube_url"
+            name="youtube_url"
+            type="url"
+            value={form.youtube_url}
+            onChange={handleChange}
+            disabled={saving}
+          />
+
+          {/* Image Upload */}
+          <label className="edit-recipe-label" htmlFor="image">Image</label>
+          <input
+            className="edit-recipe-input"
+            id="image"
+            name="image"
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            disabled={saving}
+          />
+          {imagePreview && (
+            <img src={imagePreview} alt="Preview" style={{ maxWidth: '100%', borderRadius: 'var(--radius-lg)', marginTop: 'var(--spacing-md)' }} />
+          )}
+
+          {/* Actions */}
+          <div className="edit-recipe-actions">
+            <button type="button" className="edit-recipe-btn edit-recipe-cancel" onClick={handleCancel} disabled={saving}>
+              Cancel
+            </button>
+            <button type="submit" className="edit-recipe-btn" disabled={saving}>
+              {saving ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+        </form>
       </div>
-
-      {submitError && (
-        <div style={{ 
-          background: '#ffebee', 
-          color: '#c62828', 
-          padding: '1rem', 
-          borderRadius: 4, 
-          marginBottom: '1rem' 
-        }}>
-          {submitError}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-        <BasicInfoSection 
-          form={form}
-          errors={errors}
-          handleChange={handleChange}
-          imagePreview={imagePreview}
-          handleImageChange={handleImageChange}
-        />
-
-        <RecipeStatsSection 
-          form={form}
-          errors={errors}
-          handleChange={handleChange}
-        />
-
-        <IngredientsSection 
-          form={form}
-          errors={errors}
-          handleIngredientChange={handleIngredientChange}
-          addIngredient={addIngredient}
-          removeIngredient={removeIngredient}
-        />
-
-        <InstructionsSection 
-          form={form}
-          errors={errors}
-          handleInstructionChange={handleInstructionChange}
-          addInstruction={addInstruction}
-          removeInstruction={removeInstruction}
-        />
-
-        <FormActions 
-          isValid={isValid}
-          loading={saving}
-          handleCancel={handleCancel}
-          submitText="Update Recipe"
-        />
-      </form>
     </div>
   )
 }
