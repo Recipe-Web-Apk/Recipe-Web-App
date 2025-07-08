@@ -3,7 +3,6 @@ import UserInfoCard from '../components/UserInfoCard'
 import RecipeCard from '../components/RecipeCard'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../supabaseClient'
-import './Dashboard.css'
 
 function Dashboard() {
   const { user, changePassword, updateProfile, token } = useAuth()
@@ -153,68 +152,69 @@ function Dashboard() {
   }
 
   return (
-    <div className="dashboard-container">
-      <h1 className="dashboard-title">Dashboard</h1>
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '2rem' }}>
+      <h1 style={{ fontSize: '2rem', marginBottom: '2rem' }}>Dashboard</h1>
       <UserInfoCard user={user} onEditProfile={handleEditProfile} />
       {editing && (
-        <div className="dashboard-modal">
-          <form onSubmit={handleSaveProfile} className="dashboard-modal-form">
-            <h2 className="dashboard-form-title">Edit Profile</h2>
-            <div className="dashboard-form-group">
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <form onSubmit={handleSaveProfile} style={{ background: 'white', padding: '2rem', borderRadius: 8, minWidth: 320, boxShadow: '0 2px 12px rgba(0,0,0,0.15)' }}>
+            <h2 style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>Edit Profile</h2>
+            <div style={{ marginBottom: '1rem' }}>
               <input
                 type="text"
                 placeholder="Username"
                 value={editUsername}
                 onChange={e => setEditUsername(e.target.value)}
-                className="dashboard-input"
+                style={{ width: '100%', padding: '0.5rem' }}
                 required
               />
             </div>
-            <div className="dashboard-form-group">
+            <div style={{ marginBottom: '1rem' }}>
               <input
                 type="email"
                 placeholder="Email"
                 value={editEmail}
                 onChange={e => setEditEmail(e.target.value)}
-                className="dashboard-input"
+                style={{ width: '100%', padding: '0.5rem' }}
                 required
               />
             </div>
-            <div className="dashboard-btn-group">
-              <button type="submit" className="dashboard-btn">Save</button>
-              <button type="button" className="dashboard-btn" onClick={() => setEditing(false)}>Cancel</button>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button type="submit" style={{ padding: '0.5rem 1.5rem' }}>Save</button>
+              <button type="button" style={{ padding: '0.5rem 1.5rem' }} onClick={() => setEditing(false)}>Cancel</button>
             </div>
-            {editStatus && <div className={`dashboard-status${editStatus.includes('success') ? '' : ' error'}`}>{editStatus}</div>}
+            {editStatus && <div style={{ marginTop: '1rem', color: editStatus.includes('success') ? 'green' : 'red' }}>{editStatus}</div>}
           </form>
         </div>
       )}
-      <div className="dashboard-section" style={{ maxWidth: 400 }}>
-        <h2 className="dashboard-form-title">Change Password</h2>
+      <div style={{ margin: '2rem 0', maxWidth: 400 }}>
+        <h2 style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>Change Password</h2>
         <form onSubmit={handleChangePassword}>
-          <div className="dashboard-form-group">
+          <div style={{ marginBottom: '1rem' }}>
             <input
               type="password"
               placeholder="Current Password"
               value={currentPassword}
               onChange={e => setCurrentPassword(e.target.value)}
-              className="dashboard-input"
+              style={{ width: '100%', padding: '0.5rem' }}
               required
             />
           </div>
-          <div className="dashboard-form-group">
+          <div style={{ marginBottom: '1rem' }}>
             <input
               type="password"
               placeholder="New Password"
               value={newPassword}
               onChange={e => setNewPassword(e.target.value)}
-              className="dashboard-input"
+              style={{ width: '100%', padding: '0.5rem' }}
               required
             />
           </div>
-          <button type="submit" className="dashboard-btn">Change Password</button>
+          <button type="submit" style={{ padding: '0.5rem 1.5rem' }}>Change Password</button>
         </form>
-        {changeStatus && <div className={`dashboard-status${changeStatus.includes('success') ? '' : ' error'}`}>{changeStatus}</div>}
+        {changeStatus && <div style={{ marginTop: '1rem', color: changeStatus.includes('success') ? 'green' : 'red' }}>{changeStatus}</div>}
       </div>
+
       {loading ? (
         <div style={{ textAlign: 'center', padding: '2rem' }}>
           <div style={{ fontSize: '1.1rem', color: '#666' }}>Loading your recipes...</div>
@@ -222,7 +222,7 @@ function Dashboard() {
       ) : (
         <>
           {/* My Created Recipes */}
-          <div className="dashboard-section">
+          <div style={{ marginTop: '3rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <h2 style={{ fontSize: '1.3rem', margin: 0 }}>My Recipes</h2>
               <a 
@@ -244,7 +244,11 @@ function Dashboard() {
                 You haven't created any recipes yet. <a href="/recipes/create" style={{ color: '#007bff', textDecoration: 'none' }}>Create your first recipe!</a>
               </div>
             ) : (
-              <div className="dashboard-recipe-grid">
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                gap: '2rem'
+              }}>
                 {myRecipes.map(recipe => (
                   <RecipeCard
                     key={recipe.id}
@@ -258,15 +262,20 @@ function Dashboard() {
               </div>
             )}
           </div>
+
           {/* Saved Recipes */}
-          <div className="dashboard-section">
+          <div style={{ marginTop: '3rem' }}>
             <h2 style={{ fontSize: '1.3rem', marginBottom: '1rem' }}>Saved Recipes</h2>
             {savedRecipes.length === 0 ? (
               <div style={{ color: '#666', fontSize: '1.1rem', padding: '2rem 0' }}>
                 No saved recipes yet. Browse recipes and save your favorites!
               </div>
             ) : (
-              <div className="dashboard-recipe-grid">
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                gap: '2rem'
+              }}>
                 {savedRecipes.map(recipe => (
                   <RecipeCard
                     key={recipe.id}

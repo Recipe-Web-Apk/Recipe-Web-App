@@ -168,7 +168,7 @@ function RecipeForm() {
         console.error('Supabase error:', error)
         setSubmitError(error.message || 'Failed to create recipe')
       } else {
-      alert('Recipe created successfully!')
+        alert('Recipe created successfully!')
         navigate('/recipes')
       }
     } catch (error) {
