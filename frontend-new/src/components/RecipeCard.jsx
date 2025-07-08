@@ -1,101 +1,57 @@
-import React from 'react'
-import { useNavigate } from 'react-router-dom'
+import React from 'react';
+import { Link } from 'react-router-dom';
+import './RecipeCard.css';
 
-function RecipeCard({ recipe, allowDelete, onDelete, allowEdit, onEdit }) {
-  const navigate = useNavigate()
-
+function RecipeCard({ recipe, onDelete, onEdit, allowEdit, allowDelete, onFavorite, isFavorite }) {
   return (
-    <div style={{
-      border: '1px solid #eee',
-      borderRadius: 8,
-      overflow: 'hidden',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-      position: 'relative',
-      background: 'white',
-      cursor: 'pointer',
-      transition: 'transform 0.2s, box-shadow 0.2s'
-    }}
-      onClick={() => navigate(`/recipes/${recipe.id}`)}
-    >
-      {allowDelete && (
-        <button
-          onClick={e => {
-            e.stopPropagation()
-            onDelete(recipe.id)
-          }}
-          style={{
-            position: 'absolute',
-            top: 10,
-            right: 10,
-            background: '#ff4444',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 4,
-            padding: '0.3rem 0.7rem',
-            fontSize: '0.9rem',
-            cursor: 'pointer',
-            zIndex: 2
-          }}
-        >
-          Remove
-        </button>
-      )}
-      {allowEdit && (
-        <button
-          onClick={e => {
-            e.stopPropagation()
-            onEdit()
-          }}
-          style={{
-            position: 'absolute',
-            top: 10,
-            right: allowDelete ? 80 : 10,
-            background: '#007bff',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 4,
-            padding: '0.3rem 0.7rem',
-            fontSize: '0.9rem',
-            cursor: 'pointer',
-            zIndex: 2
-          }}
-        >
-          Edit
-        </button>
-      )}
-      <img
-        src={recipe.image}
-        alt={recipe.title || recipe.name}
-        style={{ width: '100%', height: 180, objectFit: 'cover' }}
-      />
-      <div style={{ padding: '1rem' }}>
-        <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '1.1rem' }}>{recipe.title || recipe.name}</h4>
-        <div style={{ color: '#666', fontSize: '0.95rem', marginBottom: '0.5rem' }}>
-          {recipe.calories ? `Calories: ${recipe.calories}` : 'User Recipe'}
+    <article className="recipe-card" tabIndex={0} aria-label={recipe.title}>
+      <Link to={`/recipes/${recipe.id}`} tabIndex={-1}>
+        <img
+          src={recipe.image || 'https://via.placeholder.com/400x300?text=No+Image'}
+          alt={recipe.title}
+          className="recipe-card-image"
+        />
+      </Link>
+      <div className="recipe-card-body">
+        <h2 className="recipe-card-title" title={recipe.title}>{recipe.title}</h2>
+        <div className="recipe-card-meta">
+          {recipe.readyInMinutes && <span>⏱ {recipe.readyInMinutes} min</span>}
+          {recipe.servings && <span>🍽 {recipe.servings} servings</span>}
         </div>
-        {/* Show YouTube icon if recipe has YouTube URL */}
-        {recipe.youtube_url && (
-          <div style={{ 
-            position: 'absolute', 
-            top: 10, 
-            left: 10, 
-            background: 'rgba(255, 0, 0, 0.9)', 
-            color: 'white', 
-            borderRadius: '50%', 
-            width: 24, 
-            height: 24, 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            fontSize: '12px',
-            zIndex: 2
-          }}>
-            ▶
+        {recipe.summary && (
+          <div className="recipe-card-description">
+            {recipe.summary.replace(/<[^>]+>/g, '').slice(0, 120)}{recipe.summary.length > 120 ? '...' : ''}
           </div>
         )}
+        <div className="recipe-card-actions">
+          <Link to={`/recipes/${recipe.id}`} className="recipe-card-btn">
+            View
+          </Link>
+          {allowEdit && (
+            <button className="recipe-card-btn" onClick={() => onEdit(recipe.id)}>
+              Edit
+            </button>
+          )}
+          {allowDelete && (
+            <button className="recipe-card-btn" onClick={() => onDelete(recipe.id)}>
+              Delete
+            </button>
+          )}
+          {onFavorite && (
+            <button
+              className={`recipe-card-favorite${isFavorite ? ' filled' : ''}`}
+              onClick={() => onFavorite(recipe.id)}
+              aria-label={isFavorite ? 'Unfavorite' : 'Favorite'}
+              title={isFavorite ? 'Unfavorite' : 'Favorite'}
+              type="button"
+            >
+              {isFavorite ? '♥' : '♡'}
+            </button>
+          )}
+        </div>
       </div>
-    </div>
-  )
+    </article>
+  );
 }
 
-export default RecipeCard 
+export default RecipeCard; 

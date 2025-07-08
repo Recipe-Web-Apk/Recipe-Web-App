@@ -19,47 +19,39 @@ import SimilarRecipes from '../components/SimilarRecipes'
 import { supabase } from '../supabaseClient'
 import './RecipeDetail.css'
 
-function isSpoonacularId(id) {
-  return /^\d+$/.test(id);
-}
-
 function RecipeDetail() {
-  const { id } = useParams()
-  const navigate = useNavigate()
-  const [recipe, setRecipe] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [saved, setSaved] = useState(false)
-  const [checkedIngredients, setCheckedIngredients] = useState([])
-  const [expandedInstructions, setExpandedInstructions] = useState(true)
-  const [showShareToast, setShowShareToast] = useState(false)
-  const [dataSource, setDataSource] = useState('spoonacular') // Default to spoonacular
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [recipe, setRecipe] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [saved, setSaved] = useState(false);
+  const [checkedIngredients, setCheckedIngredients] = useState([]);
+  const [showShareToast, setShowShareToast] = useState(false);
+  const [dataSource, setDataSource] = useState('spoonacular');
 
   useEffect(() => {
-    fetchRecipeDetails()
-    // Check if recipe is saved in localStorage
-    const savedRecipes = JSON.parse(localStorage.getItem('savedRecipes') || '[]')
-    setSaved(savedRecipes.includes(parseInt(id)))
-  }, [id])
+    fetchRecipeDetails();
+    const savedRecipes = JSON.parse(localStorage.getItem('savedRecipes') || '[]');
+    setSaved(savedRecipes.includes(parseInt(id)));
+  }, [id]);
 
   async function fetchRecipeDetails() {
     try {
       setLoading(true)
       setError(null)
       
-      if (isSpoonacularId(id)) {
-        // Try Spoonacular first (for explore recipes)
-        try {
-          const response = await fetch(`http://localhost:5000/api/spoonacular/recipe/${id}`)
-          if (response.ok) {
-            const data = await response.json()
-            setRecipe(data)
-            setDataSource('spoonacular')
-            return
-          }
-        } catch (error) {
-          console.log('Spoonacular fetch failed, trying Supabase...')
+      // Try Spoonacular first (for explore recipes)
+      try {
+        const response = await fetch(`http://localhost:5000/api/spoonacular/recipe/${id}`)
+        if (response.ok) {
+          const data = await response.json()
+          setRecipe(data)
+          setDataSource('spoonacular')
+          return
         }
+      } catch (error) {
+        console.log('Spoonacular fetch failed, trying Supabase...')
       }
       
       // Try Supabase (for user recipes)
@@ -68,42 +60,32 @@ function RecipeDetail() {
           .from('recipes')
           .select('*')
           .eq('id', id)
-          .single()
-        
-        if (supabaseError) throw supabaseError
-        
+          .single();
+        if (supabaseError) throw supabaseError;
         if (data) {
-          setRecipe(data)
-          setDataSource('supabase')
-          return
+          setRecipe(data);
+          setDataSource('supabase');
+          return;
         }
-      } catch (error) {
-        console.log('Supabase fetch failed')
-      }
-      
-      // If both fail, show error
-      setError('Recipe not found')
+      } catch (error) {}
+      setError('Recipe not found');
     } catch (error) {
-      console.error('Error fetching recipe:', error)
-      setError('Network error. Please try again.')
+      setError('Network error. Please try again.');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   function handleSaveRecipe() {
-    const savedRecipes = JSON.parse(localStorage.getItem('savedRecipes') || '[]')
-    
+    const savedRecipes = JSON.parse(localStorage.getItem('savedRecipes') || '[]');
     if (saved) {
-      // Remove from saved
-      const updatedRecipes = savedRecipes.filter(recipeId => recipeId !== parseInt(id))
-      localStorage.setItem('savedRecipes', JSON.stringify(updatedRecipes))
-      setSaved(false)
+      const updatedRecipes = savedRecipes.filter(recipeId => recipeId !== parseInt(id));
+      localStorage.setItem('savedRecipes', JSON.stringify(updatedRecipes));
+      setSaved(false);
     } else {
-      // Add to saved
-      savedRecipes.push(parseInt(id))
-      localStorage.setItem('savedRecipes', JSON.stringify(savedRecipes))
-      setSaved(true)
+      savedRecipes.push(parseInt(id));
+      localStorage.setItem('savedRecipes', JSON.stringify(savedRecipes));
+      setSaved(true);
     }
   }
 
@@ -114,309 +96,246 @@ function RecipeDetail() {
           title: recipe.title,
           text: `Check out this recipe: ${recipe.title}`,
           url: window.location.href,
-        })
-      } catch (error) {
-        console.log('Error sharing:', error)
-      }
+        });
+      } catch (error) {}
     } else {
-      // Fallback: copy to clipboard
-      navigator.clipboard.writeText(window.location.href)
-      setShowShareToast(true)
-      setTimeout(() => setShowShareToast(false), 2000)
+      navigator.clipboard.writeText(window.location.href);
+      setShowShareToast(true);
+      setTimeout(() => setShowShareToast(false), 2000);
     }
   }
 
   function toggleIngredient(index) {
-    setCheckedIngredients(prev => 
-      prev.includes(index) 
+    setCheckedIngredients(prev =>
+      prev.includes(index)
         ? prev.filter(i => i !== index)
         : [...prev, index]
-    )
+    );
   }
 
   function getDifficulty() {
-    if (!recipe) return 'Medium'
-    const ingredientCount = recipe.ingredients?.length || 0
-    if (ingredientCount <= 5) return 'Easy'
-    if (ingredientCount <= 10) return 'Medium'
-    return 'Hard'
+    if (!recipe) return 'Medium';
+    const ingredientCount = recipe.ingredients?.length || 0;
+    if (ingredientCount <= 5) return 'Easy';
+    if (ingredientCount <= 10) return 'Medium';
+    return 'Hard';
   }
 
   function openYouTubeVideo() {
     if (recipe.youtube_url) {
-      window.open(recipe.youtube_url, '_blank')
+      window.open(recipe.youtube_url, '_blank');
     }
   }
 
-  // Extract YouTube video ID from URL
-  function getYouTubeVideoId(url) {
-    if (!url) return null
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
-    const match = url.match(regExp)
-    return (match && match[2].length === 11) ? match[2] : null
-  }
-
-  // Strip HTML tags from text
   function stripHtml(html) {
-    if (!html) return ''
-    const tmp = document.createElement('div')
-    tmp.innerHTML = html
-    return tmp.textContent || tmp.innerText || ''
+    if (!html) return '';
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || '';
   }
 
   if (loading) {
     return (
-      <div className="recipe-detail-loading">
-        <div className="loading-spinner"></div>
-        <p>Loading recipe details...</p>
+      <div className="recipe-detail-page">
+        <div className="recipe-detail-container">
+          <div className="loading-state">
+            <div className="loading-spinner">
+              <div className="spinner"></div>
+              <span>Loading recipe details...</span>
+            </div>
+          </div>
+        </div>
       </div>
-    )
+    );
   }
 
   if (error) {
     return (
-      <div className="recipe-detail-error">
-        <h2>Error</h2>
-        <p>{error}</p>
-        <button onClick={() => navigate('/recipes')} className="btn-back">
-          <FiArrowLeft /> Back to Recipes
-        </button>
+      <div className="recipe-detail-page">
+        <div className="recipe-detail-container">
+          <div className="error-state">
+            <div className="error-state-icon">⚠️</div>
+            <h2 className="error-state-title">Error</h2>
+            <p className="error-state-description">{error}</p>
+            <button onClick={() => navigate('/recipes')} className="back-button">
+              <FiArrowLeft /> Back to Recipes
+            </button>
+          </div>
+        </div>
       </div>
-    )
+    );
   }
 
   if (!recipe) {
     return (
-      <div className="recipe-detail-error">
-        <h2>Recipe Not Found</h2>
-        <p>The recipe you're looking for doesn't exist.</p>
-        <button onClick={() => navigate('/recipes')} className="btn-back">
-          <FiArrowLeft /> Back to Recipes
-        </button>
+      <div className="recipe-detail-page">
+        <div className="recipe-detail-container">
+          <div className="error-state">
+            <div className="error-state-icon">🔍</div>
+            <h2 className="error-state-title">Recipe Not Found</h2>
+            <p className="error-state-description">The recipe you're looking for doesn't exist.</p>
+            <button onClick={() => navigate('/recipes')} className="back-button">
+              <FiArrowLeft /> Back to Recipes
+            </button>
+          </div>
+        </div>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="recipe-detail">
+    <div className="recipe-detail-page">
       <div className="recipe-detail-container">
-        {/* Header with Back Button */}
+        <button onClick={() => navigate(-1)} className="back-button">
+          <FiArrowLeft /> Back
+        </button>
         <div className="recipe-detail-header">
-          <button onClick={() => navigate(-1)} className="btn-back">
-            <FiArrowLeft /> Back
-          </button>
-        </div>
-
-        {/* Main Content Grid */}
-        <div className="recipe-detail-content">
-          {/* Left Column - Image and Basic Info */}
-          <div className="recipe-detail-left">
-            <div className="recipe-detail-image-container">
-              <img 
-                src={recipe.image || 'https://via.placeholder.com/600x400/CCCCCC/666666?text=No+Image'} 
+          <div className="recipe-hero">
+            {recipe.image && (
+              <img
+                src={recipe.image}
                 alt={recipe.title}
-                className="recipe-detail-image"
-                onError={(e) => {
-                  e.target.src = 'https://via.placeholder.com/600x400/CCCCCC/666666?text=No+Image'
-                }}
+                className="recipe-hero-image"
               />
-              
-              {/* YouTube Video Button */}
-              {recipe.youtube_url && (
-                <div className="youtube-video-container">
-                  <button 
-                    onClick={openYouTubeVideo}
-                    className="youtube-video-btn"
-                    title="Watch cooking video"
-                  >
-                    <FiYoutube />
-                    <span>Watch Video</span>
-                  </button>
-                </div>
+            )}
+            <div className="recipe-hero-overlay"></div>
+            <div className="recipe-hero-content">
+              <h1 className="recipe-title">{recipe.title}</h1>
+              {recipe.summary && (
+                <p className="recipe-subtitle">
+                  {stripHtml(recipe.summary).substring(0, 200)}...
+                </p>
               )}
-            </div>
-
-            {/* Recipe Stats with Icons */}
-            <div className="recipe-detail-stats">
-              {/* First Row */}
-              <div className="stat-item">
-                <FiUsers className="stat-icon" />
-                <span className="stat-label">Servings</span>
-                <span className="stat-value">{recipe.servings || recipe.yield || 'N/A'}</span>
+              <div className="recipe-meta">
+                {recipe.readyInMinutes && (
+                  <div className="recipe-meta-item">
+                    <FiClock className="recipe-meta-icon" />
+                    <span>{recipe.readyInMinutes} min</span>
+                  </div>
+                )}
+                {recipe.servings && (
+                  <div className="recipe-meta-item">
+                    <FiUsers className="recipe-meta-icon" />
+                    <span>{recipe.servings} servings</span>
+                  </div>
+                )}
+                <div className="recipe-meta-item">
+                  <FiTarget className="recipe-meta-icon" />
+                  <span>{getDifficulty()}</span>
+                </div>
+                {recipe.youtube_url && (
+                  <div className="recipe-meta-item">
+                    <FiYoutube className="recipe-meta-icon" />
+                    <span>Video Available</span>
+                  </div>
+                )}
               </div>
-              <div className="stat-item">
-                <FiZap className="stat-icon" />
-                <span className="stat-label">Calories</span>
-                <span className="stat-value">{recipe.calories || recipe.nutrition?.nutrients?.find(n => n.name === 'Calories')?.amount || 'N/A'}</span>
+              <div className="recipe-actions">
+                <button
+                  onClick={handleSaveRecipe}
+                  className={`btn ${saved ? 'btn-secondary' : 'btn-primary'}`}
+                >
+                  <FiHeart className={saved ? 'filled' : ''} />
+                  {saved ? 'Saved' : 'Save Recipe'}
+                </button>
+                <button onClick={handleShareRecipe} className="btn btn-secondary">
+                  <FiShare2 /> Share
+                </button>
+                {recipe.youtube_url && (
+                  <button onClick={openYouTubeVideo} className="btn btn-secondary">
+                    <FiPlay /> Watch Video
+                  </button>
+                )}
               </div>
-              <div className="stat-item">
-                <FiClock className="stat-icon" />
-                <span className="stat-label">Total Time</span>
-                <span className="stat-value">
-                  {(() => {
-                    const totalTime = (recipe.prepTime || 0) + (recipe.cookTime || 0) + (recipe.readyInMinutes || 0)
-                    return totalTime > 0 ? `${totalTime} min` : 'N/A'
-                  })()}
-                </span>
-              </div>
-              
-              {/* Second Row */}
-              <div className="stat-item">
-                <FiCalendar className="stat-icon" />
-                <span className="stat-label">Prep Time</span>
-                <span className="stat-value">{recipe.prepTime ? `${recipe.prepTime} min` : 'N/A'}</span>
-              </div>
-              <div className="stat-item">
-                <FiClock className="stat-icon" />
-                <span className="stat-label">Cook Time</span>
-                <span className="stat-value">{recipe.cookTime ? `${recipe.cookTime} min` : 'N/A'}</span>
-              </div>
-              <div className="stat-item">
-                <FiTarget className="stat-icon" />
-                <span className="stat-label">Difficulty</span>
-                <span className="stat-value">{getDifficulty()}</span>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="recipe-actions">
-              <button 
-                onClick={handleSaveRecipe}
-                className={`btn-save ${saved ? 'saved' : ''}`}
-              >
-                <FiHeart className={saved ? 'filled' : ''} />
-                {saved ? 'Saved' : 'Save Recipe'}
-              </button>
-              <button onClick={handleShareRecipe} className="btn-share">
-                <FiShare2 />
-                Share
-              </button>
             </div>
           </div>
-
-          {/* Right Column - Details */}
-          <div className="recipe-detail-right">
-            <h1 className="recipe-detail-title">{recipe.title}</h1>
-
-            {/* Description */}
-            <div className="recipe-detail-summary">
-              <h3>About this recipe</h3>
-              <p className="summary-content">{stripHtml(recipe.description || recipe.summary)}</p>
-            </div>
-
-            {/* Recipe Details */}
-            {(recipe.category || recipe.cuisine || recipe.diet || recipe.tags) && (
-              <div className="recipe-detail-section">
-                <h3>Recipe Details</h3>
-                <div className="recipe-tags">
-                  {recipe.category && (
-                    <span className="tag category-tag">{recipe.category}</span>
-                  )}
-                  {recipe.cuisine && (
-                    <span className="tag cuisine-tag">{recipe.cuisine}</span>
-                  )}
-                  {recipe.diet && (
-                    <span className="tag diet-tag">{recipe.diet}</span>
-                  )}
-                  {recipe.tags && recipe.tags.split(',').map((tag, index) => (
-                    <span key={index} className="tag">{tag.trim()}</span>
-                  ))}
-                </div>
+        </div>
+        <div className="recipe-info">
+          <div className="recipe-info-grid">
+            <div className="recipe-section">
+              <div className="section-header">
+                <h2 className="section-title">Ingredients</h2>
               </div>
-            )}
-
-            {/* Ingredients */}
-            <div className="recipe-detail-section">
-              <h3>Ingredients</h3>
-              <div className="ingredients-container">
+              <div className="section-content">
                 <ul className="ingredients-list">
-                  {recipe.ingredients?.map((ingredient, index) => {
-                    let ingredientText = ''
-                    if (typeof ingredient === 'string') {
-                      ingredientText = ingredient
-                    } else if (ingredient && typeof ingredient === 'object') {
-                      // Handle Spoonacular API format
-                      if (ingredient.original) {
-                        ingredientText = ingredient.original
-                      } else if (ingredient.name) {
-                        ingredientText = ingredient.name
-                      } else {
-                        ingredientText = JSON.stringify(ingredient)
-                      }
-                    } else {
-                      ingredientText = String(ingredient)
-                    }
-                    
-                    return (
-                      <li 
-                        key={index} 
-                        className={`ingredient-item ${checkedIngredients.includes(index) ? 'checked' : ''}`}
-                        onClick={() => toggleIngredient(index)}
-                      >
-                        <div className="ingredient-checkbox">
-                          {checkedIngredients.includes(index) && <FiCheck />}
-                        </div>
-                        <span className="ingredient-name">
-                          {stripHtml(ingredientText)}
-                        </span>
-                      </li>
-                    )
-                  })}
+                  {recipe.ingredients?.map((ingredient, index) => (
+                    <li key={index} className="ingredient-item">
+                      <input
+                        type="checkbox"
+                        className="ingredient-checkbox"
+                        checked={checkedIngredients.includes(index)}
+                        onChange={() => toggleIngredient(index)}
+                      />
+                      <span className="ingredient-text">
+                        {ingredient.original || ingredient}
+                      </span>
+                    </li>
+                  ))}
                 </ul>
               </div>
             </div>
-
-            {/* Instructions */}
-            <div className="recipe-detail-section">
+            <div className="recipe-section">
               <div className="section-header">
-                <h3>Instructions</h3>
-                <button 
-                  onClick={() => setExpandedInstructions(!expandedInstructions)}
-                  className="btn-toggle"
-                >
-                  {expandedInstructions ? <FiChevronUp /> : <FiChevronDown />}
-                </button>
+                <h2 className="section-title">Instructions</h2>
               </div>
-              <div className={`instructions-content ${expandedInstructions ? 'expanded' : 'collapsed'}`}>
-                <div className="instructions-text">
-                  {stripHtml(recipe.instructions)}
-                </div>
+              <div className="section-content">
+                <ol className="instructions-list">
+                  {recipe.instructions?.split('\n').filter(step => step.trim()).map((step, index) => (
+                    <li key={index} className="instruction-item">
+                      <div className="instruction-number"></div>
+                      <div className="instruction-text">
+                        {stripHtml(step.trim())}
+                      </div>
+                    </li>
+                  ))}
+                </ol>
               </div>
             </div>
-
-            {/* Nutrition Information */}
-            {recipe.nutrition?.nutrients && (
-              <div className="recipe-detail-section">
-                <h3>Nutrition Information</h3>
-                <div className="nutrition-grid">
-                  {recipe.nutrition.nutrients
-                    .filter(nutrient => ['Calories', 'Protein', 'Fat', 'Carbohydrates', 'Fiber', 'Sugar'].includes(nutrient.name))
-                    .map((nutrient, index) => (
-                      <div key={index} className="nutrition-item">
-                        <span className="nutrition-name">{nutrient.name}</span>
-                        <span className="nutrition-value">
-                          {Math.round(nutrient.amount)}{nutrient.unit}
-                        </span>
-                      </div>
-                    ))}
-                </div>
+          </div>
+          {recipe.nutrition && (
+            <div className="recipe-nutrition">
+              <h3 style={{ marginBottom: 'var(--spacing-lg)', color: 'var(--color-primary)' }}>
+                Nutrition Information
+              </h3>
+              <div className="nutrition-grid">
+                {recipe.nutrition.nutrients?.slice(0, 8).map((nutrient, index) => (
+                  <div key={index} className="nutrition-item">
+                    <div className="nutrition-value">
+                      {Math.round(nutrient.amount)}{nutrient.unit}
+                    </div>
+                    <div className="nutrition-label">{nutrient.name}</div>
+                  </div>
+                ))}
               </div>
+            </div>
+          )}
+          <div className="recipe-actions-bottom">
+            <button
+              onClick={handleSaveRecipe}
+              className={`btn ${saved ? 'btn-secondary' : 'btn-primary'}`}
+            >
+              <FiHeart className={saved ? 'filled' : ''} />
+              {saved ? 'Recipe Saved' : 'Save This Recipe'}
+            </button>
+            <button onClick={handleShareRecipe} className="btn btn-secondary">
+              <FiShare2 /> Share Recipe
+            </button>
+            {recipe.youtube_url && (
+              <button onClick={openYouTubeVideo} className="btn btn-secondary">
+                <FiPlay /> Watch Video Tutorial
+              </button>
             )}
           </div>
         </div>
-
-        {/* Share Toast */}
+        {dataSource === 'spoonacular' && <SimilarRecipes recipeId={id} />}
         {showShareToast && (
           <div className="toast">
-            <p>Link copied to clipboard!</p>
+            Recipe link copied to clipboard!
           </div>
         )}
-
-        {/* Similar Recipes */}
-        <SimilarRecipes recipeId={id} />
       </div>
     </div>
-  )
+  );
 }
 
-export default RecipeDetail; 
+export default RecipeDetail 

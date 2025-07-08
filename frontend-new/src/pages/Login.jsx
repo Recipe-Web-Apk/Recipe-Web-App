@@ -1,103 +1,74 @@
-import React, { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
-import './Login.css'
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import './Login.css';
 
 function Login() {
-  const [form, setForm] = useState({ email: '', password: '' })
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-  const { login } = useAuth()
-  const navigate = useNavigate()
+  const { login } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  async function handleSubmit(e) {
-    e.preventDefault()
-    
-    if (!form.email || !form.password) {
-      setError('Both fields are required')
-      return
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      const result = await login(email, password);
+      if (result.success) {
+        navigate('/dashboard');
+      } else {
+        setError(result.error || 'Login failed.');
+      }
+    } catch (err) {
+      setError('An error occurred.');
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(true)
-    setError('')
-
-    const result = await login(form.email, form.password)
-    
-    if (result.success) {
-      navigate('/dashboard')
-    } else {
-      setError(result.error)
-    }
-    
-    setLoading(false)
-  }
-
-  function handleChange(e) {
-    setForm({ ...form, [e.target.name]: e.target.value })
-    if (error) setError('')
-  }
+  };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <h2 className="auth-title">Welcome Back</h2>
-        <p className="auth-subtitle">Sign in to your account</p>
-        
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-group">
-            <label htmlFor="email" className="form-label">Email</label>
+    <div className="login-page">
+      <div className="login-container">
+        <h1 className="login-title">Sign In</h1>
+        <form className="login-form" onSubmit={handleSubmit} autoComplete="off">
+          <div>
+            <label htmlFor="login-email" className="login-label">Email</label>
             <input
+              id="login-email"
+              className="login-input"
               type="email"
-              id="email"
-              name="email"
-              placeholder="Enter your email"
-              value={form.email}
-              onChange={handleChange}
-              className="form-input"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              autoComplete="username"
               required
             />
           </div>
-          
-          <div className="form-group">
-            <label htmlFor="password" className="form-label">Password</label>
+          <div>
+            <label htmlFor="login-password" className="login-label">Password</label>
             <input
+              id="login-password"
+              className="login-input"
               type="password"
-              id="password"
-              name="password"
-              placeholder="Enter your password"
-              value={form.password}
-              onChange={handleChange}
-              className="form-input"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              autoComplete="current-password"
               required
             />
           </div>
-          
-          <button 
-            type="submit" 
-            className="auth-button"
-            disabled={loading}
-          >
-            {loading ? 'Signing in...' : 'Sign In'}
-          </button>
-          
-          {error && (
-            <div className="auth-error">
-              {error}
-            </div>
-          )}
+          {error && <div className="login-error">{error}</div>}
+          <div className="login-actions">
+            <button className="login-btn" type="submit" disabled={loading}>
+              {loading ? 'Signing in...' : 'Sign In'}
+            </button>
+            <Link to="/register" className="login-link">Don't have an account? Sign Up</Link>
+          </div>
         </form>
-        
-        <div className="auth-footer">
-          <p>
-            Don't have an account?{' '}
-            <Link to="/register" className="auth-link">
-              Sign up here
-            </Link>
-          </p>
-        </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default Login
+export default Login;
