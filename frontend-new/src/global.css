@@ -1,0 +1,102 @@
+:root {
+  --color-bg: #fff;
+  --color-text: #111;
+  --color-accent: #232946;
+  --color-accent-alt: #1a1a2e;
+  --color-border: #e5e7eb;
+  --color-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  --color-card: #fff;
+  --color-link: #232946;
+  --color-link-hover: #1a1a2e;
+  --radius: 12px;
+  --transition: 0.18s cubic-bezier(.4,0,.2,1);
+  --font-main: 'Inter', system-ui, sans-serif;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-main);
+  font-size: 1.05rem;
+  min-height: 100vh;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background var(--transition), color var(--transition);
+}
+
+.dark {
+  --color-bg: #181a1b;
+  --color-text: #f3f4f6;
+  --color-accent: #232946;
+  --color-accent-alt: #232946;
+  --color-border: #232946;
+  --color-card: #232946;
+  --color-link: #a3a8c9;
+  --color-link-hover: #fff;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+a {
+  color: var(--color-link);
+  text-decoration: none;
+  transition: color var(--transition);
+}
+a:hover, a:focus {
+  color: var(--color-link-hover);
+  text-decoration: underline;
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+  font-size: 1rem;
+  border-radius: var(--radius);
+  outline: none;
+  transition: box-shadow var(--transition), border var(--transition), background var(--transition), color var(--transition);
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: var(--color-accent);
+  color: #fff;
+  min-height: 44px;
+  padding: 0.7rem 1.3rem;
+  border-radius: var(--radius);
+  box-shadow: var(--color-shadow);
+}
+button:active {
+  opacity: 0.92;
+}
+
+input, select, textarea {
+  border: 1px solid var(--color-border);
+  background: #fafbfc;
+  color: var(--color-text);
+  min-height: 44px;
+  padding: 0.6rem 1rem;
+}
+input:focus, select:focus, textarea:focus {
+  border: 1.5px solid var(--color-accent);
+}
+
+.card {
+  background: var(--color-card);
+  border-radius: var(--radius);
+  box-shadow: var(--color-shadow);
+  padding: 2rem;
+  transition: box-shadow var(--transition), background var(--transition);
+}
+
+@media (max-width: 600px) {
+  .card {
+    padding: 1rem;
+  }
+} 
