@@ -33,10 +33,10 @@ function Recipes() {
   return (
     <div className="recipes-page">
       <div className="recipes-container">
-        <header className="recipes-header">
+        <header className="card recipes-header">
           <h1 className="recipes-title">All Recipes</h1>
           <p className="recipes-description">Browse and discover delicious recipes from the community.</p>
-          <Link to="/recipes/new" className="login-link" style={{ marginTop: 0 }}>+ Add Recipe</Link>
+          <Link to="/recipes/new" className="login-link">+ Add Recipe</Link>
         </header>
         {loading ? (
           <div className="recipes-loading">Loading recipes...</div>
@@ -45,7 +45,7 @@ function Recipes() {
         ) : recipes.length === 0 ? (
           <div className="recipes-empty">No recipes found. Be the first to add one!</div>
         ) : (
-          <div className="recipes-grid">
+          <div className="card recipes-grid">
             {recipes.map(recipe => (
               <RecipeCard key={recipe.id} recipe={recipe} />
             ))}

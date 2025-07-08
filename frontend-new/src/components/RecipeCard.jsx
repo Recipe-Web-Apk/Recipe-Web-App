@@ -4,7 +4,7 @@ import './RecipeCard.css';
 
 function RecipeCard({ recipe, onDelete, onEdit, allowEdit, allowDelete, onFavorite, isFavorite }) {
   return (
-    <article className="recipe-card" tabIndex={0} aria-label={recipe.title}>
+    <article className="card recipe-card" tabIndex={0} aria-label={recipe.title}>
       <Link to={`/recipes/${recipe.id}`} tabIndex={-1}>
         <img
           src={recipe.image || 'https://via.placeholder.com/400x300?text=No+Image'}
@@ -15,8 +15,8 @@ function RecipeCard({ recipe, onDelete, onEdit, allowEdit, allowDelete, onFavori
       <div className="recipe-card-body">
         <h2 className="recipe-card-title" title={recipe.title}>{recipe.title}</h2>
         <div className="recipe-card-meta">
-          {recipe.readyInMinutes && <span>⏱ {recipe.readyInMinutes} min</span>}
-          {recipe.servings && <span>🍽 {recipe.servings} servings</span>}
+          {recipe.readyInMinutes && <span>{recipe.readyInMinutes} min</span>}
+          {recipe.servings && <span>{recipe.servings} servings</span>}
         </div>
         {recipe.summary && (
           <div className="recipe-card-description">
@@ -45,7 +45,7 @@ function RecipeCard({ recipe, onDelete, onEdit, allowEdit, allowDelete, onFavori
               title={isFavorite ? 'Unfavorite' : 'Favorite'}
               type="button"
             >
-              {isFavorite ? '♥' : '♡'}
+              {isFavorite ? '\u2665' : '\u2661'}
             </button>
           )}
         </div>

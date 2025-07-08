@@ -117,7 +117,7 @@ function RecipeDetail() {
   if (loading) {
     return (
       <div className="recipe-detail-page">
-        <div className="recipe-detail-container">
+        <div className="card recipe-detail-container">
           <div className="loading-state">
             <div className="loading-spinner">
               <div className="spinner"></div>
@@ -132,7 +132,7 @@ function RecipeDetail() {
   if (error) {
     return (
       <div className="recipe-detail-page">
-        <div className="recipe-detail-container">
+        <div className="card recipe-detail-container">
           <div className="error-state">
             <div className="error-state-icon">⚠️</div>
             <h2 className="error-state-title">Error</h2>
@@ -149,7 +149,7 @@ function RecipeDetail() {
   if (!recipe) {
     return (
       <div className="recipe-detail-page">
-        <div className="recipe-detail-container">
+        <div className="card recipe-detail-container">
           <div className="error-state">
             <div className="error-state-icon">🔍</div>
             <h2 className="error-state-title">Recipe Not Found</h2>
@@ -165,11 +165,11 @@ function RecipeDetail() {
 
   return (
     <div className="recipe-detail-page">
-      <div className="recipe-detail-container">
+      <div className="card recipe-detail-container">
         <button onClick={() => navigate(-1)} className="back-button">
           <FiArrowLeft /> Back
         </button>
-        <div className="recipe-detail-header">
+        <div className="card recipe-detail-header">
           <div className="recipe-hero">
             {recipe.image && (
               <img
@@ -230,7 +230,7 @@ function RecipeDetail() {
             </div>
           </div>
         </div>
-        <div className="recipe-info">
+        <div className="card recipe-info">
           <div className="recipe-info-grid">
             <div className="recipe-section">
               <div className="section-header">
@@ -273,8 +273,8 @@ function RecipeDetail() {
             </div>
           </div>
           {recipe.nutrition && (
-            <div className="recipe-nutrition">
-              <h3 style={{ marginBottom: 'var(--spacing-lg)', color: 'var(--color-primary)' }}>
+            <div className="card recipe-nutrition">
+              <h3 className="nutrition-title">
                 Nutrition Information
               </h3>
               <div className="nutrition-grid">
