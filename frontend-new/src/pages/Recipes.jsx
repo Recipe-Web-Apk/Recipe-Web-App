@@ -439,6 +439,30 @@ function Recipes() {
                 ))}
               </select>
             </div>
+            {/* Min Calories */}
+            <div className="filter-group">
+              <label className="filter-label">Min Calories</label>
+              <input
+                type="number"
+                value={filters.minCalories || ''}
+                onChange={e => setFilters(prev => ({ ...prev, minCalories: e.target.value }))}
+                className="filter-input"
+                placeholder="e.g. 200"
+                min="0"
+              />
+            </div>
+            {/* Max Calories */}
+            <div className="filter-group">
+              <label className="filter-label">Max Calories</label>
+              <input
+                type="number"
+                value={filters.maxCalories || ''}
+                onChange={e => setFilters(prev => ({ ...prev, maxCalories: e.target.value }))}
+                className="filter-input"
+                placeholder="e.g. 800"
+                min="0"
+              />
+            </div>
           </div>
         )}
 

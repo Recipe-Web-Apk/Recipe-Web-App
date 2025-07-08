@@ -1,6 +1,7 @@
 import React from 'react'
 
 function UserInfoCard({ user, onEditProfile }) {
+  if (!user) return null;
   return (
     <div style={{
       display: 'flex',

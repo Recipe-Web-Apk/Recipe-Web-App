@@ -19,7 +19,8 @@ router.get('/search', async (req, res) => {
     intolerances,
     maxReadyTime,
     minProtein,
-    maxCalories
+    maxCalories,
+    minCalories // <-- add minCalories
   } = req.query;
   
   if (!query) return res.status(400).json({ error: 'Query is required' });
@@ -57,7 +58,26 @@ router.get('/search', async (req, res) => {
     const response = await axios.get('https://api.spoonacular.com/recipes/complexSearch', {
       params
     });
-    res.json(response.data);
+    let results = response.data.results || [];
+    // Filter by minCalories if provided
+    if (minCalories) {
+      const min = parseInt(minCalories);
+      results = results.filter(recipe => {
+        // Try to get calories from nutrition.nutrients
+        if (recipe.nutrition && Array.isArray(recipe.nutrition.nutrients)) {
+          const cal = recipe.nutrition.nutrients.find(n => n.name === 'Calories');
+          return cal && cal.amount >= min;
+        }
+        // Fallback: if no nutrition info, include the recipe
+        return true;
+      });
+    }
+    // Normalize ingredients for each recipe
+    results = results.map(recipe => ({
+      ...recipe,
+      ingredients: Array.isArray(recipe.extendedIngredients) ? recipe.extendedIngredients.map(ing => ing.original || ing.name || '') : [],
+    }));
+    res.json({ ...response.data, results });
   } catch (error) {
     console.error('Spoonacular API Error:', error.response?.data || error.message);
     res.status(500).json({ 
@@ -79,9 +99,32 @@ router.get('/recipe/:id', async (req, res) => {
     const response = await axios.get(`https://api.spoonacular.com/recipes/${id}/information`, {
       params: {
         apiKey: SPOONACULAR_API_KEY,
+        includeNutrition: true
       },
     });
-    res.json(response.data);
+    const data = response.data;
+    // Normalize the recipe object for frontend compatibility
+    const normalized = {
+      id: data.id,
+      title: data.title,
+      image: data.image,
+      summary: data.summary,
+      description: data.summary, // fallback
+      instructions: data.instructions,
+      readyInMinutes: data.readyInMinutes,
+      cookTime: data.cookingMinutes || data.readyInMinutes,
+      prepTime: data.preparationMinutes,
+      servings: data.servings,
+      cuisines: data.cuisines,
+      dishTypes: data.dishTypes,
+      diets: data.diets,
+      nutrition: data.nutrition,
+      calories: data.nutrition && Array.isArray(data.nutrition.nutrients) ? (data.nutrition.nutrients.find(n => n.name === 'Calories')?.amount) : undefined,
+      ingredients: Array.isArray(data.extendedIngredients) ? data.extendedIngredients.map(ing => ing.original || ing.name || '') : [],
+      youtube_url: data.sourceUrl && data.sourceUrl.includes('youtube') ? data.sourceUrl : undefined,
+      sourceUrl: data.sourceUrl,
+    };
+    res.json(normalized);
   } catch (error) {
     console.error('Spoonacular Recipe Details Error:', error.response?.data || error.message);
     res.status(500).json({ 

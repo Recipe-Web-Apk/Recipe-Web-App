@@ -1,0 +1,44 @@
+body {
+  background: #111216;
+  color: #fff;
+}
+.recipe-card,
+.search-results,
+.recipe-detail,
+.recipes-container,
+.navbar,
+.login-form,
+.dashboard-container {
+  background: #181a1b !important;
+  color: #fff !important;
+}
+input, textarea, select {
+  background: #23272a !important;
+  color: #fff !important;
+  border-color: #444 !important;
+}
+.btn, button {
+  background: #23272a;
+  color: #ffe066;
+  border-color: #ffe066;
+}
+h1, h2, h3, h4, h5 {
+  color: #ffe066 !important;
+}
+a {
+  color: #8ecae6 !important;
+}
+.error-message, .recipe-detail-error, .empty-state {
+  background: #3a1a1a !important;
+  color: #ff5e5e !important;
+}
+.success-message {
+  background: #1a3a1a !important;
+  color: #7fff7f !important;
+}
+.recipe-card-title, .search-results-title {
+  color: #ffe066 !important;
+}
+.recipe-card-meta, .recipe-card-description {
+  color: #e0e0e0 !important;
+} 

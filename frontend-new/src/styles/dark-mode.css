@@ -1,0 +1,71 @@
+body.dark-mode {
+  --bg-color: #181a1b;
+  --text-color: #f1f1f1;
+  --card-bg: #23272a;
+  --input-bg: #23272a;
+  --border-color: #444;
+  --accent: #ffe066;
+  --heading-color: #ffe066;
+  --link-color: #8ecae6;
+  --error-bg: #3a1a1a;
+  --error-text: #ff5e5e;
+  --success-bg: #1a3a1a;
+  --success-text: #7fff7f;
+  background: var(--bg-color);
+  color: var(--text-color);
+}
+body.dark-mode .recipe-card,
+body.dark-mode .search-results,
+body.dark-mode .recipe-detail,
+body.dark-mode .recipes-container,
+body.dark-mode .navbar,
+body.dark-mode .login-form,
+body.dark-mode .dashboard-container {
+  background: var(--card-bg) !important;
+  color: var(--text-color) !important;
+}
+body.dark-mode input,
+body.dark-mode textarea,
+body.dark-mode select {
+  background: var(--input-bg) !important;
+  color: var(--text-color) !important;
+  border-color: var(--border-color) !important;
+}
+body.dark-mode .btn,
+body.dark-mode button {
+  background: var(--card-bg);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+body.dark-mode .btn-save.saved {
+  color: #ff5e5e;
+}
+body.dark-mode .search-input,
+body.dark-mode .filter-input {
+  background: var(--input-bg);
+  color: var(--text-color);
+}
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode h4,
+body.dark-mode h5 {
+  color: var(--heading-color) !important;
+}
+body.dark-mode a {
+  color: var(--link-color) !important;
+}
+body.dark-mode .error-message, body.dark-mode .recipe-detail-error, body.dark-mode .empty-state {
+  background: var(--error-bg) !important;
+  color: var(--error-text) !important;
+}
+body.dark-mode .success-message {
+  background: var(--success-bg) !important;
+  color: var(--success-text) !important;
+}
+body.dark-mode .recipe-card-title, body.dark-mode .search-results-title {
+  color: var(--heading-color) !important;
+}
+body.dark-mode .recipe-card-meta, body.dark-mode .recipe-card-description {
+  color: #e0e0e0 !important;
+} 

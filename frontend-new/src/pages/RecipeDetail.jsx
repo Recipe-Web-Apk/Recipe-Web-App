@@ -19,6 +19,10 @@ import SimilarRecipes from '../components/SimilarRecipes'
 import { supabase } from '../supabaseClient'
 import './RecipeDetail.css'
 
+function isSpoonacularId(id) {
+  return /^\d+$/.test(id);
+}
+
 function RecipeDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -43,17 +47,19 @@ function RecipeDetail() {
       setLoading(true)
       setError(null)
       
-      // Try Spoonacular first (for explore recipes)
-      try {
-        const response = await fetch(`http://localhost:5000/api/spoonacular/recipe/${id}`)
-        if (response.ok) {
-          const data = await response.json()
-          setRecipe(data)
-          setDataSource('spoonacular')
-          return
+      if (isSpoonacularId(id)) {
+        // Try Spoonacular first (for explore recipes)
+        try {
+          const response = await fetch(`http://localhost:5000/api/spoonacular/recipe/${id}`)
+          if (response.ok) {
+            const data = await response.json()
+            setRecipe(data)
+            setDataSource('spoonacular')
+            return
+          }
+        } catch (error) {
+          console.log('Spoonacular fetch failed, trying Supabase...')
         }
-      } catch (error) {
-        console.log('Spoonacular fetch failed, trying Supabase...')
       }
       
       // Try Supabase (for user recipes)
@@ -413,4 +419,4 @@ function RecipeDetail() {
   )
 }
 
-export default RecipeDetail 
+export default RecipeDetail; 

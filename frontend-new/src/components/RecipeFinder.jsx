@@ -53,7 +53,9 @@ function RecipeFinder() {
     try {
       const validIngredients = ingredients.filter(ing => ing.trim() !== '')
       const query = validIngredients.join(', ')
-      const url = `http://localhost:5000/api/spoonacular/search?query=${encodeURIComponent(query)}&offset=${isLoadMore ? offset : 0}`
+      let url = `http://localhost:5000/api/spoonacular/search?query=${encodeURIComponent(query)}&offset=${isLoadMore ? offset : 0}`
+      if (minCalories) url += `&minCalories=${encodeURIComponent(minCalories)}`
+      if (maxCalories) url += `&maxCalories=${encodeURIComponent(maxCalories)}`
       
       console.log('Making request to:', url)
       

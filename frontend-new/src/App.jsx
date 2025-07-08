@@ -10,10 +10,12 @@ import RecipeForm from './pages/RecipeForm';
 import EditRecipe from './pages/EditRecipe';
 import Dashboard from './pages/Dashboard';
 import Navbar from './components/Navbar';
+import DarkModeToggle from './components/DarkModeToggle';
 
 function App() {
   return (
     <AuthProvider>
+      <DarkModeToggle />
       <Router>
         <Navbar />
         <Routes>
