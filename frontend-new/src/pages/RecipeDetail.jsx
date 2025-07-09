@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useDarkMode } from '../contexts/DarkModeContext'
 import { 
   FiClock, 
   FiUsers, 
@@ -22,6 +23,7 @@ import './RecipeDetail.css'
 function RecipeDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { isDarkMode } = useDarkMode()
   const [recipe, setRecipe] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -158,6 +160,38 @@ function RecipeDetail() {
     return tmp.textContent || tmp.innerText || ''
   }
 
+  // Helper function to extract ingredients properly
+  function getIngredients() {
+    if (!recipe) return []
+    
+    // Handle different data sources
+    if (dataSource === 'spoonacular') {
+      // Spoonacular API format
+      if (recipe.extendedIngredients && Array.isArray(recipe.extendedIngredients)) {
+        return recipe.extendedIngredients.map(ing => ing.original || ing.name || '')
+      }
+      if (recipe.ingredients && Array.isArray(recipe.ingredients)) {
+        return recipe.ingredients
+      }
+    } else {
+      // Supabase format - ingredients might be stored as JSON string
+      if (recipe.ingredients) {
+        if (typeof recipe.ingredients === 'string') {
+          try {
+            return JSON.parse(recipe.ingredients)
+          } catch {
+            return recipe.ingredients.split(',').map(ing => ing.trim())
+          }
+        }
+        if (Array.isArray(recipe.ingredients)) {
+          return recipe.ingredients
+        }
+      }
+    }
+    
+    return []
+  }
+
   if (loading) {
     return (
       <div className="recipe-detail-loading">
@@ -192,7 +226,7 @@ function RecipeDetail() {
   }
 
   return (
-    <div className="recipe-detail">
+    <div className={`recipe-detail ${isDarkMode ? 'dark-mode' : ''}`}>
       <div className="recipe-detail-container">
         {/* Header with Back Button */}
         <div className="recipe-detail-header">
@@ -324,22 +358,8 @@ function RecipeDetail() {
               <h3>Ingredients</h3>
               <div className="ingredients-container">
                 <ul className="ingredients-list">
-                  {recipe.ingredients?.map((ingredient, index) => {
-                    let ingredientText = ''
-                    if (typeof ingredient === 'string') {
-                      ingredientText = ingredient
-                    } else if (ingredient && typeof ingredient === 'object') {
-                      // Handle Spoonacular API format
-                      if (ingredient.original) {
-                        ingredientText = ingredient.original
-                      } else if (ingredient.name) {
-                        ingredientText = ingredient.name
-                      } else {
-                        ingredientText = JSON.stringify(ingredient)
-                      }
-                    } else {
-                      ingredientText = String(ingredient)
-                    }
+                  {getIngredients().map((ingredient, index) => {
+                    let ingredientText = ingredient
                     
                     return (
                       <li 
