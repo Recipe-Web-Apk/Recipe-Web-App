@@ -1,0 +1,310 @@
+/* Dark Mode CSS Variables and Styles */
+
+/* CSS Custom Properties for Dark Mode */
+:root {
+  /* Light Mode Colors (default) */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #e9ecef;
+  --bg-card: #ffffff;
+  --bg-surface: #ffffff;
+  
+  --text-primary: #212529;
+  --text-secondary: #6c757d;
+  --text-muted: #adb5bd;
+  
+  --border-color: #dee2e6;
+  --border-light: #e9ecef;
+  
+  --accent-primary: #FF7849;
+  --accent-secondary: #3B82F6;
+  --accent-success: #10b981;
+  --accent-warning: #f59e0b;
+  --accent-danger: #ef4444;
+  
+  --shadow-light: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-medium: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-heavy: 0 10px 15px rgba(0, 0, 0, 0.1);
+  
+  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-secondary: linear-gradient(135deg, #ff6b6b, #ee5a24);
+}
+
+/* Dark Mode Colors */
+.dark-mode {
+  --bg-primary: #121212;
+  --bg-secondary: #1E1E1E;
+  --bg-tertiary: #2A2A2A;
+  --bg-card: #1F1F1F;
+  --bg-surface: #2A2A2A;
+  
+  --text-primary: #E0E0E0;
+  --text-secondary: #B0B0B0;
+  --text-muted: #808080;
+  
+  --border-color: #444444;
+  --border-light: #333333;
+  
+  --accent-primary: #FF7849;
+  --accent-secondary: #3B82F6;
+  --accent-success: #10b981;
+  --accent-warning: #f59e0b;
+  --accent-danger: #ef4444;
+  
+  --shadow-light: 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-medium: 0 4px 6px rgba(0, 0, 0, 0.4);
+  --shadow-heavy: 0 10px 15px rgba(0, 0, 0, 0.5);
+  
+  --gradient-primary: linear-gradient(135deg, #222222, #1A1A1A);
+  --gradient-secondary: linear-gradient(135deg, #FF7849, #e65a2b);
+}
+
+/* Global Dark Mode Styles */
+.dark-mode {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Form Elements Dark Mode */
+.dark-mode input,
+.dark-mode textarea,
+.dark-mode select {
+  background-color: var(--bg-card);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.dark-mode input:focus,
+.dark-mode textarea:focus,
+.dark-mode select:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(255, 120, 73, 0.2);
+}
+
+.dark-mode input::placeholder,
+.dark-mode textarea::placeholder {
+  color: var(--text-muted);
+}
+
+/* Button Dark Mode */
+.dark-mode .btn-primary {
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+}
+
+.dark-mode .btn-secondary {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.dark-mode .btn-secondary:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--accent-primary);
+}
+
+/* Card Dark Mode */
+.dark-mode .card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-medium);
+}
+
+.dark-mode .card:hover {
+  box-shadow: var(--shadow-heavy);
+  border-color: var(--accent-primary);
+}
+
+/* Navigation Dark Mode */
+.dark-mode .navbar {
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  backdrop-filter: blur(10px);
+}
+
+.dark-mode .nav-link {
+  color: var(--text-primary);
+}
+
+.dark-mode .nav-link:hover {
+  color: var(--accent-primary);
+}
+
+/* Modal Dark Mode */
+.dark-mode .modal-content {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+}
+
+.dark-mode .modal-header {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.dark-mode .modal-footer {
+  border-top: 1px solid var(--border-color);
+}
+
+/* Dropdown Dark Mode */
+.dark-mode .dropdown-menu {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-heavy);
+}
+
+.dark-mode .dropdown-item {
+  color: var(--text-primary);
+}
+
+.dark-mode .dropdown-item:hover {
+  background-color: var(--bg-tertiary);
+  color: var(--accent-primary);
+}
+
+/* Table Dark Mode */
+.dark-mode .table {
+  color: var(--text-primary);
+}
+
+.dark-mode .table th {
+  background-color: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+.dark-mode .table td {
+  border-color: var(--border-color);
+}
+
+.dark-mode .table-striped tbody tr:nth-of-type(odd) {
+  background-color: var(--bg-secondary);
+}
+
+/* Alert Dark Mode */
+.dark-mode .alert {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.dark-mode .alert-success {
+  background-color: rgba(16, 185, 129, 0.1);
+  border-color: var(--accent-success);
+  color: var(--accent-success);
+}
+
+.dark-mode .alert-warning {
+  background-color: rgba(245, 158, 11, 0.1);
+  border-color: var(--accent-warning);
+  color: var(--accent-warning);
+}
+
+.dark-mode .alert-danger {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: var(--accent-danger);
+  color: var(--accent-danger);
+}
+
+/* Badge Dark Mode */
+.dark-mode .badge {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.dark-mode .badge-primary {
+  background-color: var(--accent-primary);
+  color: white;
+}
+
+/* Progress Bar Dark Mode */
+.dark-mode .progress {
+  background-color: var(--bg-tertiary);
+}
+
+.dark-mode .progress-bar {
+  background-color: var(--accent-primary);
+}
+
+/* List Group Dark Mode */
+.dark-mode .list-group-item {
+  background-color: var(--bg-card);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.dark-mode .list-group-item:hover {
+  background-color: var(--bg-tertiary);
+}
+
+/* Code Dark Mode */
+.dark-mode code {
+  background-color: var(--bg-tertiary);
+  color: var(--accent-primary);
+}
+
+.dark-mode pre {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+/* Link Dark Mode */
+.dark-mode a {
+  color: var(--accent-primary);
+}
+
+.dark-mode a:hover {
+  color: var(--accent-secondary);
+}
+
+/* Selection Dark Mode */
+.dark-mode ::selection {
+  background-color: var(--accent-primary);
+  color: white;
+}
+
+/* Scrollbar Dark Mode */
+.dark-mode ::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dark-mode ::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+.dark-mode ::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+.dark-mode ::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-primary);
+}
+
+/* Focus Ring for Accessibility */
+.dark-mode *:focus {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* Glassmorphism Effects for Dark Mode */
+.dark-mode .glass {
+  background: rgba(30, 30, 30, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Hover Effects for Dark Mode */
+.dark-mode .hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* Glow Effects for Dark Mode */
+.dark-mode .glow {
+  box-shadow: 0 0 10px rgba(255, 120, 73, 0.3);
+}
+
+.dark-mode .glow:hover {
+  box-shadow: 0 0 20px rgba(255, 120, 73, 0.5);
+} 

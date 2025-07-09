@@ -1,0 +1,38 @@
+body {
+  background: #f7f7f7;
+  color: #222;
+}
+.recipe-card,
+.search-results,
+.recipe-detail,
+.recipes-container,
+.navbar,
+.login-form,
+.dashboard-container {
+  background: #fff;
+  color: #222;
+}
+input, textarea, select {
+  background: #fff;
+  color: #222;
+  border-color: #ccc;
+}
+.btn, button {
+  background: #fff;
+  color: #222;
+  border-color: #222;
+}
+h1, h2, h3, h4, h5 {
+  color: #222;
+}
+a {
+  color: #0077cc;
+}
+.error-message, .recipe-detail-error, .empty-state {
+  background: #ffeaea;
+  color: #d32f2f;
+}
+.success-message {
+  background: #eaffea;
+  color: #388e3c;
+} 

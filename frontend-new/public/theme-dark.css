@@ -1,0 +1,107 @@
+body {
+  background: #121212;
+  color: #E0E0E0;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.recipe-card,
+.search-results,
+.recipe-detail,
+.recipes-container,
+.navbar,
+.login-form,
+.dashboard-container {
+  background: linear-gradient(135deg, #222222 0%, #1A1A1A 100%);
+  color: #E0E0E0;
+  box-shadow: 0 2px 16px 0 rgba(0,0,0,0.45), 0 1.5px 4px rgba(0,0,0,0.18);
+  border-radius: 1.1rem;
+}
+
+input, textarea, select {
+  background: #1F1F1F !important;
+  color: #E0E0E0 !important;
+  border: 1.5px solid #444 !important;
+  transition: background-color 0.3s, color 0.3s, border 0.3s;
+}
+input:focus, textarea:focus, select:focus {
+  outline: 2px solid #FF7849;
+  border-color: #FF7849 !important;
+  box-shadow: 0 0 0 2px #FF784933;
+}
+
+.btn, button {
+  background: #1F1F1F;
+  color: #FF7849;
+  border: 1.5px solid #FF7849;
+  border-radius: 2rem;
+  transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
+  box-shadow: 0 0 10px rgba(255, 120, 73, 0.08);
+}
+.btn:hover, button:hover, .btn:focus, button:focus {
+  background: linear-gradient(135deg, #2A2A2A 0%, #1F1F1F 100%);
+  color: #fff;
+  box-shadow: 0 0 10px rgba(255, 120, 73, 0.18);
+}
+
+h1, h2, h3, h4, h5 {
+  color: #FF7849 !important;
+}
+
+a {
+  color: #3B82F6 !important;
+  transition: color 0.3s;
+}
+a:hover {
+  color: #FF7849 !important;
+}
+
+.error-message, .recipe-detail-error, .empty-state {
+  background: #3a1a1a !important;
+  color: #ff5e5e !important;
+  border-radius: 0.7rem;
+}
+.success-message {
+  background: #1a3a1a !important;
+  color: #7fff7f !important;
+  border-radius: 0.7rem;
+}
+
+.recipe-card-title, .search-results-title {
+  color: #FF7849 !important;
+}
+.recipe-card-meta, .recipe-card-description {
+  color: #B0B0B0 !important;
+}
+
+.badge, .pill-badge {
+  display: inline-block;
+  padding: 0.2em 0.9em;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #23272a 60%, #1F1F1F 100%);
+  color: #E0E0E0;
+  font-size: 0.95em;
+  font-weight: 500;
+  margin-right: 0.4em;
+  box-shadow: 0 0 8px rgba(59,130,246,0.10);
+}
+
+img, .recipe-card img, .search-results img {
+  background: #23272a;
+  border-radius: 0.7rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+  border: 1.5px solid #23272a;
+}
+
+/* Overlay for hover/focus */
+.recipe-card:hover, .search-results .recipe-card:hover {
+  box-shadow: 0 0 18px 2px #FF784933, 0 2px 16px 0 rgba(0,0,0,0.45);
+  background: linear-gradient(135deg, #23272a 0%, #1F1F1F 100%);
+}
+
+/* Glassmorphism for modals/navbars (optional) */
+.glass {
+  background: rgba(30,30,30,0.7);
+  backdrop-filter: blur(8px);
+  border-radius: 1.2rem;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.25);
+} 

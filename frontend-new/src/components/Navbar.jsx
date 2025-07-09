@@ -1,48 +1,37 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { useDarkMode } from '../contexts/DarkModeContext';
+import DarkModeToggle from './DarkModeToggle';
 import './Navbar.css';
 
-function Navbar({ user, onLogout }) {
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  const handleHamburger = () => setMenuOpen((open) => !open);
-  const closeMenu = () => setMenuOpen(false);
+function Navbar() {
+  const { user, logout } = useAuth();
+  const { isDarkMode } = useDarkMode();
+  const navigate = useNavigate();
 
   return (
-    <nav className="navbar">
-      <Link to="/" className="navbar-logo" onClick={closeMenu}>
-        RecipeApp
-      </Link>
-      <button className="navbar-hamburger" onClick={handleHamburger} aria-label="Toggle navigation">
-        <span aria-hidden="true">☰</span>
-      </button>
-      <div className={`navbar-links${menuOpen ? ' open' : ''}`}>
-        <Link to="/" className="navbar-link" onClick={closeMenu}>
-          Home
+    <nav className={`navbar ${isDarkMode ? 'dark-mode' : ''}`}>
+      <div className="navbar-left">
+        <Link to="/" className="navbar-logo">
+          <span role="img" aria-label="logo">🍲</span> Recipe Buddy
         </Link>
-        <Link to="/recipes" className="navbar-link" onClick={closeMenu}>
-          Recipes
-        </Link>
-        <Link to="/explore" className="navbar-link" onClick={closeMenu}>
-          Explore
-        </Link>
-        {user && (
-          <Link to="/dashboard" className="navbar-link" onClick={closeMenu}>
-            Dashboard
-          </Link>
-        )}
+        <Link to="/recipes" className="navbar-link">Recipes</Link>
+        {user && <Link to="/dashboard" className="navbar-link">Dashboard</Link>}
       </div>
-      <div className="navbar-actions">
-        {user ? (
+      <div className="navbar-right">
+        <DarkModeToggle />
+        {!user && (
           <>
-            <span className="navbar-link" style={{ cursor: 'default', opacity: 0.8 }}>{user.email}</span>
-            <button className="navbar-btn" onClick={onLogout}>Logout</button>
+            <button className="navbar-btn" onClick={() => navigate('/login')}>Login</button>
+            <button className="navbar-btn primary" onClick={() => navigate('/register')}>Sign Up</button>
           </>
-        ) : (
-          <>
-            <Link to="/login" className="navbar-btn">Login</Link>
-            <Link to="/register" className="navbar-btn">Sign Up</Link>
-          </>
+        )}
+        {user && (
+          <div className="navbar-user-menu">
+            <span className="navbar-user">👤 {user.email}</span>
+            <button className="navbar-btn" onClick={logout}>Logout</button>
+          </div>
         )}
       </div>
     </nav>
