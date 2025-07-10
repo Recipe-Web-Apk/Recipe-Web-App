@@ -393,10 +393,17 @@
 
 .ingredients-section h3,
 .calorie-section h3 {
-  color: white;
   margin: 0 0 1rem 0;
+  color: white;
   font-size: 1.1rem;
   font-weight: 600;
+}
+
+.ingredients-note {
+  margin: 0 0 1rem 0;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  font-style: italic;
 }
 
 .ingredient-input {

@@ -1,32 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../supabaseClient';
 import './SaveRecipeButton.css';
 
 const SaveRecipeButton = ({ recipe, onSave, onUnsave }) => {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [isSaved, setIsSaved] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (user && recipe) {
+    if (user && recipe && token) {
       checkIfSaved();
     }
-  }, [user, recipe]);
+  }, [user, recipe, token]);
 
   const checkIfSaved = async () => {
     try {
-      const { data, error } = await supabase
-        .from('saved_recipes')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('recipe_id', recipe.id)
-        .single();
+      const response = await fetch('http://localhost:5000/api/saved-recipes', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error checking saved status:', error);
+      if (response.ok) {
+        const data = await response.json();
+        const savedRecipe = data.recipes.find(r => r.id === recipe.id);
+        setIsSaved(!!savedRecipe);
       } else {
-        setIsSaved(!!data);
+        console.error('Error checking saved status:', response.status);
       }
     } catch (error) {
       console.error('Error checking saved status:', error);
@@ -34,7 +34,7 @@ const SaveRecipeButton = ({ recipe, onSave, onUnsave }) => {
   };
 
   const handleSave = async () => {
-    if (!user) {
+    if (!user || !token) {
       // Redirect to login or show login prompt
       return;
     }
@@ -43,31 +43,47 @@ const SaveRecipeButton = ({ recipe, onSave, onUnsave }) => {
     try {
       if (isSaved) {
         // Unsave recipe
-        const { error } = await supabase
-          .from('saved_recipes')
-          .delete()
-          .eq('user_id', user.id)
-          .eq('recipe_id', recipe.id);
+        const response = await fetch(`http://localhost:5000/api/saved-recipes/${recipe.id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
 
-        if (error) throw error;
-        setIsSaved(false);
-        if (onUnsave) onUnsave(recipe);
+        if (response.ok) {
+          setIsSaved(false);
+          if (onUnsave) onUnsave(recipe);
+          // Notify other pages about the unsave
+          localStorage.setItem('recipeUnsaved', Date.now().toString());
+          localStorage.removeItem('recipeUnsaved');
+        } else {
+          throw new Error('Failed to unsave recipe');
+        }
       } else {
         // Save recipe
-        const { error } = await supabase
-          .from('saved_recipes')
-          .insert({
-            user_id: user.id,
-            recipe_id: recipe.id,
-            recipe_data: recipe
-          });
+        const response = await fetch('http://localhost:5000/api/saved-recipes', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ recipe })
+        });
 
-        if (error) throw error;
-        setIsSaved(true);
-        if (onSave) onSave(recipe);
+        if (response.ok) {
+          setIsSaved(true);
+          if (onSave) onSave(recipe);
+          // Notify other pages about the save
+          localStorage.setItem('recipeSaved', Date.now().toString());
+          localStorage.removeItem('recipeSaved');
+        } else {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to save recipe');
+        }
       }
     } catch (error) {
       console.error('Error saving/unsaving recipe:', error);
+      alert(error.message || 'Failed to save/unsave recipe');
     } finally {
       setLoading(false);
     }

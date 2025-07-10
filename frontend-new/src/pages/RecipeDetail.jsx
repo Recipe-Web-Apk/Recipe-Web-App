@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useDarkMode } from '../contexts/DarkModeContext'
+import { useAuth } from '../contexts/AuthContext'
 import { 
   FiClock, 
   FiUsers, 
@@ -24,6 +25,7 @@ function RecipeDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { isDarkMode } = useDarkMode()
+  const { token } = useAuth();
   const [recipe, setRecipe] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -44,8 +46,21 @@ function RecipeDetail() {
     try {
       setLoading(true)
       setError(null)
-      
-      // Try Spoonacular first (for explore recipes)
+      // 1. Try backend for user-created recipes
+      try {
+        const response = await fetch(`http://localhost:5000/api/recipes/${id}`, {
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.recipe) {
+            setRecipe(data.recipe);
+            setDataSource('user');
+            return;
+          }
+        }
+      } catch (err) { /* ignore and fallback */ }
+      // 2. Try Spoonacular for explore recipes
       try {
         const response = await fetch(`http://localhost:5000/api/spoonacular/recipe/${id}`)
         if (response.ok) {
@@ -54,33 +69,10 @@ function RecipeDetail() {
           setDataSource('spoonacular')
           return
         }
-      } catch (error) {
-        console.log('Spoonacular fetch failed, trying Supabase...')
-      }
-      
-      // Try Supabase (for user recipes)
-      try {
-        const { data, error: supabaseError } = await supabase
-          .from('recipes')
-          .select('*')
-          .eq('id', id)
-          .single()
-        
-        if (supabaseError) throw supabaseError
-        
-        if (data) {
-          setRecipe(data)
-          setDataSource('supabase')
-          return
-        }
-      } catch (error) {
-        console.log('Supabase fetch failed')
-      }
-      
-      // If both fail, show error
+      } catch (err) { /* ignore and fallback */ }
+      // 3. If both fail, show error
       setError('Recipe not found')
     } catch (error) {
-      console.error('Error fetching recipe:', error)
       setError('Network error. Please try again.')
     } finally {
       setLoading(false)
@@ -112,7 +104,7 @@ function RecipeDetail() {
           url: window.location.href,
         })
       } catch (error) {
-        console.log('Error sharing:', error)
+        // console.log('Error sharing:', error) // Removed console.log
       }
     } else {
       // Fallback: copy to clipboard
@@ -241,11 +233,12 @@ function RecipeDetail() {
           <div className="recipe-detail-left">
             <div className="recipe-detail-image-container">
               <img 
-                src={recipe.image || 'https://via.placeholder.com/600x400/CCCCCC/666666?text=No+Image'} 
+                src={recipe.image || 'https://via.placeholder.com/600x400.png?text=No+Image'} 
                 alt={recipe.title}
                 className="recipe-detail-image"
                 onError={(e) => {
-                  e.target.src = 'https://via.placeholder.com/600x400/CCCCCC/666666?text=No+Image'
+                  e.target.onerror = null;
+                  e.target.src = 'https://via.placeholder.com/600x400.png?text=No+Image';
                 }}
               />
               

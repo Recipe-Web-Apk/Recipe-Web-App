@@ -187,12 +187,91 @@ function findRecipesByIngredients(ingredients, calorieRange = {}) {
   
   if (validIngredients.length === 0) return [];
   
-  // Return recipes that might contain some of the ingredients
-  return sampleRecipes.slice(0, 6).map(recipe => ({
-    ...recipe,
-    missedIngredientCount: Math.floor(Math.random() * 3),
-    usedIngredientCount: Math.floor(Math.random() * 4) + 1
-  }));
+  // Create sample recipes with ingredients that match the user's input
+  const sampleRecipesWithIngredients = [
+    {
+      id: 101,
+      title: "Chicken Pasta with Tomatoes",
+      image: "https://images.unsplash.com/photo-1621996346565-e3dbc353d2e5?w=400&h=300&fit=crop",
+      readyInMinutes: 25,
+      servings: 4,
+      calories: 450,
+      diets: ["gluten free"],
+      extendedIngredients: [
+        { original: "2 chicken breasts", name: "chicken", amount: 2, unit: "breasts" },
+        { original: "1 pound pasta", name: "pasta", amount: 1, unit: "pound" },
+        { original: "4 tomatoes", name: "tomatoes", amount: 4, unit: "pieces" },
+        { original: "2 tablespoons olive oil", name: "olive oil", amount: 2, unit: "tbsp" }
+      ],
+      instructions: "1. Cook pasta according to package directions.\n2. Season chicken and cook in oil.\n3. Add tomatoes and cook until softened.\n4. Combine pasta and chicken mixture.",
+      summary: "A delicious pasta dish with chicken and fresh tomatoes.",
+      missedIngredientCount: 0,
+      usedIngredientCount: 4
+    },
+    {
+      id: 102,
+      title: "Beef Stir Fry with Vegetables",
+      image: "https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=400&h=300&fit=crop",
+      readyInMinutes: 20,
+      servings: 4,
+      calories: 350,
+      diets: ["gluten free"],
+      extendedIngredients: [
+        { original: "1 pound beef strips", name: "beef", amount: 1, unit: "pound" },
+        { original: "2 cups mixed vegetables", name: "vegetables", amount: 2, unit: "cups" },
+        { original: "3 tablespoons soy sauce", name: "soy sauce", amount: 3, unit: "tbsp" },
+        { original: "2 tablespoons oil", name: "oil", amount: 2, unit: "tbsp" }
+      ],
+      instructions: "1. Heat oil in wok.\n2. Stir fry beef until browned.\n3. Add vegetables and stir fry.\n4. Add soy sauce and serve.",
+      summary: "Quick and healthy beef stir fry with fresh vegetables.",
+      missedIngredientCount: 0,
+      usedIngredientCount: 4
+    },
+    {
+      id: 103,
+      title: "Salmon with Lemon and Herbs",
+      image: "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400&h=300&fit=crop",
+      readyInMinutes: 30,
+      servings: 2,
+      calories: 520,
+      diets: ["gluten free", "pescetarian"],
+      extendedIngredients: [
+        { original: "2 salmon fillets", name: "salmon", amount: 2, unit: "fillets" },
+        { original: "1 lemon", name: "lemon", amount: 1, unit: "piece" },
+        { original: "2 tablespoons herbs", name: "herbs", amount: 2, unit: "tbsp" },
+        { original: "2 tablespoons butter", name: "butter", amount: 2, unit: "tbsp" }
+      ],
+      instructions: "1. Season salmon with herbs.\n2. Cook in butter until flaky.\n3. Squeeze lemon over top.\n4. Serve immediately.",
+      summary: "Simple and elegant salmon with fresh herbs and lemon.",
+      missedIngredientCount: 0,
+      usedIngredientCount: 4
+    }
+  ];
+  
+  // Filter recipes based on ingredients (simplified matching)
+  const matchingRecipes = sampleRecipesWithIngredients.filter(recipe => {
+    const recipeIngredients = recipe.extendedIngredients.map(ing => 
+      (ing.original || ing.name || '').toLowerCase()
+    );
+    
+    // Check if ALL user ingredients are present in the recipe
+    return validIngredients.every(userIngredient => 
+      recipeIngredients.some(recipeIngredient => 
+        recipeIngredient.includes(userIngredient) || userIngredient.includes(recipeIngredient)
+      )
+    );
+  });
+  
+  // If no exact matches, return recipes that use most of the ingredients
+  if (matchingRecipes.length === 0) {
+    return sampleRecipesWithIngredients.slice(0, 3).map(recipe => ({
+      ...recipe,
+      missedIngredientCount: Math.floor(Math.random() * 2),
+      usedIngredientCount: Math.floor(Math.random() * 3) + 2
+    }));
+  }
+  
+  return matchingRecipes;
 }
 
 module.exports = {

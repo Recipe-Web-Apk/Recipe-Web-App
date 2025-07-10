@@ -103,10 +103,51 @@ function RecipeForm() {
     if (file) {
       const reader = new FileReader()
       reader.onloadend = () => {
-        setImagePreview(reader.result)
+        // Compress the image to reduce payload size
+        compressImage(reader.result, (compressedImage) => {
+          setImagePreview(compressedImage)
+        })
       }
       reader.readAsDataURL(file)
     }
+  }
+
+  // Function to compress image
+  function compressImage(base64String, callback) {
+    const img = new Image()
+    img.onload = function() {
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      
+      // Set maximum dimensions
+      const maxWidth = 800
+      const maxHeight = 600
+      
+      let { width, height } = img
+      
+      // Calculate new dimensions
+      if (width > height) {
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width
+          width = maxWidth
+        }
+      } else {
+        if (height > maxHeight) {
+          width = (width * maxHeight) / height
+          height = maxHeight
+        }
+      }
+      
+      canvas.width = width
+      canvas.height = height
+      
+      // Draw and compress
+      ctx.drawImage(img, 0, 0, width, height)
+      const compressedImage = canvas.toDataURL('image/jpeg', 0.7) // 70% quality
+      
+      callback(compressedImage)
+    }
+    img.src = base64String
   }
 
   async function handleSubmit(e) {
@@ -130,46 +171,47 @@ function RecipeForm() {
       const validIngredients = form.ingredients.filter(ing => ing.trim() !== '')
       const validInstructions = form.instructions.filter(inst => inst.trim() !== '')
       
-      // Extract user ID from JWT token
-      let userId = null
-      try {
-        const tokenParts = token.split('.')
-        if (tokenParts.length === 3) {
-          const payload = JSON.parse(atob(tokenParts[1]))
-          userId = payload.sub
-        }
-      } catch (error) {
-        console.error('Error parsing token:', error)
-      }
-      
       const recipeData = {
         title: form.title.trim(),
         description: form.description.trim(),
         ingredients: validIngredients,
         instructions: validInstructions.join('\n\n'),
         image: imagePreview || null,
-        youtube_url: form.youtube_url.trim() || null,
-        user_id: userId,
-        prepTime: form.prepTime ? parseInt(form.prepTime) : null,
-        cookTime: form.cookTime ? parseInt(form.cookTime) : null,
-        servings: form.servings ? parseInt(form.servings) : null,
-        calories: form.calories ? parseInt(form.calories) : null,
-        difficulty: form.difficulty || null,
-        category: form.category || null,
-        tags: form.tags.trim() || null
+        youtube_url: form.youtube_url.trim() || null
       }
 
-      const { data, error } = await supabase
-        .from('recipes')
-        .insert([recipeData])
-        .select()
+      // Only add optional fields if they have values
+      if (form.prepTime) recipeData.prepTime = parseInt(form.prepTime)
+      if (form.cookTime) recipeData.cookTime = parseInt(form.cookTime)
+      if (form.servings) recipeData.servings = parseInt(form.servings)
+      if (form.calories) recipeData.calories = parseInt(form.calories)
+      if (form.difficulty) recipeData.difficulty = form.difficulty
+      if (form.category) recipeData.category = form.category
+      if (form.tags) recipeData.tags = form.tags.trim()
 
-      if (error) {
-        console.error('Supabase error:', error)
-        setSubmitError(error.message || 'Failed to create recipe')
-      } else {
+      const response = await fetch('http://localhost:5000/api/recipes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(recipeData)
+      })
+
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Server returned non-JSON response. Make sure the backend server is running.')
+      }
+
+      const data = await response.json()
+
+      if (response.ok) {
         alert('Recipe created successfully!')
         navigate('/recipes')
+      } else {
+        console.error('Recipe creation error:', data.error)
+        setSubmitError(data.error || 'Failed to create recipe')
       }
     } catch (error) {
       console.error('Error creating recipe:', error)

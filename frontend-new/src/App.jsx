@@ -11,6 +11,7 @@ import RecipeForm from './pages/RecipeForm';
 import EditRecipe from './pages/EditRecipe';
 import Dashboard from './pages/Dashboard';
 import Navbar from './components/Navbar';
+import ProtectedRoute from './components/ProtectedRoute';
 import './styles/dark-mode.css';
 
 function App() {
@@ -25,9 +26,9 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/recipes" element={<Recipes />} />
             <Route path="/recipes/:id" element={<RecipeDetail />} />
-            <Route path="/recipes/create" element={<RecipeForm />} />
-            <Route path="/recipes/edit/:id" element={<EditRecipe />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/recipes/create" element={<ProtectedRoute><RecipeForm /></ProtectedRoute>} />
+            <Route path="/recipes/edit/:id" element={<ProtectedRoute><EditRecipe /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           </Routes>
         </Router>
       </AuthProvider>

@@ -14,29 +14,51 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+// Test endpoint
+router.get('/test', (req, res) => {
+  res.json({ 
+    message: 'Auth route is working',
+    supabaseUrl: supabaseUrl ? 'Present' : 'Missing',
+    supabaseKey: supabaseAnonKey ? 'Present' : 'Missing'
+  });
+});
+
 // Register new user
 router.post('/register', async (req, res) => {
   try {
+    console.log('=== REGISTRATION REQUEST ===');
+    console.log('Headers:', req.headers);
+    console.log('Body:', req.body);
+    console.log('Content-Type:', req.headers['content-type']);
+    console.log('===========================');
+    
     const { email, password, username } = req.body;
 
     if (!email || !password || !username) {
+      console.log('Missing required fields:', { email: !!email, password: !!password, username: !!username });
       return res.status(400).json({ error: 'Email, password, and username are required' });
     }
 
     // Create user in Supabase Auth using signUp
+    console.log('Attempting Supabase auth signup with:', { email, username });
+    
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: {
-          username: username
-        }
+        data: { username } // ✅ proper way to include metadata
       }
     });
 
     if (authError) {
       console.error('Auth error:', authError);
+      console.error('Auth error details:', JSON.stringify(authError, null, 2));
       return res.status(400).json({ error: authError.message });
+    }
+
+    // Check if user was created successfully
+    if (!authData.user) {
+      return res.status(400).json({ error: 'Failed to create user account' });
     }
 
     // Create user profile in our users table
@@ -91,21 +113,44 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: error.message });
     }
 
-    // Get user profile
-    const { data: profile, error: profileError } = await supabase
+    // Get user profile by email (since IDs don't match between auth and users table)
+    let profile = null;
+    const { data: profileData, error: profileError } = await supabase
       .from('users')
       .select('*')
-      .eq('id', data.user.id)
+      .eq('email', data.user.email)
       .single();
 
     if (profileError) {
       console.error('Profile fetch error:', profileError);
+      
+      // If profile doesn't exist, try to create it
+      if (profileError.code === 'PGRST116') {
+        console.log('User profile not found, creating one...');
+        const { data: newProfile, error: createError } = await supabase
+          .from('users')
+          .insert([{
+            username: data.user.user_metadata?.username || data.user.email.split('@')[0],
+            email: data.user.email
+          }])
+          .select();
+        
+        if (createError) {
+          console.error('Failed to create profile on login:', createError);
+        } else {
+          console.log('Profile created successfully on login');
+          profile = newProfile[0];
+        }
+      }
+    } else {
+      profile = profileData;
     }
 
     res.json({
       message: 'Login successful',
       user: {
-        id: data.user.id,
+        id: profile?.id || data.user.id, // Use profile ID if available, otherwise auth ID
+        auth_id: data.user.id, // Keep auth ID for reference
         email: data.user.email,
         username: profile?.username || data.user.user_metadata?.username
       },
@@ -161,11 +206,11 @@ router.get('/me', async (req, res) => {
       return res.status(401).json({ error: 'Invalid token' });
     }
 
-    // Get user profile
+    // Get user profile by email
     const { data: profile, error: profileError } = await supabase
       .from('users')
       .select('*')
-      .eq('id', user.id)
+      .eq('email', user.email)
       .single();
 
     if (profileError) {
@@ -174,7 +219,8 @@ router.get('/me', async (req, res) => {
 
     res.json({
       user: {
-        id: user.id,
+        id: profile?.id || user.id, // Use profile ID if available, otherwise auth ID
+        auth_id: user.id, // Keep auth ID for reference
         email: user.email,
         username: profile?.username || user.user_metadata?.username
       }

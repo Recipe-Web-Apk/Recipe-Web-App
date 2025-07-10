@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { supabase } from '../supabaseClient';
@@ -10,9 +10,10 @@ function Recipes() {
   const { user } = useAuth();
   const { isDarkMode } = useDarkMode();
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState('explore'); // 'explore' or 'my-recipes'
   const [recipes, setRecipes] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Start with false since explore tab doesn't need initial loading
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -41,11 +42,61 @@ function Recipes() {
     sort: 'relevance'
   });
 
+  // Read query and diet from URL on mount
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const urlQuery = params.get('query') || '';
+    const urlDiet = params.get('diet') || '';
+    if (urlQuery) {
+      setSearchQuery(urlQuery);
+      setFilters(f => ({ ...f, diet: urlDiet }));
+      setShowRecipeFinder(false);
+      setCurrentPage(0);
+      // Perform search
+      searchSpoonacularRecipesFromParams(urlQuery, urlDiet);
+    }
+  }, [location.search]);
+
+  async function searchSpoonacularRecipesFromParams(query, diet) {
+    setSearchLoading(true);
+    setLoading(false); // Ensure loading is false for search
+    setError('');
+    try {
+      const params = new URLSearchParams({
+        query,
+        offset: 0,
+        number: 12
+      });
+      if (diet) params.append('diet', diet);
+      // Add other filters if needed
+      
+      console.log('Searching from params:', params.toString());
+      const response = await fetch(`http://localhost:5000/api/spoonacular/search?${params}`);
+      const data = await response.json();
+      
+      console.log('Search from params response:', response.status, data);
+      
+      if (response.ok) {
+        setSearchResults(data.results || []);
+        setTotalResults(data.totalResults || 0);
+        setHasMore((data.results || []).length === 12);
+      } else {
+        setError('Failed to search recipes.');
+      }
+    } catch (err) {
+      console.error('Search from params error:', err);
+      setError('Network error. Please try again.');
+    } finally {
+      setSearchLoading(false);
+    }
+  }
+
   useEffect(() => {
     if (activeTab === 'my-recipes') {
       fetchMyRecipes();
     } else {
       setRecipes([]);
+      setLoading(false); // Set loading to false when switching to explore tab
       // Don't clear search results when switching to explore tab
       // setSearchResults([]);
       // setFinderResults([]);
@@ -83,6 +134,7 @@ function Recipes() {
 
     if (page === 0) {
       setSearchLoading(true);
+      setLoading(false); // Ensure loading is false for search
     } else {
       setLoadingMore(true);
     }
@@ -99,8 +151,11 @@ function Recipes() {
         if (value) params.append(key, value);
       });
 
+      console.log('Searching with params:', params.toString());
       const response = await fetch(`http://localhost:5000/api/spoonacular/search?${params}`);
       const data = await response.json();
+      
+      console.log('Search response:', response.status, data);
       
       if (response.ok) {
         if (append) {
@@ -119,6 +174,7 @@ function Recipes() {
         }
       }
     } catch (err) {
+      console.error('Search error:', err);
       setError('Network error. Please try again.');
     } finally {
       setSearchLoading(false);
@@ -134,6 +190,7 @@ function Recipes() {
     }
 
     setFinderLoading(true);
+    setLoading(false); // Ensure loading is false for ingredient search
     try {
       const ingredientsQuery = validIngredients.join(',');
       const params = new URLSearchParams({
@@ -274,7 +331,6 @@ function Recipes() {
     : recipes;
 
   const activeFilters = Object.values(filters).filter(value => value).length;
-  
 
 
   return (
@@ -501,6 +557,7 @@ function Recipes() {
               <form onSubmit={handleFinderSearch} className="finder-form">
                 <div className="ingredients-section">
                   <h3>What ingredients do you have?</h3>
+                  <p className="ingredients-note">Find recipes that use ALL of these ingredients</p>
                   {ingredients.map((ingredient, index) => (
                     <div key={index} className="ingredient-input">
                       <input
@@ -569,123 +626,127 @@ function Recipes() {
             <div className="search-tip">
               {!showRecipeFinder 
                 ? '💡 Try searching for: pasta, chicken, vegan, dessert, breakfast'
-                : '💡 Add ingredients you have and find recipes that use them!'
+                : '💡 Add ingredients you have and find recipes that use ALL of them!'
               }
             </div>
           </div>
         )}
 
         {/* Content */}
-        {loading ? (
-          <div className="recipes-loading">Loading recipes...</div>
-        ) : searchLoading ? (
-          <div className="recipes-loading">Searching for recipes...</div>
-        ) : error ? (
-          <div className="recipes-error">{error}</div>
-        ) : displayedRecipes.length === 0 && !searchLoading ? (
-          <div className="recipes-empty">
-            {activeTab === 'explore' 
-              ? (showRecipeFinder ? 'Add ingredients to find recipes!' : 'Search for recipes to get started!')
-              : 'No recipes found. Create your first recipe!'
-            }
-          </div>
-        ) : (
-          <>
-            <div className="recipes-grid">
-              {displayedRecipes.map(recipe => {
-                const difficulty = getDifficulty(recipe.readyInMinutes);
-                const difficultyColor = getDifficultyColor(difficulty);
-                
-                return (
-                  <div 
-                    key={recipe.id} 
-                    className="recipe-card"
-                    onClick={() => navigate(`/recipes/${recipe.id}`)}
-                  >
-                    {/* Save Button */}
-                    <SaveRecipeButton 
-                      recipe={recipe}
-                      onSave={handleRecipeSave}
-                      onUnsave={handleRecipeUnsave}
-                    />
-                    
-                    {/* Difficulty Badge */}
-                    <div 
-                      className="difficulty-badge"
-                      style={{ backgroundColor: difficultyColor }}
-                    >
-                      {difficulty}
-                    </div>
-
-                    <img 
-                      src={recipe.image || 'https://via.placeholder.com/300x200/CCCCCC/666666?text=No+Image'} 
-                      alt={recipe.title} 
-                      className="recipe-image"
-                      onError={(e) => {
-                        e.target.src = 'https://via.placeholder.com/300x200/CCCCCC/666666?text=No+Image'
-                      }}
-                    />
-                    <div className="recipe-content">
-                      <h3 className="recipe-title">{recipe.title}</h3>
-                      
-                      {/* Recipe Stats */}
-                      <div className="recipe-stats">
-                        <div className="recipe-meta">
-                          <span className="recipe-time">⏱️ {recipe.readyInMinutes || recipe.cookTime || 'N/A'} min</span>
-                          <span className="recipe-servings">👥 {recipe.servings || 'N/A'} servings</span>
-                        </div>
-                        
-                        {recipe.calories && (
-                          <div className="recipe-calories">
-                            🔥 {Math.round(recipe.calories)} cal
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Missing Ingredients (for Recipe Finder) */}
-                      {recipe.missedIngredientCount > 0 && (
-                        <div className="recipe-missing">
-                          <span className="missing-badge">
-                            Missing {recipe.missedIngredientCount} ingredients
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Recipe Tags */}
-                      {recipe.diets && recipe.diets.length > 0 && (
-                        <div className="recipe-tags">
-                          {recipe.diets.slice(0, 3).map((diet, index) => (
-                            <span key={index} className="recipe-tag">
-                              {diet}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Pagination */}
-            {!showRecipeFinder && searchResults.length > 0 && (
-              <div className="pagination-section">
-                <div className="pagination-info">
-                  Showing {searchResults.length} of {totalResults} recipes
-                </div>
-                {hasMore && (
-                  <button 
-                    className="load-more-btn"
-                    onClick={loadMore}
-                    disabled={loadingMore}
-                  >
-                    {loadingMore ? 'Loading...' : 'Load More Recipes'}
-                  </button>
-                )}
+        {(() => {
+          if (loading) {
+            return <div className="recipes-loading">Loading recipes...</div>;
+          } else if (searchLoading) {
+            return <div className="recipes-loading">Searching for recipes...</div>;
+          } else if (error) {
+            return <div className="recipes-error">{error}</div>;
+          } else if (displayedRecipes.length === 0 && !searchLoading) {
+            return (
+              <div className="recipes-empty">
+                {activeTab === 'explore' 
+                  ? (showRecipeFinder ? 'Add ingredients to find recipes!' : 'Search for recipes to get started!')
+                  : 'No recipes found. Create your first recipe!'
+                }
               </div>
-            )}
-          </>
-        )}
+            );
+          } else {
+            return (
+              <>
+                <div className="recipes-grid">
+                  {displayedRecipes.map(recipe => {
+                    const difficulty = getDifficulty(recipe.readyInMinutes);
+                    const difficultyColor = getDifficultyColor(difficulty);
+                    
+                    return (
+                      <div 
+                        key={recipe.id} 
+                        className="recipe-card"
+                        onClick={() => navigate(`/recipes/${recipe.id}`)}
+                      >
+                        {/* Save Button */}
+                        <SaveRecipeButton 
+                          recipe={recipe}
+                          onSave={handleRecipeSave}
+                          onUnsave={handleRecipeUnsave}
+                        />
+                        
+                        {/* Difficulty Badge */}
+                        <div 
+                          className="difficulty-badge"
+                          style={{ backgroundColor: difficultyColor }}
+                        >
+                          {difficulty}
+                        </div>
+
+                        <img 
+                          src={recipe.image || 'https://via.placeholder.com/300x200.png?text=No+Image'}
+                          alt={recipe.title} 
+                          className="recipe-image"
+                          onError={e => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/300x200.png?text=No+Image'; }}
+                        />
+                        <div className="recipe-content">
+                          <h3 className="recipe-title">{recipe.title}</h3>
+                          
+                          {/* Recipe Stats */}
+                          <div className="recipe-stats">
+                            <div className="recipe-meta">
+                              <span className="recipe-time">⏱️ {recipe.readyInMinutes || recipe.cookTime || 'N/A'} min</span>
+                              <span className="recipe-servings">👥 {recipe.servings || 'N/A'} servings</span>
+                            </div>
+                            
+                            {recipe.calories && (
+                              <div className="recipe-calories">
+                                🔥 {Math.round(recipe.calories)} cal
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Missing Ingredients (for Recipe Finder) */}
+                          {recipe.missedIngredientCount > 0 && (
+                            <div className="recipe-missing">
+                              <span className="missing-badge">
+                                Missing {recipe.missedIngredientCount} ingredients
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Recipe Tags */}
+                          {recipe.diets && recipe.diets.length > 0 && (
+                            <div className="recipe-tags">
+                              {recipe.diets.slice(0, 3).map((diet, index) => (
+                                <span key={index} className="recipe-tag">
+                                  {diet}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Pagination */}
+                {!showRecipeFinder && searchResults.length > 0 && (
+                  <div className="pagination-section">
+                    <div className="pagination-info">
+                      Showing {searchResults.length} of {totalResults} recipes
+                    </div>
+                    {hasMore && (
+                      <button 
+                        className="load-more-btn"
+                        onClick={loadMore}
+                        disabled={loadingMore}
+                      >
+                        {loadingMore ? 'Loading...' : 'Load More Recipes'}
+                      </button>
+                    )}
+                  </div>
+                )}
+              </>
+            );
+          }
+        })()}
 
         {/* Login Prompt for My Recipes */}
         {!user && activeTab === 'my-recipes' && (
