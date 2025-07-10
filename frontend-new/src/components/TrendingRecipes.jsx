@@ -52,12 +52,10 @@ function TrendingRecipes() {
           >
             <div className="trending-image-container">
               <img 
-                src={recipe.image} 
+                src={recipe.image || 'https://via.placeholder.com/300x200.png?text=No+Image'}
                 alt={recipe.title}
                 className="trending-image"
-                onError={(e) => {
-                  e.target.src = 'https://via.placeholder.com/300x200/CCCCCC/666666?text=No+Image'
-                }}
+                onError={e => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/300x200.png?text=No+Image'; }}
               />
               <div className="trending-overlay">
                 <span className="trending-badge">🔥 Trending</span>

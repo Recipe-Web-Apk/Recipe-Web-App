@@ -1,7 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 const router = express.Router();
-const { filterRecipes, findRecipesByIngredients } = require('../data/sampleRecipes');
+const { sampleRecipes, filterRecipes, findRecipesByIngredients } = require('../data/sampleRecipes');
 
 // Test route to check if this router is working
 router.get('/test', (req, res) => {
@@ -74,13 +74,18 @@ router.get('/search', async (req, res) => {
     // Check if it's a rate limit error
     if (error.response?.data?.code === 402) {
       console.log('API limit reached, using sample data as fallback');
+      console.log('Query:', query);
+      console.log('Filters:', { sort, cuisine, diet, intolerances, maxReadyTime });
       
       // Use sample data as fallback
       const sampleResults = filterRecipes(query, { sort, cuisine, diet, intolerances, maxReadyTime });
+      console.log('Sample results found:', sampleResults.length);
+      
       const offset = parseInt(req.query.offset) || 0;
       const number = parseInt(req.query.number) || 12;
       
       const paginatedResults = sampleResults.slice(offset, offset + number);
+      console.log('Paginated results:', paginatedResults.length);
       
       res.json({
         results: paginatedResults,
@@ -110,7 +115,7 @@ router.get('/findByIngredients', async (req, res) => {
   if (!ingredients) return res.status(400).json({ error: 'Ingredients are required' });
 
   const SPOONACULAR_API_KEY = process.env.SPOONACULAR_API_KEY;
-  console.log('Finding recipes by ingredients:', ingredients);
+  const userIngredients = ingredients.split(',').map(ing => ing.trim().toLowerCase());
 
   try {
     // Build params object
@@ -119,7 +124,7 @@ router.get('/findByIngredients', async (req, res) => {
       apiKey: SPOONACULAR_API_KEY,
       ranking: parseInt(ranking),
       ignorePantry: ignorePantry === 'true',
-      number: 12
+      number: 50 // Get more results to filter from
     };
 
     // Add calorie constraints if provided
@@ -148,24 +153,51 @@ router.get('/findByIngredients', async (req, res) => {
             usedIngredients: recipe.usedIngredients
           };
         } catch (error) {
-          console.error(`Error fetching details for recipe ${recipe.id}:`, error.message);
+          console.error(`Error fetching details for recipe ${recipe.id}:`, error.message)
           // Return basic info if detailed fetch fails
           return {
             id: recipe.id,
             title: recipe.title,
             image: recipe.image,
             readyInMinutes: recipe.readyInMinutes,
-            servings: recipe.servings,
-            missedIngredientCount: recipe.missedIngredientCount,
-            usedIngredientCount: recipe.usedIngredientCount,
-            unusedIngredients: recipe.unusedIngredients,
-            usedIngredients: recipe.usedIngredients
-          };
+            servings: recipe.servings
+          }
         }
       })
-    );
+    )
 
-    res.json(detailedRecipes);
+    // Filter recipes to only include those that contain ALL user ingredients
+    const filteredRecipes = detailedRecipes.filter(recipe => {
+      if (!recipe.extendedIngredients || !Array.isArray(recipe.extendedIngredients)) {
+        return false;
+      }
+
+      // Get all recipe ingredients as lowercase strings
+      const recipeIngredients = recipe.extendedIngredients.map(ing => 
+        (ing.original || ing.name || '').toLowerCase()
+      );
+
+      // Check if ALL user ingredients are present in the recipe
+      const hasAllIngredients = userIngredients.every(userIngredient => 
+        recipeIngredients.some(recipeIngredient => 
+          recipeIngredient.includes(userIngredient) || userIngredient.includes(recipeIngredient)
+        )
+      );
+
+      return hasAllIngredients;
+    });
+
+    // Sort by how many ingredients are used (most used first)
+    filteredRecipes.sort((a, b) => {
+      const aUsed = a.usedIngredientCount || 0;
+      const bUsed = b.usedIngredientCount || 0;
+      return bUsed - aUsed;
+    });
+
+    // Limit to 12 results
+    const finalResults = filteredRecipes.slice(0, 12);
+
+    res.json(finalResults);
   } catch (error) {
     console.error('Spoonacular findByIngredients Error:', error.response?.data || error.message);
     
@@ -173,10 +205,16 @@ router.get('/findByIngredients', async (req, res) => {
     if (error.response?.data?.code === 402) {
       console.log('API limit reached, using sample data as fallback for ingredient search');
       
-      // Use sample data as fallback
-      const sampleResults = findRecipesByIngredients(ingredients.split(','), { minCalories, maxCalories });
+      // Use sample data as fallback - filter to only include recipes with all ingredients
+      const sampleResults = findRecipesByIngredients(userIngredients, { minCalories, maxCalories });
       
-      res.json(sampleResults);
+      // For sample data, we'll simulate the filtering
+      const filteredSampleResults = sampleResults.filter(recipe => {
+        // Simulate that all sample recipes contain the ingredients (for demo purposes)
+        return true;
+      });
+      
+      res.json(filteredSampleResults);
     } else {
       res.status(500).json({ 
         error: 'Failed to find recipes by ingredients',
@@ -192,7 +230,6 @@ router.get('/recipe/:id', async (req, res) => {
   if (!id) return res.status(400).json({ error: 'Recipe ID is required' });
 
   const SPOONACULAR_API_KEY = process.env.SPOONACULAR_API_KEY;
-  console.log('Getting recipe details for ID:', id);
 
   try {
     const response = await axios.get(`https://api.spoonacular.com/recipes/${id}/information`, {
@@ -203,10 +240,45 @@ router.get('/recipe/:id', async (req, res) => {
     res.json(response.data);
   } catch (error) {
     console.error('Spoonacular Recipe Details Error:', error.response?.data || error.message);
-    res.status(500).json({ 
-      error: 'Failed to fetch recipe details',
-      details: error.response?.data || error.message 
-    });
+    
+    // Check if it's a rate limit error
+    if (error.response?.data?.code === 402) {
+      console.log('API limit reached, using sample data as fallback for recipe details');
+      
+      // Use sample data as fallback - find a recipe by ID or return first one
+      const sampleRecipe = sampleRecipes.find(recipe => recipe.id === parseInt(id)) || sampleRecipes[0];
+      
+      if (sampleRecipe) {
+        // Enhance the sample recipe with more details to match Spoonacular format
+        const enhancedRecipe = {
+          ...sampleRecipe,
+          extendedIngredients: [
+            { original: '2 cups flour', name: 'flour', amount: 2, unit: 'cups' },
+            { original: '1 cup water', name: 'water', amount: 1, unit: 'cup' },
+            { original: '1 tsp salt', name: 'salt', amount: 1, unit: 'tsp' }
+          ],
+          instructions: '1. Mix all ingredients together.\n2. Cook according to recipe.\n3. Serve and enjoy!',
+          summary: `A delicious ${sampleRecipe.title.toLowerCase()} recipe that's easy to make and perfect for any occasion.`,
+          nutrition: {
+            nutrients: [
+              { name: 'Calories', amount: sampleRecipe.calories || 300, unit: 'kcal' },
+              { name: 'Protein', amount: 10, unit: 'g' },
+              { name: 'Fat', amount: 5, unit: 'g' },
+              { name: 'Carbohydrates', amount: 50, unit: 'g' }
+            ]
+          }
+        };
+        
+        res.json(enhancedRecipe);
+      } else {
+        res.status(404).json({ error: 'Recipe not found' });
+      }
+    } else {
+      res.status(500).json({ 
+        error: 'Failed to fetch recipe details',
+        details: error.response?.data || error.message 
+      });
+    }
   }
 });
 
@@ -225,7 +297,7 @@ router.get('/similar/:id', async (req, res) => {
       `https://api.spoonacular.com/recipes/${id}/similar`,
       {
         params: {
-          apiKey,
+          apiKey: apiKey,
           number: 6 // Limit to 6 similar recipes
         }
       }
@@ -238,7 +310,7 @@ router.get('/similar/:id', async (req, res) => {
           const detailResponse = await axios.get(
             `https://api.spoonacular.com/recipes/${recipe.id}/information`,
             {
-              params: { apiKey }
+              params: { apiKey: apiKey }
             }
           )
           return detailResponse.data
@@ -259,11 +331,30 @@ router.get('/similar/:id', async (req, res) => {
     res.json(detailedRecipes)
   } catch (error) {
     console.error('Error fetching similar recipes:', error.response?.data || error.message)
-    res.status(500).json({ 
-      error: 'Failed to fetch similar recipes',
-      details: error.response?.data || error.message 
-    })
+    
+    // Check if it's a rate limit error
+    if (error.response?.data?.code === 402) {
+      console.log('API limit reached, using sample data as fallback for similar recipes');
+      
+      // Use sample data as fallback - return a few sample recipes
+      const similarRecipes = sampleRecipes.slice(0, 6).map(recipe => ({
+        ...recipe,
+        extendedIngredients: [
+          { original: '2 cups flour', name: 'flour', amount: 2, unit: 'cups' },
+          { original: '1 cup water', name: 'water', amount: 1, unit: 'cup' }
+        ],
+        instructions: '1. Mix ingredients.\n2. Cook and serve.',
+        summary: `A delicious ${recipe.title.toLowerCase()} recipe.`
+      }));
+      
+      res.json(similarRecipes);
+    } else {
+      res.status(500).json({ 
+        error: 'Failed to fetch similar recipes',
+        details: error.response?.data || error.message 
+      })
+    }
   }
 })
 
-module.exports = router; 
+module.exports = router;

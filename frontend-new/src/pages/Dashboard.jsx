@@ -33,7 +33,24 @@ function Dashboard() {
   }
 
   useEffect(() => {
-    fetchRecipes()
+    if (token) {
+      fetchRecipes()
+    }
+  }, [token])
+
+  // Listen for recipe save/unsave events from other pages
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'recipeSaved' || e.key === 'recipeUnsaved') {
+        // Refresh saved recipes when user saves/unsaves from other pages
+        if (token) {
+          fetchRecipes()
+        }
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
   }, [token])
 
   // Refresh recipes when component mounts or when returning from other pages
@@ -51,52 +68,63 @@ function Dashboard() {
     
     try {
       setLoading(true)
-      const userId = getUserId()
-      
-      // Fetch user's created recipes
-      const { data: createdRecipes, error: createdError } = await supabase
-        .from('recipes')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-
-      if (createdError) {
-        console.error('Error fetching created recipes:', createdError)
+      // Fetch user's created recipes from backend API
+      const createdResponse = await fetch('http://localhost:5000/api/recipes', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      if (createdResponse.ok) {
+        const data = await createdResponse.json()
+        setMyRecipes(data.recipes || [])
       } else {
-        setMyRecipes(createdRecipes || [])
+        console.error('Error fetching created recipes:', createdResponse.status, createdResponse.statusText)
+        setMyRecipes([])
       }
 
-      // Fetch saved recipes (from localStorage for now)
-      const savedRecipeIds = JSON.parse(localStorage.getItem('savedRecipes') || '[]')
-      if (savedRecipeIds.length > 0) {
-        // For saved recipes, we'll fetch from Spoonacular API
-        const savedRecipesData = []
-        for (const recipeId of savedRecipeIds) {
-          try {
-            const response = await fetch(`http://localhost:5000/api/spoonacular/recipe/${recipeId}`)
-            if (response.ok) {
-              const recipe = await response.json()
-              savedRecipesData.push(recipe)
-            }
-          } catch (error) {
-            console.error(`Error fetching saved recipe ${recipeId}:`, error)
-          }
+      // Fetch saved recipes from backend API
+      const response = await fetch('http://localhost:5000/api/saved-recipes', {
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
-        setSavedRecipes(savedRecipesData)
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setSavedRecipes(data.recipes || [])
+      } else {
+        console.error('Error fetching saved recipes:', response.status, response.statusText)
+        setSavedRecipes([])
       }
     } catch (error) {
       console.error('Error fetching recipes:', error)
+      setSavedRecipes([])
+      setMyRecipes([])
     } finally {
       setLoading(false)
     }
   }
 
-  function handleRemoveRecipe(id) {
-    setSavedRecipes(prev => prev.filter(recipe => recipe.id !== id))
-    // Also remove from localStorage
-    const savedRecipes = JSON.parse(localStorage.getItem('savedRecipes') || '[]')
-    const updatedRecipes = savedRecipes.filter(recipeId => recipeId !== id)
-    localStorage.setItem('savedRecipes', JSON.stringify(updatedRecipes))
+  async function handleRemoveRecipe(id) {
+    try {
+      const response = await fetch(`http://localhost:5000/api/saved-recipes/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        // Update local state
+        setSavedRecipes(prev => prev.filter(recipe => recipe.id !== id))
+      } else {
+        console.error('Error removing saved recipe:', response.status, response.statusText)
+        alert('Failed to remove recipe')
+      }
+    } catch (error) {
+      console.error('Error removing saved recipe:', error)
+      alert('Failed to remove recipe')
+    }
   }
 
   async function handleDeleteMyRecipe(id) {
@@ -150,6 +178,17 @@ function Dashboard() {
       setEditStatus(result.error || 'Failed to update profile')
     }
   }
+
+  // Add logging and normalization before rendering
+  const normalizedMyRecipes = myRecipes.map(recipe => ({
+    ...recipe
+  }));
+  const normalizedSavedRecipes = savedRecipes.map(item => {
+    const recipe = item.recipe_data ? item.recipe_data : item;
+    return { ...recipe };
+  });
+  console.log('myRecipes:', normalizedMyRecipes);
+  console.log('savedRecipes:', normalizedSavedRecipes);
 
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto', padding: '2rem' }}>
@@ -239,7 +278,7 @@ function Dashboard() {
                 + Create Recipe
               </a>
             </div>
-            {myRecipes.length === 0 ? (
+            {normalizedMyRecipes.length === 0 ? (
               <div style={{ color: '#666', fontSize: '1.1rem', padding: '2rem 0' }}>
                 You haven't created any recipes yet. <a href="/recipes/create" style={{ color: '#007bff', textDecoration: 'none' }}>Create your first recipe!</a>
               </div>
@@ -249,7 +288,7 @@ function Dashboard() {
                 gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
                 gap: '2rem'
               }}>
-                {myRecipes.map(recipe => (
+                {normalizedMyRecipes.map(recipe => (
                   <RecipeCard
                     key={recipe.id}
                     recipe={recipe}
@@ -266,7 +305,7 @@ function Dashboard() {
           {/* Saved Recipes */}
           <div style={{ marginTop: '3rem' }}>
             <h2 style={{ fontSize: '1.3rem', marginBottom: '1rem' }}>Saved Recipes</h2>
-            {savedRecipes.length === 0 ? (
+            {normalizedSavedRecipes.length === 0 ? (
               <div style={{ color: '#666', fontSize: '1.1rem', padding: '2rem 0' }}>
                 No saved recipes yet. Browse recipes and save your favorites!
               </div>
@@ -276,12 +315,14 @@ function Dashboard() {
                 gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
                 gap: '2rem'
               }}>
-                {savedRecipes.map(recipe => (
+                {normalizedSavedRecipes.map(recipe => (
                   <RecipeCard
                     key={recipe.id}
                     recipe={recipe}
-                    allowDelete={true}
-                    onDelete={handleRemoveRecipe}
+                    allowDelete={false}
+                    onDelete={null}
+                    allowEdit={false}
+                    onEdit={null}
                   />
                 ))}
               </div>

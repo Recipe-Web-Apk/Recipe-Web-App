@@ -31,12 +31,9 @@ function SearchResults({ results, searchPerformed }) {
             className="recipe-card"
           >
             <img 
-              src={recipe.image} 
-              alt={recipe.title || recipe.name} 
-              className="recipe-card-image"
-              onError={(e) => {
-                e.target.src = 'https://via.placeholder.com/300x200/CCCCCC/666666?text=No+Image'
-              }}
+              src={recipe.image || 'https://via.placeholder.com/300x200.png?text=No+Image'}
+              alt={recipe.title}
+              onError={e => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/300x200.png?text=No+Image'; }}
             />
             <div className="recipe-card-content">
               <h4 className="recipe-card-title">

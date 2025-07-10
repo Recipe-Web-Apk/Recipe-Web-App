@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './RecipeFinder.css';
 
 function RecipeFinder({ isOpen, onClose, onSearch }) {
   const [query, setQuery] = useState('');
   const [diet, setDiet] = useState('');
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -13,7 +15,17 @@ function RecipeFinder({ isOpen, onClose, onSearch }) {
       return;
     }
     setError('');
-    onSearch({ query, diet });
+    // If onSearch is provided, use it (for /recipes page), otherwise redirect (for Home)
+    if (onSearch) {
+      onSearch({ query, diet });
+    } else {
+      // Redirect to /recipes with query params
+      const params = new URLSearchParams();
+      params.set('query', query);
+      if (diet) params.set('diet', diet);
+      navigate(`/recipes?${params.toString()}`);
+      if (onClose) onClose();
+    }
   };
 
   if (!isOpen) return null;

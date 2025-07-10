@@ -63,11 +63,9 @@ function SimilarRecipes({ recipeId }) {
           >
             <div className="similar-recipe-image">
               <img 
-                src={recipe.image} 
+                src={recipe.image || 'https://via.placeholder.com/300x200.png?text=No+Image'}
                 alt={recipe.title}
-                onError={(e) => {
-                  e.target.src = 'https://via.placeholder.com/300x200/CCCCCC/666666?text=No+Image'
-                }}
+                onError={e => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/300x200.png?text=No+Image'; }}
               />
             </div>
             <div className="similar-recipe-info">

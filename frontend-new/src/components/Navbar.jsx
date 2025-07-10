@@ -29,7 +29,7 @@ function Navbar() {
         )}
         {user && (
           <div className="navbar-user-menu">
-            <span className="navbar-user">👤 {user.email}</span>
+            <span className="navbar-user">👤 {user.email || 'User'}</span>
             <button className="navbar-btn" onClick={logout}>Logout</button>
           </div>
         )}

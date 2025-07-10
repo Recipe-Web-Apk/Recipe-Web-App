@@ -75,6 +75,8 @@ export function AuthProvider({ children }) {
 
   async function register(email, password, username) {
     try {
+      console.log('Sending registration request:', { email, username });
+      
       const response = await fetch('http://localhost:5000/api/auth/register', {
         method: 'POST',
         headers: {
@@ -84,6 +86,7 @@ export function AuthProvider({ children }) {
       })
 
       const data = await response.json()
+      console.log('Registration response:', response.status, data);
 
       if (response.ok) {
         return { success: true, message: data.message }
@@ -91,7 +94,7 @@ export function AuthProvider({ children }) {
         return { success: false, error: data.error }
       }
     } catch (error) {
-      console.error('Registration error:', error)
+      console.error('Registration network error:', error);
       return { success: false, error: 'Network error. Please try again.' }
     }
   }

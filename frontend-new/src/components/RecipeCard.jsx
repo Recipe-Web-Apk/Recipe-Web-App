@@ -7,22 +7,31 @@ function RecipeCard({ recipe, onDelete, onEdit, allowEdit, allowDelete, onFavori
     <article className="recipe-card" tabIndex={0} aria-label={recipe.title}>
       <Link to={`/recipes/${recipe.id}`} tabIndex={-1}>
         <img
-          src={recipe.image || 'https://via.placeholder.com/400x300?text=No+Image'}
+          src={recipe.image || "https://via.placeholder.com/300x200.png?text=No+Image"}
           alt={recipe.title}
-          className="recipe-card-image"
+          onError={e => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/300x200.png?text=No+Image"; }}
+          className="recipe-image"
         />
       </Link>
       <div className="recipe-card-body">
         <h2 className="recipe-card-title" title={recipe.title}>{recipe.title}</h2>
         <div className="recipe-card-meta">
-          {recipe.readyInMinutes && <span>⏱ {recipe.readyInMinutes} min</span>}
+          {recipe.readyInMinutes
+            ? <span>⏱ {recipe.readyInMinutes} min</span>
+            : recipe.cookTime
+              ? <span>⏱ {recipe.cookTime} min</span>
+              : null}
           {recipe.servings && <span>🍽 {recipe.servings} servings</span>}
         </div>
-        {recipe.summary && (
+        {recipe.summary ? (
           <div className="recipe-card-description">
             {recipe.summary.replace(/<[^>]+>/g, '').slice(0, 120)}{recipe.summary.length > 120 ? '...' : ''}
           </div>
-        )}
+        ) : recipe.description ? (
+          <div className="recipe-card-description">
+            {recipe.description.slice(0, 120)}{recipe.description.length > 120 ? '...' : ''}
+          </div>
+        ) : null}
         <div className="recipe-card-actions">
           <Link to={`/recipes/${recipe.id}`} className="recipe-card-btn">
             View
