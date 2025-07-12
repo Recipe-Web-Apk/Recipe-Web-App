@@ -4,7 +4,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { supabase } from '../supabaseClient';
 import SaveRecipeButton from '../components/SaveRecipeButton';
+import AutoSuggestSearch from '../components/AutoSuggestSearch';
 import './Recipes.css';
+import axiosInstance from '../api/axiosInstance';
 
 function Recipes() {
   const { user } = useAuth();
@@ -71,12 +73,12 @@ function Recipes() {
       // Add other filters if needed
       
       console.log('Searching from params:', params.toString());
-      const response = await fetch(`http://localhost:5000/api/spoonacular/search?${params}`);
-      const data = await response.json();
+      const response = await axiosInstance.get(`/spoonacular/search?${params.toString()}`);
+      const data = response.data;
       
       console.log('Search from params response:', response.status, data);
       
-      if (response.ok) {
+      if (response.status === 200) {
         setSearchResults(data.results || []);
         setTotalResults(data.totalResults || 0);
         setHasMore((data.results || []).length === 12);
@@ -152,12 +154,12 @@ function Recipes() {
       });
 
       console.log('Searching with params:', params.toString());
-      const response = await fetch(`http://localhost:5000/api/spoonacular/search?${params}`);
-      const data = await response.json();
+      const response = await axiosInstance.get(`/spoonacular/search?${params.toString()}`);
+      const data = response.data;
       
       console.log('Search response:', response.status, data);
       
-      if (response.ok) {
+      if (response.status === 200) {
         if (append) {
           setSearchResults(prev => [...prev, ...(data.results || [])]);
         } else {
@@ -202,10 +204,10 @@ function Recipes() {
       if (calorieRange.min) params.append('minCalories', calorieRange.min);
       if (calorieRange.max) params.append('maxCalories', calorieRange.max);
 
-      const response = await fetch(`http://localhost:5000/api/spoonacular/findByIngredients?${params}`);
-      const data = await response.json();
+      const response = await axiosInstance.get(`/spoonacular/findByIngredients?${params.toString()}`);
+      const data = response.data;
       
-      if (response.ok) {
+      if (response.status === 200) {
         setFinderResults(data || []);
       } else {
         // Check if it's an API limit error
@@ -395,27 +397,19 @@ function Recipes() {
             {/* Name Search */}
             {!showRecipeFinder && (
               <>
-                <form onSubmit={handleSearch} className="search-form">
-                  <input
-                    type="text"
+                <div className="search-form">
+                  <AutoSuggestSearch
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={setSearchQuery}
+                    onSearch={(query) => {
+                      setSearchQuery(query);
+                      setCurrentPage(0);
+                      searchSpoonacularRecipes(0, false);
+                    }}
                     placeholder="Search recipes by name or ingredient (e.g., pasta, chicken, vegan)"
-                    className="search-input"
+                    className="recipes-auto-suggest"
                   />
-                  {searchQuery && (
-                    <button
-                      type="button"
-                      className="clear-btn"
-                      onClick={clearSearch}
-                    >
-                      ×
-                    </button>
-                  )}
-                  <button type="submit" className="search-btn">
-                    {searchLoading ? 'Searching...' : 'Search'}
-                  </button>
-                </form>
+                </div>
 
                 {/* Advanced Filters */}
                 <div className="filters-section">
@@ -679,10 +673,13 @@ function Recipes() {
                         </div>
 
                         <img 
-                          src={recipe.image || 'https://via.placeholder.com/300x200.png?text=No+Image'}
+                          src={recipe.image || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjE1MCIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4='}
                           alt={recipe.title} 
                           className="recipe-image"
-                          onError={e => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/300x200.png?text=No+Image'; }}
+                          onError={e => { 
+                            e.target.onerror = null; 
+                            e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjE1MCIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4='; 
+                          }}
                         />
                         <div className="recipe-content">
                           <h3 className="recipe-title">{recipe.title}</h3>

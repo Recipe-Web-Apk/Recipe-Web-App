@@ -95,6 +95,37 @@
   letter-spacing: 1px;
 }
 
+.hero-search {
+  margin: 2rem 0;
+  width: 100%;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.hero-auto-suggest {
+  width: 100%;
+}
+
+.hero-auto-suggest .search-input-wrapper {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.hero-auto-suggest .search-input-wrapper:focus-within {
+  border-color: rgba(0, 123, 255, 0.5);
+  box-shadow: 0 12px 40px rgba(0, 123, 255, 0.2);
+}
+
+.hero-auto-suggest .suggestions-dropdown {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
+}
+
 @media (max-width: 768px) {
   .home-hero {
     padding: 2rem 1rem;

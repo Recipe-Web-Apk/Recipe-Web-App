@@ -1,5 +1,5 @@
 const express = require('express');
-const axios = require('axios');
+const axiosInstance = require('../axiosInstance');
 const router = express.Router();
 const { sampleRecipes, filterRecipes, findRecipesByIngredients } = require('../data/sampleRecipes');
 
@@ -64,7 +64,7 @@ router.get('/search', async (req, res) => {
     if (minProtein) params.minProtein = parseInt(minProtein);
     if (maxCalories) params.maxCalories = parseInt(maxCalories);
 
-    const response = await axios.get('https://api.spoonacular.com/recipes/complexSearch', {
+    const response = await axiosInstance.get('https://api.spoonacular.com/recipes/complexSearch', {
       params
     });
     res.json(response.data);
@@ -131,7 +131,7 @@ router.get('/findByIngredients', async (req, res) => {
     if (minCalories) params.minCalories = parseInt(minCalories);
     if (maxCalories) params.maxCalories = parseInt(maxCalories);
 
-    const response = await axios.get('https://api.spoonacular.com/recipes/findByIngredients', {
+    const response = await axiosInstance.get('https://api.spoonacular.com/recipes/findByIngredients', {
       params
     });
 
@@ -139,7 +139,7 @@ router.get('/findByIngredients', async (req, res) => {
     const detailedRecipes = await Promise.all(
       response.data.map(async (recipe) => {
         try {
-          const detailResponse = await axios.get(
+          const detailResponse = await axiosInstance.get(
             `https://api.spoonacular.com/recipes/${recipe.id}/information`,
             {
               params: { apiKey: SPOONACULAR_API_KEY }
@@ -232,7 +232,7 @@ router.get('/recipe/:id', async (req, res) => {
   const SPOONACULAR_API_KEY = process.env.SPOONACULAR_API_KEY;
 
   try {
-    const response = await axios.get(`https://api.spoonacular.com/recipes/${id}/information`, {
+    const response = await axiosInstance.get(`https://api.spoonacular.com/recipes/${id}/information`, {
       params: {
         apiKey: SPOONACULAR_API_KEY,
       },
@@ -293,7 +293,7 @@ router.get('/similar/:id', async (req, res) => {
     }
 
     // First get similar recipe IDs
-    const similarResponse = await axios.get(
+    const similarResponse = await axiosInstance.get(
       `https://api.spoonacular.com/recipes/${id}/similar`,
       {
         params: {
@@ -307,7 +307,7 @@ router.get('/similar/:id', async (req, res) => {
     const detailedRecipes = await Promise.all(
       similarResponse.data.map(async (recipe) => {
         try {
-          const detailResponse = await axios.get(
+          const detailResponse = await axiosInstance.get(
             `https://api.spoonacular.com/recipes/${recipe.id}/information`,
             {
               params: { apiKey: apiKey }
@@ -356,5 +356,68 @@ router.get('/similar/:id', async (req, res) => {
     }
   }
 })
+
+// GET /api/spoonacular/suggest - Get recipe suggestions for auto-complete
+router.get('/suggest', async (req, res) => {
+  try {
+    const { query } = req.query;
+    
+    if (!query || query.length < 2) {
+      return res.json({ results: [] });
+    }
+
+    const SPOONACULAR_API_KEY = process.env.SPOONACULAR_API_KEY;
+    
+    // Use a lightweight search to get suggestions
+    const response = await axiosInstance.get(
+      'https://api.spoonacular.com/recipes/complexSearch',
+      {
+        params: {
+          query,
+          apiKey: SPOONACULAR_API_KEY,
+          number: 10, // Get more results for better variety
+          addRecipeInformation: false, // Don't need full recipe info
+          fillIngredients: false,
+          instructionsRequired: false,
+          sort: 'relevance' // Ensure most relevant results first
+        }
+      }
+    );
+
+    if (response.status === 200 && response.data.results) {
+      const suggestions = response.data.results.map(recipe => ({
+        id: recipe.id,
+        title: recipe.title,
+        image: recipe.image,
+        type: 'recipe'
+      }));
+      
+      res.json({ results: suggestions });
+    } else {
+      res.json({ results: [] });
+    }
+  } catch (error) {
+    console.error('Suggest API error:', error.message);
+    
+    // Check if it's a rate limit error and use sample data as fallback
+    if (error.response?.data?.code === 402) {
+      console.log('API limit reached, using sample data as fallback for suggestions');
+      
+      // Use sample data as fallback - filter recipes that match the query
+      const sampleResults = filterRecipes(query, {});
+      const suggestions = sampleResults.slice(0, 10).map(recipe => ({
+        id: recipe.id,
+        title: recipe.title,
+        image: recipe.image,
+        type: 'recipe'
+      }));
+      
+      res.json({ results: suggestions });
+    } else {
+      // Return empty results on error to prevent breaking the UI
+      res.json({ results: [] });
+    }
+  }
+});
 
 module.exports = router;

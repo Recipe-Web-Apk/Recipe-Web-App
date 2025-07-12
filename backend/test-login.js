@@ -1,5 +1,6 @@
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
+const axiosInstance = require('./axiosInstance');
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_ANON_KEY;
@@ -10,6 +11,9 @@ if (!supabaseUrl || !supabaseKey) {
 }
 
 const supabase = createClient(supabaseUrl, supabaseKey);
+
+const TEST_EMAIL = 'vincentburner01@gmail.com';
+const TEST_PASSWORD = '999999';
 
 async function testLogin() {
   console.log('🔍 Testing login functionality...');
@@ -89,24 +93,14 @@ async function testLogin() {
     
     // Test 5: Test the backend login endpoint
     console.log('\n5. Testing backend login endpoint...');
-    const fetch = require('node-fetch');
     
-    const response = await fetch('http://localhost:5000/api/auth/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        email: testEmail,
-        password: testPassword
-      })
-    });
+    const response = await axiosInstance.post('/auth/login', { email: testEmail, password: testPassword });
     
-    const responseData = await response.json();
+    const responseData = response.data;
     console.log('Backend response status:', response.status);
     console.log('Backend response data:', responseData);
     
-    if (response.ok) {
+    if (response.status === 200) {
       console.log('✅ Backend login successful');
     } else {
       console.log('❌ Backend login failed');

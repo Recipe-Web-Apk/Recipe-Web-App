@@ -1,5 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
-const fetch = require('node-fetch');
+const axiosInstance = require('./axiosInstance');
 require('dotenv').config();
 
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -28,12 +28,8 @@ async function fetchAndCacheSpoonacularRecipe(recipeId) {
   // 2. Fetch from Spoonacular
   console.log('Fetching from Spoonacular API...');
   const url = `https://api.spoonacular.com/recipes/${recipeId}/information?includeNutrition=true&apiKey=${spoonacularApiKey}`;
-  const response = await fetch(url);
-  if (!response.ok) {
-    console.error('Spoonacular API error:', response.status, await response.text());
-    return null;
-  }
-  const data = await response.json();
+  const response = await axiosInstance.get(url);
+  const data = response.data;
 
   // 3. Cache in DB
   const { error: insertError } = await supabase

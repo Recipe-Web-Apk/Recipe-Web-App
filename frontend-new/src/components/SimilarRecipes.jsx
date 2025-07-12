@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { FiClock, FiUsers } from 'react-icons/fi'
 import './SimilarRecipes.css'
+import axiosInstance from '../api/axiosInstance';
 
 function SimilarRecipes({ recipeId }) {
   const [similarRecipes, setSimilarRecipes] = useState([])
@@ -19,10 +20,10 @@ function SimilarRecipes({ recipeId }) {
       setLoading(true)
       setError(null)
       
-      const response = await fetch(`http://localhost:5000/api/spoonacular/similar/${recipeId}`)
-      const data = await response.json()
+      const response = await axiosInstance.get(`/spoonacular/similar/${recipeId}`)
+      const data = response.data
       
-      if (response.ok) {
+      if (response.status === 200) {
         setSimilarRecipes(data)
       } else {
         setError(data.error || 'Failed to fetch similar recipes')
@@ -63,9 +64,9 @@ function SimilarRecipes({ recipeId }) {
           >
             <div className="similar-recipe-image">
               <img 
-                src={recipe.image || 'https://via.placeholder.com/300x200.png?text=No+Image'}
-                alt={recipe.title}
-                onError={e => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/300x200.png?text=No+Image'; }}
+                src={recipe.image || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjE1MCIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4='}
+                alt={recipe.title} 
+                onError={e => { e.target.onerror = null; e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjE1MCIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4='; }}
               />
             </div>
             <div className="similar-recipe-info">

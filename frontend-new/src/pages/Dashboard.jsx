@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import UserInfoCard from '../components/UserInfoCard'
 import RecipeCard from '../components/RecipeCard'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../supabaseClient'
+import axiosInstance from '../api/axiosInstance';
 
 function Dashboard() {
   const { user, changePassword, updateProfile, token } = useAuth()
@@ -32,68 +33,42 @@ function Dashboard() {
     return null
   }
 
-  useEffect(() => {
-    if (token) {
-      fetchRecipes()
-    }
-  }, [token])
-
-  // Listen for recipe save/unsave events from other pages
-  useEffect(() => {
-    const handleStorageChange = (e) => {
-      if (e.key === 'recipeSaved' || e.key === 'recipeUnsaved') {
-        // Refresh saved recipes when user saves/unsaves from other pages
-        if (token) {
-          fetchRecipes()
-        }
-      }
-    }
-
-    window.addEventListener('storage', handleStorageChange)
-    return () => window.removeEventListener('storage', handleStorageChange)
-  }, [token])
-
-  // Refresh recipes when component mounts or when returning from other pages
-  useEffect(() => {
-    const handleFocus = () => {
-      fetchRecipes()
-    }
-    
-    window.addEventListener('focus', handleFocus)
-    return () => window.removeEventListener('focus', handleFocus)
-  }, [])
-
-  async function fetchRecipes() {
+  const fetchRecipes = useCallback(async () => {
     if (!token) return
     
     try {
       setLoading(true)
+      // Debug: Log token and Authorization header
+      console.log('Dashboard fetchRecipes: token =', token)
+      console.log('Dashboard fetchRecipes: Authorization header =', `Bearer ${token}`)
+      
       // Fetch user's created recipes from backend API
-      const createdResponse = await fetch('http://localhost:5000/api/recipes', {
+      const createdResponse = await axiosInstance.get('/recipes', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       })
-      if (createdResponse.ok) {
-        const data = await createdResponse.json()
-        setMyRecipes(data.recipes || [])
+      console.log('Dashboard: Created recipes response:', createdResponse.data)
+      if (createdResponse.data.success) {
+        setMyRecipes(createdResponse.data.recipes || [])
       } else {
-        console.error('Error fetching created recipes:', createdResponse.status, createdResponse.statusText)
+        console.error('Error fetching created recipes:', createdResponse.data.error)
         setMyRecipes([])
       }
 
       // Fetch saved recipes from backend API
-      const response = await fetch('http://localhost:5000/api/saved-recipes', {
+      const response = await axiosInstance.get('/saved-recipes', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       })
+      console.log('Dashboard: Saved recipes response:', response.data)
 
-      if (response.ok) {
-        const data = await response.json()
-        setSavedRecipes(data.recipes || [])
+      if (response.data.success) {
+        console.log('Dashboard: Setting saved recipes:', response.data.recipes)
+        setSavedRecipes(response.data.recipes || [])
       } else {
-        console.error('Error fetching saved recipes:', response.status, response.statusText)
+        console.error('Error fetching saved recipes:', response.data.error)
         setSavedRecipes([])
       }
     } catch (error) {
@@ -103,22 +78,71 @@ function Dashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [token]);
+
+  useEffect(() => {
+    if (token) {
+      fetchRecipes()
+    }
+  }, [token, fetchRecipes])
+
+  // Listen for recipe save/unsave events from other pages
+  useEffect(() => {
+    console.log('Dashboard: Setting up event listeners for recipe save/unsave');
+    
+    const handleRecipeSaved = (e) => {
+      console.log('Dashboard: Recipe saved event received', e.detail);
+      console.log('Dashboard: Current token exists?', !!token);
+      // Refresh saved recipes when user saves from other pages
+      if (token) {
+        console.log('Dashboard: Calling fetchRecipes after save event');
+        fetchRecipes()
+      }
+    }
+
+    const handleRecipeUnsaved = (e) => {
+      console.log('Dashboard: Recipe unsaved event received', e.detail);
+      console.log('Dashboard: Current token exists?', !!token);
+      // Refresh saved recipes when user unsaves from other pages
+      if (token) {
+        console.log('Dashboard: Calling fetchRecipes after unsave event');
+        fetchRecipes()
+      }
+    }
+
+    window.addEventListener('recipeSaved', handleRecipeSaved)
+    window.addEventListener('recipeUnsaved', handleRecipeUnsaved)
+    
+    return () => {
+      console.log('Dashboard: Cleaning up event listeners');
+      window.removeEventListener('recipeSaved', handleRecipeSaved)
+      window.removeEventListener('recipeUnsaved', handleRecipeUnsaved)
+    }
+  }, [token, fetchRecipes])
+
+  // Refresh recipes when component mounts or when returning from other pages
+  useEffect(() => {
+    const handleFocus = () => {
+      fetchRecipes()
+    }
+    
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
+  }, [fetchRecipes])
 
   async function handleRemoveRecipe(id) {
     try {
-      const response = await fetch(`http://localhost:5000/api/saved-recipes/${id}`, {
-        method: 'DELETE',
+      const response = await axiosInstance.delete(`/saved-recipes/${id}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
 
-      if (response.ok) {
+      if (response.data.success) {
         // Update local state
         setSavedRecipes(prev => prev.filter(recipe => recipe.id !== id))
       } else {
-        console.error('Error removing saved recipe:', response.status, response.statusText)
+        console.error('Error removing saved recipe:', response.data.error)
         alert('Failed to remove recipe')
       }
     } catch (error) {
@@ -183,16 +207,20 @@ function Dashboard() {
   const normalizedMyRecipes = myRecipes.map(recipe => ({
     ...recipe
   }));
-  const normalizedSavedRecipes = savedRecipes.map(item => {
-    const recipe = item.recipe_data ? item.recipe_data : item;
+  const normalizedSavedRecipes = savedRecipes.map(recipe => {
+    // The backend already extracts recipe_data, so we just need to spread the recipe
     return { ...recipe };
   });
+  console.log('Dashboard: Current user:', user);
+  console.log('Dashboard: Current user ID:', user?.id);
+  console.log('Dashboard: Token exists:', !!token);
   console.log('myRecipes:', normalizedMyRecipes);
   console.log('savedRecipes:', normalizedSavedRecipes);
 
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto', padding: '2rem' }}>
       <h1 style={{ fontSize: '2rem', marginBottom: '2rem' }}>Dashboard</h1>
+      
       <UserInfoCard user={user} onEditProfile={handleEditProfile} />
       {editing && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>

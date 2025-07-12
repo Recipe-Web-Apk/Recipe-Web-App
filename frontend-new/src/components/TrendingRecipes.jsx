@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './TrendingRecipes.css';
+import axiosInstance from '../api/axiosInstance';
 
 function TrendingRecipes() {
   const [trendingRecipes, setTrendingRecipes] = useState([]);
@@ -14,10 +15,10 @@ function TrendingRecipes() {
   async function fetchTrendingRecipes() {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5000/api/spoonacular/search?query=popular&sort=popularity&offset=0');
-      const data = await response.json();
+      const response = await axiosInstance.get('http://localhost:5000/api/spoonacular/search?query=popular&sort=popularity&offset=0');
+      const data = response.data;
       
-      if (response.ok) {
+      if (response.status === 200) {
         setTrendingRecipes(data.results?.slice(0, 6) || []);
       } else {
         console.error('Failed to fetch trending recipes:', data);
@@ -52,10 +53,10 @@ function TrendingRecipes() {
           >
             <div className="trending-image-container">
               <img 
-                src={recipe.image || 'https://via.placeholder.com/300x200.png?text=No+Image'}
-                alt={recipe.title}
+                src={recipe.image || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjE1MCIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4='}
+                alt={recipe.title} 
                 className="trending-image"
-                onError={e => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/300x200.png?text=No+Image'; }}
+                onError={e => { e.target.onerror = null; e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjE1MCIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4='; }}
               />
               <div className="trending-overlay">
                 <span className="trending-badge">🔥 Trending</span>

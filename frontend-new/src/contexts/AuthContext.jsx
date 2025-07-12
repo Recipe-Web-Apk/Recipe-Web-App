@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
+import axiosInstance from '../api/axiosInstance';
 
 const AuthContext = createContext()
 
@@ -23,15 +24,10 @@ export function AuthProvider({ children }) {
         return
       }
 
-      const response = await fetch('http://localhost:5000/api/auth/me', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
+      const response = await axiosInstance.get('/auth/me')
 
-      if (response.ok) {
-        const data = await response.json()
-        setUser(data.user)
+      if (response.data) {
+        setUser(response.data.user)
       } else {
         // Token is invalid, clear it
         localStorage.removeItem('token')
@@ -48,24 +44,16 @@ export function AuthProvider({ children }) {
 
   async function login(email, password) {
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email, password })
-      })
+      const response = await axiosInstance.post('/auth/login', { email, password })
 
-      const data = await response.json()
-
-      if (response.ok) {
-        setUser(data.user)
-        setToken(data.session.access_token)
-        localStorage.setItem('token', data.session.access_token)
-        localStorage.setItem('refresh_token', data.session.refresh_token)
+      if (response.data) {
+        setUser(response.data.user)
+        setToken(response.data.session.access_token)
+        localStorage.setItem('token', response.data.session.access_token)
+        localStorage.setItem('refresh_token', response.data.session.refresh_token)
         return { success: true }
       } else {
-        return { success: false, error: data.error }
+        return { success: false, error: response.data.error }
       }
     } catch (error) {
       console.error('Login error:', error)
@@ -77,18 +65,12 @@ export function AuthProvider({ children }) {
     try {
       console.log('Sending registration request:', { email, username });
       
-      const response = await fetch('http://localhost:5000/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email, password, username })
-      })
+      const response = await axiosInstance.post('/auth/register', { email, password, username })
 
-      const data = await response.json()
+      const data = response.data;
       console.log('Registration response:', response.status, data);
 
-      if (response.ok) {
+      if (response.data) {
         return { success: true, message: data.message }
       } else {
         return { success: false, error: data.error }
@@ -102,13 +84,7 @@ export function AuthProvider({ children }) {
   async function logout() {
     try {
       if (token) {
-        await fetch('http://localhost:5000/api/auth/logout', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ access_token: token })
-        })
+        await axiosInstance.post('/auth/logout', { access_token: token })
       }
     } catch (error) {
       console.error('Logout error:', error)
@@ -125,17 +101,11 @@ export function AuthProvider({ children }) {
       const refresh_token = localStorage.getItem('refresh_token')
       if (!refresh_token) return false
 
-      const response = await fetch('http://localhost:5000/api/auth/refresh', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ refresh_token })
-      })
+      const response = await axiosInstance.post('/auth/refresh', { refresh_token })
 
-      const data = await response.json()
+      const data = response.data;
 
-      if (response.ok) {
+      if (response.data) {
         setToken(data.session.access_token)
         localStorage.setItem('token', data.session.access_token)
         localStorage.setItem('refresh_token', data.session.refresh_token)
@@ -154,16 +124,13 @@ export function AuthProvider({ children }) {
 
   async function changePassword(currentPassword, newPassword) {
     try {
-      const response = await fetch('http://localhost:5000/api/auth/change-password', {
-        method: 'POST',
+      const response = await axiosInstance.post('/auth/change-password', { currentPassword, newPassword }, {
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ currentPassword, newPassword })
+        }
       })
-      const data = await response.json()
-      if (response.ok) {
+      const data = response.data
+      if (response.data) {
         return { success: true }
       } else {
         return { success: false, error: data.error }
@@ -175,16 +142,13 @@ export function AuthProvider({ children }) {
 
   async function updateProfile(username, email) {
     try {
-      const response = await fetch('http://localhost:5000/api/auth/update-profile', {
-        method: 'POST',
+      const response = await axiosInstance.post('/auth/update-profile', { username, email }, {
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ username, email })
+        }
       })
-      const data = await response.json()
-      if (response.ok) {
+      const data = response.data
+      if (response.data) {
         setUser(data.user)
         return { success: true }
       } else {

@@ -7,6 +7,7 @@ import RecipeStatsSection from '../components/RecipeStatsSection'
 import IngredientsSection from '../components/IngredientsSection'
 import InstructionsSection from '../components/InstructionsSection'
 import FormActions from '../components/FormActions'
+import axiosInstance from '../api/axiosInstance';
 
 function RecipeForm() {
   const navigate = useNavigate()
@@ -189,29 +190,19 @@ function RecipeForm() {
       if (form.category) recipeData.category = form.category
       if (form.tags) recipeData.tags = form.tags.trim()
 
-      const response = await fetch('http://localhost:5000/api/recipes', {
-        method: 'POST',
+      const response = await axiosInstance.post('/recipes', recipeData, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(recipeData)
+        }
       })
 
-      // Check if response is JSON
-      const contentType = response.headers.get('content-type')
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new Error('Server returned non-JSON response. Make sure the backend server is running.')
-      }
-
-      const data = await response.json()
-
-      if (response.ok) {
+      if (response.data.success) {
         alert('Recipe created successfully!')
         navigate('/recipes')
       } else {
-        console.error('Recipe creation error:', data.error)
-        setSubmitError(data.error || 'Failed to create recipe')
+        console.error('Recipe creation error:', response.data.error)
+        setSubmitError(response.data.error || 'Failed to create recipe')
       }
     } catch (error) {
       console.error('Error creating recipe:', error)
