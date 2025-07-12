@@ -55,6 +55,7 @@ router.post('/', authenticateToken, async (req, res) => {
     }
 
     res.json({ 
+      success: true,
       message: 'Recipe created successfully',
       recipe: data[0]
     });
@@ -80,7 +81,7 @@ router.get('/', authenticateToken, async (req, res) => {
       return res.status(500).json({ error: 'Failed to fetch recipes' });
     }
 
-    res.json({ recipes: recipes || [] });
+    res.json({ success: true, recipes: recipes || [] });
   } catch (error) {
     console.error('Error in get recipes route:', error);
     res.status(500).json({ error: 'Internal server error' });

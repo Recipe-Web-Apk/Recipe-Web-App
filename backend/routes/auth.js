@@ -149,7 +149,7 @@ router.post('/login', async (req, res) => {
     res.json({
       message: 'Login successful',
       user: {
-        id: profile?.id || data.user.id, // Use profile ID if available, otherwise auth ID
+        id: data.user.id, // Always use auth user ID for consistency
         auth_id: data.user.id, // Keep auth ID for reference
         email: data.user.email,
         username: profile?.username || data.user.user_metadata?.username
@@ -219,7 +219,7 @@ router.get('/me', async (req, res) => {
 
     res.json({
       user: {
-        id: profile?.id || user.id, // Use profile ID if available, otherwise auth ID
+        id: user.id, // Always use auth user ID for consistency
         auth_id: user.id, // Keep auth ID for reference
         email: user.email,
         username: profile?.username || user.user_metadata?.username

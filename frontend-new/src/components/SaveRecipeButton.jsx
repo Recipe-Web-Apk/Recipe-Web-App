@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import './SaveRecipeButton.css';
+import axiosInstance from '../api/axiosInstance';
 
 const SaveRecipeButton = ({ recipe, onSave, onUnsave }) => {
   const { user, token } = useAuth();
@@ -15,18 +16,17 @@ const SaveRecipeButton = ({ recipe, onSave, onUnsave }) => {
 
   const checkIfSaved = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/saved-recipes', {
+      const response = await axiosInstance.get('/saved-recipes', {
         headers: {
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`
         }
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        const savedRecipe = data.recipes.find(r => r.id === recipe.id);
+      if (response.data.success) {
+        const savedRecipe = response.data.recipes.find(r => r.id === recipe.id);
         setIsSaved(!!savedRecipe);
       } else {
-        console.error('Error checking saved status:', response.status);
+        console.error('Error checking saved status:', response.data.error);
       }
     } catch (error) {
       console.error('Error checking saved status:', error);
@@ -39,46 +39,46 @@ const SaveRecipeButton = ({ recipe, onSave, onUnsave }) => {
       return;
     }
 
+    console.log('SaveRecipeButton: Starting save/unsave process, isSaved =', isSaved);
+    console.log('SaveRecipeButton: Current user:', user);
+    console.log('SaveRecipeButton: Current token exists:', !!token);
     setLoading(true);
     try {
       if (isSaved) {
+        console.log('SaveRecipeButton: Unsaving recipe', recipe.id);
         // Unsave recipe
-        const response = await fetch(`http://localhost:5000/api/saved-recipes/${recipe.id}`, {
-          method: 'DELETE',
+        const response = await axiosInstance.delete(`/saved-recipes/${recipe.id}`, {
           headers: {
-            'Authorization': `Bearer ${token}`
+            Authorization: `Bearer ${token}`
           }
         });
 
-        if (response.ok) {
+        if (response.data.success) {
+          console.log('SaveRecipeButton: Recipe unsaved successfully, dispatching event');
           setIsSaved(false);
           if (onUnsave) onUnsave(recipe);
-          // Notify other pages about the unsave
-          localStorage.setItem('recipeUnsaved', Date.now().toString());
-          localStorage.removeItem('recipeUnsaved');
+          // Notify other pages about the unsave using custom event
+          window.dispatchEvent(new CustomEvent('recipeUnsaved', { detail: recipe }));
         } else {
           throw new Error('Failed to unsave recipe');
         }
       } else {
+        console.log('SaveRecipeButton: Saving recipe', recipe.id);
         // Save recipe
-        const response = await fetch('http://localhost:5000/api/saved-recipes', {
-          method: 'POST',
+        const response = await axiosInstance.post('/saved-recipes', { recipe }, {
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ recipe })
+            Authorization: `Bearer ${token}`
+          }
         });
 
-        if (response.ok) {
+        if (response.data.success) {
+          console.log('SaveRecipeButton: Recipe saved successfully, dispatching event');
           setIsSaved(true);
           if (onSave) onSave(recipe);
-          // Notify other pages about the save
-          localStorage.setItem('recipeSaved', Date.now().toString());
-          localStorage.removeItem('recipeSaved');
+          // Notify other pages about the save using custom event
+          window.dispatchEvent(new CustomEvent('recipeSaved', { detail: recipe }));
         } else {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to save recipe');
+          throw new Error(response.data.error || 'Failed to save recipe');
         }
       }
     } catch (error) {

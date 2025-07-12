@@ -1,28 +1,25 @@
 require('dotenv').config();
-const fetch = require('node-fetch');
+const axiosInstance = require('./axiosInstance');
+
+const TEST_EMAIL = 'vincentburner01@gmail.com';
+const TEST_PASSWORD = '999999';
 
 async function testRegistration() {
   console.log('Testing registration endpoint...');
   
   try {
-    const response = await fetch('http://localhost:5000/api/auth/register', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        email: 'test@example.com',
-        password: 'testpass123',
-        username: 'testuser'
-      })
+    const response = await axiosInstance.post('http://localhost:5000/api/auth/register', {
+      email: TEST_EMAIL,
+      password: TEST_PASSWORD,
+      username: 'testuser'
     });
 
-    const data = await response.json();
+    const data = response.data;
     
     console.log('Response status:', response.status);
     console.log('Response data:', data);
     
-    if (response.ok) {
+    if (response.status === 201) { // Assuming 201 is the status for successful registration
       console.log('✅ Registration successful!');
     } else {
       console.log('❌ Registration failed:', data.error);

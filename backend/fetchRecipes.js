@@ -1,5 +1,5 @@
 const fs = require('fs');
-const axios = require('axios');
+const axiosInstance = require('./axiosInstance');
 require('dotenv').config();
 
 const API_KEY = process.env.SPOONACULAR_API_KEY;
@@ -9,7 +9,7 @@ const BATCH_SIZE = 10; // Safe default for free tier
 const fetchRecipes = async () => {
   try {
     // Step 1: Fetch recipes from API
-    const response = await axios.get('https://api.spoonacular.com/recipes/random', {
+    const response = await axiosInstance.get('/recipes/random', {
       params: {
         number: BATCH_SIZE,
         apiKey: API_KEY

@@ -1,5 +1,5 @@
 require('dotenv').config();
-const axios = require('axios');
+const axiosInstance = require('./axiosInstance');
 
 const SPOONACULAR_API_KEY = process.env.SPOONACULAR_API_KEY;
 
@@ -15,7 +15,7 @@ async function testSpoonacularAPI() {
   try {
     // Test 1: Simple search
     console.log('\n1. Testing simple search...');
-    const searchResponse = await axios.get('https://api.spoonacular.com/recipes/complexSearch', {
+    const searchResponse = await axiosInstance.get('/recipes/complexSearch', {
       params: {
         query: 'pasta',
         apiKey: SPOONACULAR_API_KEY,
@@ -43,7 +43,7 @@ async function testSpoonacularAPI() {
   try {
     // Test 2: Recipe information
     console.log('\n2. Testing recipe information...');
-    const infoResponse = await axios.get('https://api.spoonacular.com/recipes/716429/information', {
+    const infoResponse = await axiosInstance.get('/recipes/716429/information', {
       params: {
         apiKey: SPOONACULAR_API_KEY
       }
@@ -59,7 +59,7 @@ async function testSpoonacularAPI() {
   try {
     // Test 3: Find by ingredients
     console.log('\n3. Testing find by ingredients...');
-    const ingredientsResponse = await axios.get('https://api.spoonacular.com/recipes/findByIngredients', {
+    const ingredientsResponse = await axiosInstance.get('/recipes/findByIngredients', {
       params: {
         ingredients: 'chicken,rice',
         apiKey: SPOONACULAR_API_KEY,

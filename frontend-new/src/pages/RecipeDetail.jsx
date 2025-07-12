@@ -20,6 +20,7 @@ import {
 import SimilarRecipes from '../components/SimilarRecipes'
 import { supabase } from '../supabaseClient'
 import './RecipeDetail.css'
+import axiosInstance from '../api/axiosInstance';
 
 function RecipeDetail() {
   const { id } = useParams()
@@ -48,24 +49,20 @@ function RecipeDetail() {
       setError(null)
       // 1. Try backend for user-created recipes
       try {
-        const response = await fetch(`http://localhost:5000/api/recipes/${id}`, {
+        const response = await axiosInstance.get(`/recipes/${id}`, {
           headers: token ? { 'Authorization': `Bearer ${token}` } : {}
         });
-        if (response.ok) {
-          const data = await response.json();
-          if (data.recipe) {
-            setRecipe(data.recipe);
-            setDataSource('user');
-            return;
-          }
+        if (response.data.recipe) {
+          setRecipe(response.data.recipe);
+          setDataSource('user');
+          return;
         }
       } catch (err) { /* ignore and fallback */ }
       // 2. Try Spoonacular for explore recipes
       try {
-        const response = await fetch(`http://localhost:5000/api/spoonacular/recipe/${id}`)
-        if (response.ok) {
-          const data = await response.json()
-          setRecipe(data)
+        const response = await axiosInstance.get(`/spoonacular/recipe/${id}`)
+        if (response.data) {
+          setRecipe(response.data)
           setDataSource('spoonacular')
           return
         }
@@ -233,12 +230,12 @@ function RecipeDetail() {
           <div className="recipe-detail-left">
             <div className="recipe-detail-image-container">
               <img 
-                src={recipe.image || 'https://via.placeholder.com/600x400.png?text=No+Image'} 
+                src={recipe.image || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjMwMCIgeT0iMjAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4='}
                 alt={recipe.title}
                 className="recipe-detail-image"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = 'https://via.placeholder.com/600x400.png?text=No+Image';
+                onError={e => { 
+                  e.target.onerror = null; 
+                  e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjMwMCIgeT0iMjAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4='; 
                 }}
               />
               
