@@ -367,7 +367,7 @@ router.get('/suggest', async (req, res) => {
     }
 
     const SPOONACULAR_API_KEY = process.env.SPOONACULAR_API_KEY;
-    
+    const lowerQuery = query.toLowerCase();
     // Use a lightweight search to get suggestions
     const response = await axiosInstance.get(
       'https://api.spoonacular.com/recipes/complexSearch',
@@ -385,12 +385,14 @@ router.get('/suggest', async (req, res) => {
     );
 
     if (response.status === 200 && response.data.results) {
-      const suggestions = response.data.results.map(recipe => ({
-        id: recipe.id,
-        title: recipe.title,
-        image: recipe.image,
-        type: 'recipe'
-      }));
+      const suggestions = response.data.results
+        .filter(recipe => recipe.title && recipe.title.toLowerCase().includes(lowerQuery))
+        .map(recipe => ({
+          id: recipe.id,
+          title: recipe.title,
+          image: recipe.image,
+          type: 'recipe'
+        }));
       
       res.json({ results: suggestions });
     } else {
@@ -402,15 +404,19 @@ router.get('/suggest', async (req, res) => {
     // Check if it's a rate limit error and use sample data as fallback
     if (error.response?.data?.code === 402) {
       console.log('API limit reached, using sample data as fallback for suggestions');
-      
+      const { query } = req.query;
+      const lowerQuery = query.toLowerCase();
       // Use sample data as fallback - filter recipes that match the query
       const sampleResults = filterRecipes(query, {});
-      const suggestions = sampleResults.slice(0, 10).map(recipe => ({
-        id: recipe.id,
-        title: recipe.title,
-        image: recipe.image,
-        type: 'recipe'
-      }));
+      const suggestions = sampleResults
+        .filter(recipe => recipe.title && recipe.title.toLowerCase().includes(lowerQuery))
+        .slice(0, 10)
+        .map(recipe => ({
+          id: recipe.id,
+          title: recipe.title,
+          image: recipe.image,
+          type: 'recipe'
+        }));
       
       res.json({ results: suggestions });
     } else {
