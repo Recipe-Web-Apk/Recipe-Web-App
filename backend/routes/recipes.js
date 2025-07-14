@@ -94,10 +94,15 @@ router.get('/:id', authenticateToken, async (req, res) => {
     const userId = req.user.id;
     const recipeId = req.params.id;
 
+    // Validate that recipeId is a valid integer
+    if (isNaN(recipeId)) {
+      return res.status(400).json({ error: 'Invalid recipe ID' });
+    }
+
     const { data, error } = await supabase
       .from('recipes')
       .select('*')
-      .eq('id', recipeId)
+      .eq('id', Number(recipeId))
       .eq('user_id', userId)
       .single();
 

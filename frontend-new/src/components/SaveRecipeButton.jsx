@@ -6,77 +6,90 @@ import axiosInstance from '../api/axiosInstance';
 const SaveRecipeButton = ({ recipe, onSave, onUnsave }) => {
   const { user, token } = useAuth();
   const [isSaved, setIsSaved] = useState(false);
+  const [savedRecipeId, setSavedRecipeId] = useState(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (user && recipe && token) {
       checkIfSaved();
     }
+    // eslint-disable-next-line
   }, [user, recipe, token]);
 
   const checkIfSaved = async () => {
     try {
       const response = await axiosInstance.get('/saved-recipes', {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+        headers: { Authorization: `Bearer ${token}` }
       });
 
-      if (response.data.success) {
-        const savedRecipe = response.data.recipes.find(r => r.id === recipe.id);
-        setIsSaved(!!savedRecipe);
-      } else {
-        console.error('Error checking saved status:', response.data.error);
-      }
+      console.log("✅ Saved recipes fetched:", response.data.recipes);
+      console.log("🔍 Matching saved recipe for:", recipe.id);
+      const savedRecipe = response.data.recipes.find(
+        r => r.spoonacular_id === recipe.id || r.id === recipe.id
+      );
+      console.log("🔁 Matched saved recipe:", savedRecipe);
+      setIsSaved(!!savedRecipe);
+      setSavedRecipeId(savedRecipe ? savedRecipe.saved_recipe_id : null);
     } catch (error) {
       console.error('Error checking saved status:', error);
     }
   };
 
   const handleSave = async () => {
+    console.log("🔥 Save button clicked");
+    console.log("👤 user:", user);
+    console.log("🔑 token:", token);
+    console.log("🍽️ recipe:", recipe);
+
     if (!user || !token) {
-      // Redirect to login or show login prompt
+      console.warn("❗ Missing user or token — skipping save");
       return;
     }
 
-    console.log('SaveRecipeButton: Starting save/unsave process, isSaved =', isSaved);
-    console.log('SaveRecipeButton: Current user:', user);
-    console.log('SaveRecipeButton: Current token exists:', !!token);
+    if (!recipe || !recipe.id) {
+      console.warn("❌ Invalid or missing recipe.id — skipping save", recipe);
+      alert('Recipe is still loading. Please wait.');
+      return;
+    }
+
     setLoading(true);
     try {
       if (isSaved) {
-        console.log('SaveRecipeButton: Unsaving recipe', recipe.id);
-        // Unsave recipe
-        const response = await axiosInstance.delete(`/saved-recipes/${recipe.id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+        // Unsave recipe using saved_recipe_id if available, else fallback to recipe.id
+        const idToDelete = savedRecipeId || recipe.id;
+        const response = await axiosInstance.delete(`/saved-recipes/${idToDelete}`, {
+          headers: { Authorization: `Bearer ${token}` }
         });
 
         if (response.data.success) {
-          console.log('SaveRecipeButton: Recipe unsaved successfully, dispatching event');
           setIsSaved(false);
+          setSavedRecipeId(null);
           if (onUnsave) onUnsave(recipe);
-          // Notify other pages about the unsave using custom event
           window.dispatchEvent(new CustomEvent('recipeUnsaved', { detail: recipe }));
         } else {
           throw new Error('Failed to unsave recipe');
         }
       } else {
-        console.log('SaveRecipeButton: Saving recipe', recipe.id);
         // Save recipe
+        console.log("🚀 Sending POST to /saved-recipes with recipe ID:", recipe.id);
+        console.log('Attempting to save recipe:', recipe);
         const response = await axiosInstance.post('/saved-recipes', { recipe }, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+          headers: { Authorization: `Bearer ${token}` }
         });
+        console.log('Save response:', response);
 
         if (response.data.success) {
-          console.log('SaveRecipeButton: Recipe saved successfully, dispatching event');
+          // Use the backend's returned recipe object for state
+          const savedRecipe = {
+            ...response.data.recipe.recipe_data,
+            saved_recipe_id: response.data.recipe.id,
+            spoonacular_id: response.data.recipe.spoonacular_id,
+            user_id: response.data.recipe.user_id
+          };
           setIsSaved(true);
-          if (onSave) onSave(recipe);
-          // Notify other pages about the save using custom event
-          window.dispatchEvent(new CustomEvent('recipeSaved', { detail: recipe }));
+          setSavedRecipeId(savedRecipe.saved_recipe_id);
+          if (onSave) onSave(savedRecipe);
+          window.dispatchEvent(new CustomEvent('recipeSaved', { detail: savedRecipe }));
         } else {
           throw new Error(response.data.error || 'Failed to save recipe');
         }
@@ -89,15 +102,13 @@ const SaveRecipeButton = ({ recipe, onSave, onUnsave }) => {
     }
   };
 
-  if (!user) {
-    return null; // Don't show save button for non-logged in users
-  }
+  if (!user) return null;
 
   return (
     <button
       className={`save-recipe-btn ${isSaved ? 'saved' : ''} ${loading ? 'loading' : ''}`}
       onClick={handleSave}
-      disabled={loading}
+      disabled={loading || !recipe?.id}
       title={isSaved ? 'Remove from saved recipes' : 'Save recipe'}
     >
       {loading ? (

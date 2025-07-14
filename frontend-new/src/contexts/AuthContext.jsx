@@ -24,7 +24,9 @@ export function AuthProvider({ children }) {
         return
       }
 
-      const response = await axiosInstance.get('/auth/me')
+      const response = await axiosInstance.get('/auth/me', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
       if (response.data) {
         setUser(response.data.user)

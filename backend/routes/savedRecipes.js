@@ -12,60 +12,27 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 router.get('/', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
-    console.log('Backend: Fetching saved recipes for user:', userId);
-    console.log('Backend: User object from JWT:', req.user);
-    
-    // First, let's check all saved recipes in the database
-    const { data: allSavedRecipes, error: allError } = await supabase
-      .from('saved_recipes')
-      .select('*');
-    
-    console.log('Backend: ALL saved recipes in database:', allSavedRecipes);
-    console.log('Backend: Total count of all saved recipes:', allSavedRecipes?.length || 0);
-    
-    if (allSavedRecipes && allSavedRecipes.length > 0) {
-      console.log('Backend: User IDs in saved recipes:', allSavedRecipes.map(r => r.user_id));
-      console.log('Backend: Current user ID matches any saved recipes:', allSavedRecipes.some(r => r.user_id === userId));
-    }
-    
-    // Now get the user's saved recipes
-    const { data: savedRecipes, error } = await supabase
-      .from('saved_recipes')
-      .select('recipe_data')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
 
-    console.log('Backend: Raw saved recipes from Supabase:', savedRecipes);
-    console.log('Backend: Supabase error:', error);
+    const { data, error } = await supabase
+      .from('saved_recipes')
+      .select('*')
+      .eq('user_id', userId);
 
     if (error) {
-      console.error('Error fetching saved recipes:', error);
+      console.error("Supabase error:", error);
       return res.status(500).json({ error: 'Failed to fetch saved recipes' });
     }
 
-    // Log each saved recipe individually
-    if (savedRecipes && savedRecipes.length > 0) {
-      console.log('Backend: Number of saved recipes found:', savedRecipes.length);
-      savedRecipes.forEach((item, index) => {
-        console.log(`Backend: Saved recipe ${index + 1}:`, {
-          id: item.id,
-          user_id: item.user_id,
-          spoonacular_id: item.spoonacular_id,
-          recipe_id: item.recipe_id,
-          has_recipe_data: !!item.recipe_data,
-          recipe_data_keys: item.recipe_data ? Object.keys(item.recipe_data) : 'null'
-        });
-      });
-    }
+    const recipes = data.map(entry => ({
+      ...entry.recipe_data,
+      saved_recipe_id: entry.id,
+      spoonacular_id: entry.spoonacular_id,
+      user_id: entry.user_id
+    }));
 
-    // Extract recipe data from the saved_recipes table
-    const recipes = savedRecipes?.map(item => item.recipe_data).filter(recipe => recipe !== null) || [];
-    console.log('Backend: Extracted recipes:', recipes);
-    console.log('Backend: Number of extracted recipes:', recipes.length);
-    
     res.json({ success: true, recipes });
-  } catch (error) {
-    console.error('Error in saved recipes route:', error);
+  } catch (err) {
+    console.error("Error:", err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -73,12 +40,12 @@ router.get('/', authenticateToken, async (req, res) => {
 // POST /api/saved-recipes - Save a recipe
 router.post('/', authenticateToken, async (req, res) => {
   try {
+    console.log('Auth header:', req.headers.authorization);
+    console.log('User:', req.user);
+    console.log('Recipe:', req.body.recipe);
+
     const userId = req.user.id;
     const { recipe } = req.body;
-
-    console.log('Backend: Saving recipe for user:', userId);
-    console.log('Backend: User object from JWT:', req.user);
-    console.log('Backend: Recipe data to save:', recipe);
 
     if (!recipe || !recipe.id) {
       return res.status(400).json({ error: 'Recipe data is required' });

@@ -655,7 +655,10 @@ function Recipes() {
                       <div 
                         key={recipe.id} 
                         className="recipe-card"
-                        onClick={() => navigate(`/recipes/${recipe.id}`)}
+                        onClick={() => {
+                          const source = activeTab === 'my-recipes' ? 'user' : 'spoonacular';
+                          navigate(`/recipes/${recipe.id}`, { state: { source } });
+                        }}
                       >
                         {/* Save Button */}
                         <SaveRecipeButton 

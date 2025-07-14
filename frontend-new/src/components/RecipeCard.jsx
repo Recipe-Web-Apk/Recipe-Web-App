@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { FiEye, FiEdit3, FiTrash2 } from 'react-icons/fi';
 import './RecipeCard.css';
 
 function RecipeCard({ recipe, onDelete, onEdit, allowEdit, allowDelete, onFavorite, isFavorite }) {
@@ -33,17 +34,17 @@ function RecipeCard({ recipe, onDelete, onEdit, allowEdit, allowDelete, onFavori
           </div>
         ) : null}
         <div className="recipe-card-actions">
-          <Link to={`/recipes/${recipe.id}`} className="recipe-card-btn">
-            View
+          <Link to={`/recipes/${recipe.id}`} className={`recipe-card-btn ${!allowEdit ? 'recipe-card-btn-view-only' : 'recipe-card-btn-view'}`}>
+            <FiEye /> View
           </Link>
           {allowEdit && (
-            <button className="recipe-card-btn" onClick={() => onEdit(recipe.id)}>
-              Edit
+            <button className="recipe-card-btn recipe-card-btn-edit" onClick={() => onEdit(recipe.id)}>
+              <FiEdit3 /> Edit
             </button>
           )}
           {allowDelete && (
-            <button className="recipe-card-btn" onClick={() => onDelete(recipe.id)}>
-              Delete
+            <button className="recipe-card-btn recipe-card-btn-delete" onClick={() => onDelete(recipe.id)}>
+              <FiTrash2 /> Delete
             </button>
           )}
           {onFavorite && (
