@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './TrendingRecipes.css';
 import axiosInstance from '../api/axiosInstance';
+import { useAuth } from '../contexts/AuthContext';
 
 function TrendingRecipes() {
   const [trendingRecipes, setTrendingRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { token } = useAuth();
 
   useEffect(() => {
     fetchTrendingRecipes();
@@ -15,7 +17,8 @@ function TrendingRecipes() {
   async function fetchTrendingRecipes() {
     try {
       setLoading(true);
-      const response = await axiosInstance.get('http://localhost:5000/api/spoonacular/search?query=popular&sort=popularity&offset=0');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const response = await axiosInstance.get('http://localhost:5000/api/spoonacular/search?query=popular&sort=popularity&offset=0', { headers });
       const data = response.data;
       
       if (response.status === 200) {

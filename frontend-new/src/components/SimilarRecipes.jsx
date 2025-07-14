@@ -3,11 +3,13 @@ import { Link } from 'react-router-dom'
 import { FiClock, FiUsers } from 'react-icons/fi'
 import './SimilarRecipes.css'
 import axiosInstance from '../api/axiosInstance';
+import { useAuth } from '../contexts/AuthContext';
 
 function SimilarRecipes({ recipeId }) {
   const [similarRecipes, setSimilarRecipes] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const { token } = useAuth();
 
   useEffect(() => {
     if (recipeId) {
@@ -20,7 +22,8 @@ function SimilarRecipes({ recipeId }) {
       setLoading(true)
       setError(null)
       
-      const response = await axiosInstance.get(`/spoonacular/similar/${recipeId}`)
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const response = await axiosInstance.get(`/spoonacular/similar/${recipeId}`, { headers });
       const data = response.data
       
       if (response.status === 200) {

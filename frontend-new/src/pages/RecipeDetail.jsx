@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useDarkMode } from '../contexts/DarkModeContext'
 import { useAuth } from '../contexts/AuthContext'
 import { 
@@ -21,10 +21,13 @@ import SimilarRecipes from '../components/SimilarRecipes'
 import { supabase } from '../supabaseClient'
 import './RecipeDetail.css'
 import axiosInstance from '../api/axiosInstance';
+import SaveRecipeButton from '../components/SaveRecipeButton';
 
 function RecipeDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const location = useLocation();
+  const source = location.state?.source;
   const { isDarkMode } = useDarkMode()
   const { token } = useAuth();
   const [recipe, setRecipe] = useState(null)
@@ -47,7 +50,29 @@ function RecipeDetail() {
     try {
       setLoading(true)
       setError(null)
-      // 1. Try backend for user-created recipes
+      if (source === 'user') {
+        const response = await axiosInstance.get(`/recipes/${id}`, {
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
+        if (response.data.recipe) {
+          setRecipe(response.data.recipe);
+          setDataSource('user');
+          return;
+        }
+        setError('Recipe not found or you do not have permission to view it');
+        return;
+      }
+      if (source === 'spoonacular') {
+        const response = await axiosInstance.get(`/spoonacular/recipe/${id}`);
+        if (response.data) {
+          setRecipe(response.data);
+          setDataSource('spoonacular');
+          return;
+        }
+        setError('Recipe not found');
+        return;
+      }
+      // Fallback: try both (current logic)
       try {
         const response = await axiosInstance.get(`/recipes/${id}`, {
           headers: token ? { 'Authorization': `Bearer ${token}` } : {}
@@ -58,7 +83,6 @@ function RecipeDetail() {
           return;
         }
       } catch (err) { /* ignore and fallback */ }
-      // 2. Try Spoonacular for explore recipes
       try {
         const response = await axiosInstance.get(`/spoonacular/recipe/${id}`)
         if (response.data) {
@@ -67,7 +91,6 @@ function RecipeDetail() {
           return
         }
       } catch (err) { /* ignore and fallback */ }
-      // 3. If both fail, show error
       setError('Recipe not found')
     } catch (error) {
       setError('Network error. Please try again.')
@@ -298,13 +321,7 @@ function RecipeDetail() {
 
             {/* Action Buttons */}
             <div className="recipe-actions">
-              <button 
-                onClick={handleSaveRecipe}
-                className={`btn-save ${saved ? 'saved' : ''}`}
-              >
-                <FiHeart className={saved ? 'filled' : ''} />
-                {saved ? 'Saved' : 'Save Recipe'}
-              </button>
+              <SaveRecipeButton recipe={recipe} />
               <button onClick={handleShareRecipe} className="btn-share">
                 <FiShare2 />
                 Share

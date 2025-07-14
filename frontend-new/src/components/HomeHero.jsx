@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import AutoSuggestSearch from './AutoSuggestSearch';
+import DownshiftAutoComplete from './DownshiftAutoComplete';
 import './HomeHero.css';
 
 function HomeHero() {
@@ -24,12 +24,9 @@ function HomeHero() {
           Create, share, and explore delicious recipes from around the world.
         </p>
         
-        {/* Auto-suggest search */}
+        {/* Enhanced auto-complete search with Downshift */}
         <div className="hero-search">
-          <AutoSuggestSearch
-            value={searchQuery}
-            onChange={setSearchQuery}
-            onSearch={handleSearch}
+          <DownshiftAutoComplete
             placeholder="Search for recipes, ingredients, or cuisines..."
             className="hero-auto-suggest"
           />
