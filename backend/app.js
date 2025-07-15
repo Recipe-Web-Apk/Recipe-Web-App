@@ -8,6 +8,7 @@ const spoonacularRoutes = require('./routes/spoonacular');
 const savedRecipesRoutes = require('./routes/savedRecipes');
 const recipesRoutes = require('./routes/recipes');
 const likesRoutes = require('./routes/likes');
+const viewsRoutes = require('./routes/views');
 
 console.log('Environment check:');
 console.log('SPOONACULAR_API_KEY:', process.env.SPOONACULAR_API_KEY ? 'Present' : 'Missing');
@@ -43,6 +44,7 @@ app.use('/api/spoonacular', spoonacularRoutes);
 app.use('/api/saved-recipes', savedRecipesRoutes);
 app.use('/api/recipes', recipesRoutes);
 app.use('/api/likes', likesRoutes);
+app.use('/api/views', viewsRoutes);
 
 app.get('/', (req, res) => {
     res.send('App is working');

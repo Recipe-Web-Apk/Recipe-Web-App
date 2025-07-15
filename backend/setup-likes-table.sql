@@ -39,6 +39,14 @@ CREATE INDEX IF NOT EXISTS idx_likes_user_id ON likes(user_id);
 CREATE INDEX IF NOT EXISTS idx_likes_recipe_id ON likes(recipe_id);
 CREATE INDEX IF NOT EXISTS idx_likes_user_recipe ON likes(user_id, recipe_id);
 
+-- Table to track recipe views
+CREATE TABLE IF NOT EXISTS views (
+  id SERIAL PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  recipe_id INTEGER,
+  viewed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 SELECT 
   column_name, 
   data_type, 
