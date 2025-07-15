@@ -12,32 +12,35 @@ function SimilarRecipes({ recipeId }) {
   const { token } = useAuth();
 
   useEffect(() => {
-    if (recipeId) {
-      fetchSimilarRecipes()
+    if (!recipeId) {
+      console.warn('Skipping fetch: recipeId is missing');
+      return;
     }
-  }, [recipeId])
 
-  async function fetchSimilarRecipes() {
-    try {
-      setLoading(true)
-      setError(null)
-      
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      const response = await axiosInstance.get(`/spoonacular/similar/${recipeId}`, { headers });
-      const data = response.data
-      
-      if (response.status === 200) {
-        setSimilarRecipes(data)
-      } else {
-        setError(data.error || 'Failed to fetch similar recipes')
+    const fetchSimilarRecipes = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const response = await axiosInstance.get(`/spoonacular/similar/${recipeId}`, { headers });
+        const data = response.data
+        
+        if (response.status === 200) {
+          setSimilarRecipes(data)
+        } else {
+          setError(data.error || 'Failed to fetch similar recipes')
+        }
+      } catch (error) {
+        console.error('Error fetching similar recipes:', error)
+        setError('Network error. Please try again.')
+      } finally {
+        setLoading(false)
       }
-    } catch (error) {
-      console.error('Error fetching similar recipes:', error)
-      setError('Network error. Please try again.')
-    } finally {
-      setLoading(false)
-    }
-  }
+    };
+
+    fetchSimilarRecipes();
+  }, [recipeId, token]);
 
   if (loading) {
     return (

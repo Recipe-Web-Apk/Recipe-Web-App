@@ -22,12 +22,14 @@ import { supabase } from '../supabaseClient'
 import './RecipeDetail.css'
 import axiosInstance from '../api/axiosInstance';
 import SaveRecipeButton from '../components/SaveRecipeButton';
+import LikeButton from '../components/LikeButton';
 
 function RecipeDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const location = useLocation();
   const source = location.state?.source;
+  const passedRecipeData = location.state?.recipeData;
   const { isDarkMode } = useDarkMode()
   const { token } = useAuth();
   const [recipe, setRecipe] = useState(null)
@@ -40,11 +42,24 @@ function RecipeDetail() {
   const [dataSource, setDataSource] = useState('spoonacular') // Default to spoonacular
 
   useEffect(() => {
-    fetchRecipeDetails()
+    if (passedRecipeData) {
+      // Ensure recipe.id is set for API liked recipes
+      let recipeObj = { ...passedRecipeData };
+      if (!recipeObj.id && recipeObj.recipe_id) {
+        recipeObj.id = recipeObj.recipe_id;
+      }
+      // Detect if it's an API recipe (spoonacular)
+      const isApiRecipe = recipeObj.readyInMinutes !== undefined || recipeObj.spoonacularSourceUrl !== undefined;
+      setRecipe(recipeObj);
+      setDataSource(source || (isApiRecipe ? 'spoonacular' : 'user'));
+      setLoading(false);
+    } else {
+      fetchRecipeDetails();
+    }
     // Check if recipe is saved in localStorage
     const savedRecipes = JSON.parse(localStorage.getItem('savedRecipes') || '[]')
     setSaved(savedRecipes.includes(parseInt(id)))
-  }, [id])
+  }, [id, passedRecipeData, source]);
 
   async function fetchRecipeDetails() {
     try {
@@ -237,6 +252,9 @@ function RecipeDetail() {
     )
   }
 
+  // Debug log for recipe object
+  console.log('RecipeDetail: recipe object:', recipe);
+
   return (
     <div className={`recipe-detail ${isDarkMode ? 'dark-mode' : ''}`}>
       <div className="recipe-detail-container">
@@ -322,6 +340,7 @@ function RecipeDetail() {
             {/* Action Buttons */}
             <div className="recipe-actions">
               <SaveRecipeButton recipe={recipe} />
+              <LikeButton recipe={recipe} />
               <button onClick={handleShareRecipe} className="btn-share">
                 <FiShare2 />
                 Share
@@ -434,7 +453,9 @@ function RecipeDetail() {
         )}
 
         {/* Similar Recipes */}
-        <SimilarRecipes recipeId={id} />
+        {dataSource === 'user' && (
+          <SimilarRecipes recipeId={recipe?.id || recipe?.recipe_id || id} />
+        )}
       </div>
     </div>
   )

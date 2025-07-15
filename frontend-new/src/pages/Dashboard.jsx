@@ -5,13 +5,14 @@ import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../supabaseClient'
 import axiosInstance from '../api/axiosInstance';
 import { useDarkMode } from '../contexts/DarkModeContext';
-import { FiPlus, FiBookmark, FiEdit3, FiClock, FiUsers, FiEye, FiTrash2 } from 'react-icons/fi';
+import { FiPlus, FiBookmark, FiEdit3, FiClock, FiUsers, FiEye, FiHeart } from 'react-icons/fi';
 
 function Dashboard() {
   const { user, changePassword, updateProfile, token } = useAuth()
   const { isDarkMode } = useDarkMode()
   const [savedRecipes, setSavedRecipes] = useState([])
   const [myRecipes, setMyRecipes] = useState([])
+  const [likedRecipes, setLikedRecipes] = useState([])
   const [loading, setLoading] = useState(true)
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -37,50 +38,71 @@ function Dashboard() {
   }
 
   const fetchRecipes = useCallback(async () => {
-    if (!token) return
+    if (!token) {
+      console.log('Dashboard: No token available, skipping fetch');
+      return;
+    }
     
     try {
-      setLoading(true)
-      // Debug: Log token and Authorization header
-      console.log('Dashboard fetchRecipes: token =', token)
-      console.log('Dashboard fetchRecipes: Authorization header =', `Bearer ${token}`)
+      setLoading(true);
+      console.log('Dashboard: Starting to fetch recipes...');
+      console.log('Dashboard: Token exists:', !!token);
+      console.log('Dashboard: Token preview:', token.substring(0, 20) + '...');
       
-      // Fetch user's created recipes from backend API
       const createdResponse = await axiosInstance.get('/recipes', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
-      })
-      console.log('Dashboard: Created recipes response:', createdResponse.data)
+      });
+      console.log('Dashboard: Created recipes response:', createdResponse.data);
       if (createdResponse.data.success) {
-        setMyRecipes(createdResponse.data.recipes || [])
+        setMyRecipes(createdResponse.data.recipes || []);
+        console.log('Dashboard: Set myRecipes to:', createdResponse.data.recipes);
       } else {
-        console.error('Error fetching created recipes:', createdResponse.data.error)
-        setMyRecipes([])
+        console.error('Dashboard: Error in created recipes response:', createdResponse.data.error);
+        setMyRecipes([]);
       }
 
-      // Fetch saved recipes from backend API
       const response = await axiosInstance.get('/saved-recipes', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
-      })
-      console.log('Dashboard: Saved recipes response:', response.data)
+      });
+      console.log('Dashboard: Saved recipes response:', response.data);
 
       if (response.data.success) {
-        console.log('Dashboard: Setting saved recipes:', response.data.recipes)
-        setSavedRecipes(response.data.recipes || [])
-        console.log("🎯 Final saved recipes in dashboard:", response.data.recipes);
+        console.log('Dashboard: Setting saved recipes:', response.data.recipes);
+        setSavedRecipes(response.data.recipes || []);
+        console.log("Dashboard: Final saved recipes count:", response.data.recipes?.length || 0);
       } else {
-        console.error('Error fetching saved recipes:', response.data.error)
-        setSavedRecipes([])
+        console.error('Dashboard: Error in saved recipes response:', response.data.error);
+        setSavedRecipes([]);
+      }
+
+      const likedResponse = await axiosInstance.get('/likes', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      console.log('Dashboard: Liked recipes response:', likedResponse.data);
+
+      if (likedResponse.data.success) {
+        console.log('Dashboard: Setting liked recipes:', likedResponse.data.likes);
+        setLikedRecipes(likedResponse.data.likes || []);
+      } else {
+        console.error('Dashboard: Error in liked recipes response:', likedResponse.data.error);
+        setLikedRecipes([]);
       }
     } catch (error) {
-      console.error('Error fetching recipes:', error)
-      setSavedRecipes([])
-      setMyRecipes([])
+      console.error('Dashboard: Error fetching recipes:', error);
+      console.error('Dashboard: Error response:', error.response?.data);
+      console.error('Dashboard: Error status:', error.response?.status);
+      setSavedRecipes([]);
+      setMyRecipes([]);
+      setLikedRecipes([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
+      console.log('Dashboard: Finished fetching recipes');
     }
   }, [token]);
 
@@ -134,47 +156,6 @@ function Dashboard() {
     return () => window.removeEventListener('focus', handleFocus)
   }, [fetchRecipes])
 
-  async function handleRemoveRecipe(id) {
-    try {
-      const response = await axiosInstance.delete(`/saved-recipes/${id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (response.data.success) {
-        // Update local state
-        setSavedRecipes(prev => prev.filter(recipe => recipe.id !== id))
-      } else {
-        console.error('Error removing saved recipe:', response.data.error)
-        alert('Failed to remove recipe')
-      }
-    } catch (error) {
-      console.error('Error removing saved recipe:', error)
-      alert('Failed to remove recipe')
-    }
-  }
-
-  async function handleDeleteMyRecipe(id) {
-    try {
-      const { error } = await supabase
-        .from('recipes')
-        .delete()
-        .eq('id', id)
-
-      if (error) {
-        console.error('Error deleting recipe:', error)
-        alert('Failed to delete recipe')
-      } else {
-        setMyRecipes(prev => prev.filter(recipe => recipe.id !== id))
-        alert('Recipe deleted successfully')
-      }
-    } catch (error) {
-      console.error('Error deleting recipe:', error)
-      alert('Failed to delete recipe')
-    }
-  }
-
   async function handleChangePassword(e) {
     e.preventDefault()
     setChangeStatus(null)
@@ -212,14 +193,21 @@ function Dashboard() {
     ...recipe
   }));
   const normalizedSavedRecipes = savedRecipes.map(recipe => {
-    // The backend already extracts recipe_data, so we just need to spread the recipe
     return { ...recipe };
   });
   console.log('Dashboard: Current user:', user);
   console.log('Dashboard: Current user ID:', user?.id);
   console.log('Dashboard: Token exists:', !!token);
-  console.log('myRecipes:', normalizedMyRecipes);
-  console.log('savedRecipes:', normalizedSavedRecipes);
+  console.log('Dashboard: myRecipes raw:', myRecipes);
+  console.log('Dashboard: savedRecipes raw:', savedRecipes);
+  console.log('Dashboard: normalizedMyRecipes:', normalizedMyRecipes);
+  console.log('Dashboard: normalizedSavedRecipes:', normalizedSavedRecipes);
+  console.log('Dashboard: myRecipes length:', normalizedMyRecipes.length);
+  console.log('Dashboard: savedRecipes length:', normalizedSavedRecipes.length);
+  console.log('Dashboard: likedRecipes:', likedRecipes);
+  if (likedRecipes.length > 0) {
+    console.log('Dashboard: first liked recipe:', likedRecipes[0]);
+  }
 
   const dashboardStyles = {
     container: {
@@ -443,6 +431,29 @@ function Dashboard() {
         </div>
       </div>
 
+      {/* Debug Section - Remove this after fixing */}
+      <div style={{ 
+        background: '#f0f0f0', 
+        padding: '1rem', 
+        margin: '1rem 0', 
+        borderRadius: '8px',
+        fontSize: '12px',
+        fontFamily: 'monospace'
+      }}>
+        <h3>Debug Info:</h3>
+        <p>Token exists: {!!token}</p>
+        <p>Loading: {loading.toString()}</p>
+        <p>My Recipes count: {myRecipes.length}</p>
+        <p>Saved Recipes count: {savedRecipes.length}</p>
+        <p>Liked Recipes count: {likedRecipes.length}</p>
+        <p>User ID: {user?.id}</p>
+        <p>Username: {user?.username}</p>
+        <details>
+          <summary>Raw Data</summary>
+          <pre>{JSON.stringify({ myRecipes, savedRecipes, likedRecipes }, null, 2)}</pre>
+        </details>
+      </div>
+
       {/* Edit Profile Modal */}
       {editing && (
         <div style={dashboardStyles.modal}>
@@ -536,8 +547,6 @@ function Dashboard() {
                   <RecipeCard
                     key={recipe.id}
                     recipe={recipe}
-                    allowDelete={true}
-                    onDelete={handleDeleteMyRecipe}
                     allowEdit={true}
                     onEdit={() => window.location.href = `/recipes/edit/${recipe.id}`}
                   />
@@ -570,8 +579,38 @@ function Dashboard() {
                   <RecipeCard
                     key={recipe.id}
                     recipe={recipe}
-                    allowDelete={false}
-                    onDelete={null}
+                    allowEdit={false}
+                    onEdit={null}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Liked Recipes Section */}
+          <div style={dashboardStyles.section}>
+            <div style={dashboardStyles.sectionHeader}>
+              <h2 style={dashboardStyles.sectionTitle}>
+                <FiHeart /> Liked Recipes
+              </h2>
+            </div>
+            
+            {likedRecipes.length === 0 ? (
+              <div style={dashboardStyles.emptyState}>
+                <div style={dashboardStyles.emptyStateIcon}>💖</div>
+                <div style={dashboardStyles.emptyStateText}>
+                  No liked recipes yet.
+                </div>
+                <a href="/recipes" style={dashboardStyles.emptyStateLink}>
+                  Browse recipes and like your favorites! →
+                </a>
+              </div>
+            ) : (
+              <div style={dashboardStyles.recipesGrid}>
+                {likedRecipes.map((recipe) => (
+                  <RecipeCard
+                    key={recipe.id}
+                    recipe={recipe}
                     allowEdit={false}
                     onEdit={null}
                   />

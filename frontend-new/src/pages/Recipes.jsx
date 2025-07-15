@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { supabase } from '../supabaseClient';
 import SaveRecipeButton from '../components/SaveRecipeButton';
+import LikeButton from '../components/LikeButton';
 import AutoSuggestSearch from '../components/AutoSuggestSearch';
 import './Recipes.css';
 import axiosInstance from '../api/axiosInstance';
@@ -666,7 +667,8 @@ function Recipes() {
                           onSave={handleRecipeSave}
                           onUnsave={handleRecipeUnsave}
                         />
-                        
+                        {/* Like Button */}
+                        <LikeButton recipe={recipe} />
                         {/* Difficulty Badge */}
                         <div 
                           className="difficulty-badge"
