@@ -61,6 +61,18 @@ function RecipeDetail() {
     setSaved(savedRecipes.includes(parseInt(id)))
   }, [id, passedRecipeData, source]);
 
+  // Record a view when the recipe is loaded and user is logged in
+  useEffect(() => {
+    if (recipe && recipe.id && token) {
+      axiosInstance.post('/views', { recipe_id: recipe.id }, {
+        headers: { Authorization: `Bearer ${token}` }
+      }).catch(err => {
+        // Silent fail, but log for debugging
+        console.warn('Failed to record view:', err);
+      });
+    }
+  }, [recipe, token]);
+
   async function fetchRecipeDetails() {
     try {
       setLoading(true)
