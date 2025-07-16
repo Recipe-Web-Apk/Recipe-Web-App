@@ -21,6 +21,9 @@ function RecipeCard({ recipe, onEdit, allowEdit, onFavorite, isFavorite }) {
           onError={e => { e.target.onerror = null; e.target.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjE1MCIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4="; }}
           className="recipe-image"
         />
+        {typeof recipe.score === 'number' && (
+          <span className="recommended-badge">Recommended</span>
+        )}
       </Link>
       <div className="recipe-card-body">
         <h2 className="recipe-card-title" title={recipe.title}>{recipe.title}</h2>

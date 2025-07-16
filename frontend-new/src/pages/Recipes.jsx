@@ -7,10 +7,12 @@ import SaveRecipeButton from '../components/SaveRecipeButton';
 import LikeButton from '../components/LikeButton';
 import AutoSuggestSearch from '../components/AutoSuggestSearch';
 import './Recipes.css';
+import './Recommendations.css';
 import axiosInstance from '../api/axiosInstance';
+import { fetchRecommendations } from '../api/recommendations';
 
 function Recipes() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const { isDarkMode } = useDarkMode();
   const navigate = useNavigate();
   const location = useLocation();
@@ -335,6 +337,23 @@ function Recipes() {
 
   const activeFilters = Object.values(filters).filter(value => value).length;
 
+  const [recommendations, setRecommendations] = useState([]);
+  const [recommendLoading, setRecommendLoading] = useState(false);
+  const [recommendError, setRecommendError] = useState('');
+
+  useEffect(() => {
+    if (user?.id && token) {
+      setRecommendLoading(true);
+      fetchRecommendations(user.id, token)
+        .then(data => setRecommendations(data))
+        .catch(err => {
+          setRecommendError('Failed to load recommendations.');
+          console.error('Error loading recommendations:', err);
+        })
+        .finally(() => setRecommendLoading(false));
+    }
+  }, [user, token]);
+
 
   return (
     <div className={`recipes-page ${isDarkMode ? 'dark-mode' : ''}`}>
@@ -625,6 +644,73 @@ function Recipes() {
               }
             </div>
           </div>
+        )}
+
+        {/* Recommendations Section */}
+        {user && (
+          <section style={{ marginBottom: '2rem' }}>
+            <div className="sticky-heading">
+              <h2>Recommended Recipes for You</h2>
+              <button className="refresh-btn" onClick={() => {
+                setRecommendLoading(true);
+                fetchRecommendations(user.id, token)
+                  .then(data => setRecommendations(data))
+                  .catch(() => setRecommendError('Failed to load recommendations.'))
+                  .finally(() => setRecommendLoading(false));
+              }}>🔁 Refresh Recommendations</button>
+            </div>
+            {recommendLoading ? (
+              <div className="loading-state">Loading your personalized recipes...</div>
+            ) : recommendError ? (
+              <div className="empty-state" style={{ color: 'red' }}>{recommendError}</div>
+            ) : recommendations.length === 0 ? (
+              <div className="empty-state">
+                <p>No recommendations yet.</p>
+                <p>Start by liking or saving a few recipes!</p>
+              </div>
+            ) : (
+              <div className="recommendations-grid">
+                {recommendations.map(recipe => (
+                  <div 
+                    key={recipe.id} 
+                    className="recommendation-card"
+                    onClick={() => {
+                      const source = activeTab === 'my-recipes' ? 'user' : 'spoonacular';
+                      navigate(`/recipes/${recipe.id}`, { state: { source } });
+                    }}
+                  >
+                    {recipe.finalScore && (
+                      <div className="match-score-badge">
+                        {Math.round(recipe.finalScore * 100)}%
+                      </div>
+                    )}
+                    <img 
+                      src={recipe.image || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjE1MCIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4='}
+                      alt={recipe.title} 
+                      onError={e => { 
+                        e.target.onerror = null; 
+                        e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjE1MCIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4='; 
+                      }}
+                    />
+                    <h3 className="recipe-title">{recipe.title}</h3>
+                    <div className="recipe-meta">{recipe.cuisine || ''} {recipe.cuisine && recipe.readyInMinutes ? '•' : ''} {recipe.readyInMinutes ? `${recipe.readyInMinutes} mins` : ''}</div>
+                    <div className="recipe-tags">
+                      {(recipe.tags || recipe.diets || []).slice(0, 3).map(tag => (
+                        <span key={tag} className="recipe-tag">{tag}</span>
+                      ))}
+                    </div>
+                    {recipe.reasons && (
+                      <div className="recipe-reasons">
+                        {recipe.reasons.map(reason => (
+                          <span key={reason} className="reason-text">{reason}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
         )}
 
         {/* Content */}
