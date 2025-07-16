@@ -1,0 +1,158 @@
+/* Recommendations Page Styles */
+
+.sticky-heading {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--card-bg, #fff);
+  color: var(--primary, #2d3748);
+  padding: 1.2rem 1rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 0 0 18px 18px;
+}
+.sticky-heading h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+}
+.refresh-btn {
+  background: #10b981;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5em 1.2em;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.refresh-btn:hover {
+  background: #059669;
+}
+.recommendations-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+@media (min-width: 600px) {
+  .recommendations-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (min-width: 1024px) {
+  .recommendations-grid {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+.recommendation-card {
+  background: var(--card-bg, #fff);
+  border-radius: 18px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  padding: 1.5rem 1rem 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  transition: box-shadow 0.15s, transform 0.13s;
+}
+.recommendation-card:hover {
+  box-shadow: 0 6px 24px rgba(0,0,0,0.13);
+  transform: translateY(-3px) scale(1.02);
+}
+.recommendation-card img {
+  width: 100%;
+  max-width: 260px;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 14px;
+  margin-bottom: 1rem;
+  background: #ececec;
+}
+.recipe-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+  text-align: center;
+}
+.recipe-meta {
+  font-size: 0.98rem;
+  color: #6b7280;
+  margin-bottom: 0.7rem;
+  text-align: center;
+}
+.recipe-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.7rem;
+  justify-content: center;
+}
+.recipe-tag {
+  background: #d1fae5;
+  color: #065f46;
+  font-size: 0.82rem;
+  padding: 0.2em 0.7em;
+  border-radius: 999px;
+  font-weight: 500;
+}
+.recipe-reasons {
+  margin-top: 0.5rem;
+  text-align: center;
+}
+.reason-text {
+  color: #2563eb;
+  font-size: 0.85rem;
+  font-style: italic;
+  margin-right: 0.5em;
+}
+.match-score-badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: #10b981;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.3em 0.8em;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  letter-spacing: 0.03em;
+}
+.loading-state {
+  text-align: center;
+  color: #6b7280;
+  font-size: 1.1rem;
+  margin: 2rem 0;
+  animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; }
+}
+.empty-state {
+  text-align: center;
+  color: #6b7280;
+  font-size: 1.1rem;
+  margin: 2rem 0;
+}
+@media (prefers-color-scheme: dark) {
+  .sticky-heading {
+    background: #18181b;
+    color: #f3f3f3;
+  }
+  .recommendation-card {
+    background: #23272f;
+    color: #f3f3f3;
+  }
+  .recommendations-grid {
+    background: #18181b;
+  }
+  .recipe-title {
+    color: #f3f3f3;
+  }
+} 
