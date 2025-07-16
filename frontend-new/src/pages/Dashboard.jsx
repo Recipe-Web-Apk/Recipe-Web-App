@@ -431,29 +431,6 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Debug Section - Remove this after fixing */}
-      <div style={{ 
-        background: '#f0f0f0', 
-        padding: '1rem', 
-        margin: '1rem 0', 
-        borderRadius: '8px',
-        fontSize: '12px',
-        fontFamily: 'monospace'
-      }}>
-        <h3>Debug Info:</h3>
-        <p>Token exists: {!!token}</p>
-        <p>Loading: {loading.toString()}</p>
-        <p>My Recipes count: {myRecipes.length}</p>
-        <p>Saved Recipes count: {savedRecipes.length}</p>
-        <p>Liked Recipes count: {likedRecipes.length}</p>
-        <p>User ID: {user?.id}</p>
-        <p>Username: {user?.username}</p>
-        <details>
-          <summary>Raw Data</summary>
-          <pre>{JSON.stringify({ myRecipes, savedRecipes, likedRecipes }, null, 2)}</pre>
-        </details>
-      </div>
-
       {/* Edit Profile Modal */}
       {editing && (
         <div style={dashboardStyles.modal}>
