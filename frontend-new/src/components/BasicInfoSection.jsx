@@ -1,6 +1,6 @@
 import React from 'react'
 
-function BasicInfoSection({ form, errors, handleChange, imagePreview, handleImageChange }) {
+function BasicInfoSection({ form, errors, handleChange, handleTitleChange, imagePreview, handleImageChange }) {
   const categoryOptions = ['Breakfast', 'Lunch', 'Dinner', 'Dessert', 'Snack', 'Appetizer']
 
   return (
@@ -14,7 +14,7 @@ function BasicInfoSection({ form, errors, handleChange, imagePreview, handleImag
             type="text"
             name="title"
             value={form.title}
-            onChange={handleChange}
+            onChange={handleTitleChange}
             style={{ 
               width: '100%', 
               padding: '0.7rem', 

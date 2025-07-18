@@ -10,6 +10,8 @@ const recipesRoutes = require('./routes/recipes');
 const likesRoutes = require('./routes/likes');
 const viewsRoutes = require('./routes/views');
 const recommendationsRoutes = require('./routes/recommendations');
+const similarRecipesRoutes = require('./routes/similarRecipes');
+const autofillRoutes = require('./routes/autofill');
 
 console.log('Environment check:');
 console.log('SPOONACULAR_API_KEY:', process.env.SPOONACULAR_API_KEY ? 'Present' : 'Missing');
@@ -47,6 +49,8 @@ app.use('/api/recipes', recipesRoutes);
 app.use('/api/likes', likesRoutes);
 app.use('/api/views', viewsRoutes);
 app.use('/api/recommendations', recommendationsRoutes);
+app.use('/api', similarRecipesRoutes);
+app.use('/api', autofillRoutes);
 
 app.get('/', (req, res) => {
     res.send('App is working');

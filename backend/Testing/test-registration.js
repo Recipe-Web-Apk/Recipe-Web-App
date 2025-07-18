@@ -1,5 +1,5 @@
 require('dotenv').config();
-const axiosInstance = require('./axiosInstance');
+const axiosInstance = require('../axiosInstance');
 
 const TEST_EMAIL = 'vincentburner01@gmail.com';
 const TEST_PASSWORD = '999999';

@@ -1,5 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
-const axiosInstance = require('./axiosInstance');
+const axiosInstance = require('../axiosInstance');
 require('dotenv').config();
 
 const supabaseUrl = process.env.SUPABASE_URL;

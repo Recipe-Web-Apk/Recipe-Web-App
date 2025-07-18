@@ -11,7 +11,7 @@ import FormActions from '../components/FormActions'
 function EditRecipe() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { token } = useAuth()
+  const { user, token } = useAuth()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [imagePreview, setImagePreview] = useState(null)
@@ -34,27 +34,47 @@ function EditRecipe() {
   })
 
   const [errors, setErrors] = useState({})
+  const [error, setError] = useState(null)
 
   const difficultyOptions = ['Easy', 'Medium', 'Hard']
   const categoryOptions = ['Breakfast', 'Lunch', 'Dinner', 'Dessert', 'Snack', 'Appetizer']
 
   useEffect(() => {
-    fetchRecipe()
-  }, [id])
+    if (!id) {
+      setSubmitError('Invalid recipe id.')
+      setLoading(false)
+      return
+    }
+    if (user && user.id) {
+      fetchRecipe()
+    }
+  }, [user, id])
 
   async function fetchRecipe() {
+    if (!user || !user.id) return
+    if (!id) return
+
+    console.log('Recipe ID:', id);
+    console.log('User ID:', user.id);
+
     try {
       setLoading(true)
-      const { data, error } = await supabase
+      setSubmitError(null)
+
+      const { data, error: fetchError } = await supabase
         .from('recipes')
         .select('*')
         .eq('id', id)
-        .single()
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-      if (error) {
-        console.error('Error fetching recipe:', error)
-        setSubmitError('Recipe not found or you do not have permission to edit it')
-        return
+      if (fetchError) {
+        console.error('Error fetching recipe:', fetchError.message);
+      }
+      if (!data) {
+        setError('Recipe not found or you do not have permission to edit it.');
+        setLoading(false);
+        return;
       }
 
       setRecipe(data)
@@ -165,25 +185,29 @@ function EditRecipe() {
 
   async function handleSubmit(e) {
     e.preventDefault()
+
     const validationErrors = validateForm()
-    
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors)
       return
     }
 
-    if (!token) {
+    if (!token || !user || !user.id) {
       setSubmitError('You must be logged in to edit a recipe')
+      return
+    }
+    if (!id) {
+      setSubmitError('Invalid recipe id.')
       return
     }
 
     setSaving(true)
     setSubmitError(null)
-    
+
     try {
       const validIngredients = form.ingredients.filter(ing => ing.trim() !== '')
       const validInstructions = form.instructions.filter(inst => inst.trim() !== '')
-      
+
       const recipeData = {
         title: form.title.trim(),
         description: form.description.trim(),
@@ -191,30 +215,37 @@ function EditRecipe() {
         instructions: validInstructions.join('\n\n'),
         image: imagePreview || null,
         youtube_url: form.youtube_url.trim() || null,
-        prepTime: form.prepTime ? parseInt(form.prepTime) : null,
-        cookTime: form.cookTime ? parseInt(form.cookTime) : null,
-        servings: form.servings ? parseInt(form.servings) : null,
-        calories: form.calories ? parseInt(form.calories) : null,
+        prepTime: form.prepTime ? parseInt(form.prepTime, 10) : null,
+        cookTime: form.cookTime ? parseInt(form.cookTime, 10) : null,
+        servings: form.servings ? parseInt(form.servings, 10) : null,
+        calories: form.calories ? parseInt(form.calories, 10) : null,
         difficulty: form.difficulty || null,
         category: form.category || null,
-        tags: form.tags.trim() || null
+        tags: form.tags.trim() || null,
+        updated_at: new Date().toISOString()
       }
+
+      console.log("Submitting update...", recipeData)
+      console.log("Recipe ID:", id)
+      console.log("User ID:", user.id)
 
       const { data, error } = await supabase
         .from('recipes')
         .update(recipeData)
         .eq('id', id)
+        .eq('user_id', user.id)
         .select()
 
+      console.log("Update response:", { data, error })
+
       if (error) {
-        console.error('Supabase error:', error)
         setSubmitError(error.message || 'Failed to update recipe')
       } else {
         alert('Recipe updated successfully!')
         navigate('/dashboard')
       }
-    } catch (error) {
-      console.error('Error updating recipe:', error)
+    } catch (err) {
+      console.error('Error updating recipe:', err)
       setSubmitError('Network error. Please try again.')
     } finally {
       setSaving(false)
@@ -231,6 +262,30 @@ function EditRecipe() {
     return (
       <div style={{ textAlign: 'center', padding: '2rem' }}>
         <div style={{ fontSize: '1.1rem', color: '#666' }}>Loading recipe...</div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div style={{ textAlign: 'center', padding: '2rem' }}>
+        <p style={{ color: 'red' }}>{error}</p>
+        <button onClick={() => navigate('/dashboard')} style={{ padding: '0.5rem 1rem' }}>
+          Back to Dashboard
+        </button>
+      </div>
+    )
+  }
+
+  if ((!user || !user.id) && !loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '2rem' }}>
+        <div style={{ color: '#ff4444', fontSize: '1.1rem', marginBottom: '1rem' }}>
+          You must be logged in to edit recipes.
+        </div>
+        <button onClick={() => navigate('/login')} style={{ padding: '0.5rem 1rem' }}>
+          Go to Login
+        </button>
       </div>
     )
   }

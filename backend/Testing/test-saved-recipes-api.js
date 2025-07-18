@@ -1,4 +1,4 @@
-const axiosInstance = require('./axiosInstance');
+const axiosInstance = require('../axiosInstance');
 
 const BASE_URL = 'http://localhost:5000/api';
 const TEST_EMAIL = 'vincentburner01@gmail.com';
