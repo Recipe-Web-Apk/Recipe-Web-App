@@ -1,5 +1,5 @@
 require('dotenv').config();
-const axiosInstance = require('./axiosInstance');
+const axiosInstance = require('../axiosInstance');
 
 const SPOONACULAR_API_KEY = process.env.SPOONACULAR_API_KEY;
 

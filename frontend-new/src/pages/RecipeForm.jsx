@@ -8,6 +8,7 @@ import IngredientsSection from '../components/IngredientsSection'
 import InstructionsSection from '../components/InstructionsSection'
 import FormActions from '../components/FormActions'
 import axiosInstance from '../api/axiosInstance';
+import SuggestedAutofillBox from '../components/SuggestedAutofillBox';
 
 function RecipeForm() {
   const navigate = useNavigate()
@@ -15,7 +16,7 @@ function RecipeForm() {
   const [loading, setLoading] = useState(false)
   const [imagePreview, setImagePreview] = useState(null)
   const [submitError, setSubmitError] = useState(null)
-  
+
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -32,23 +33,128 @@ function RecipeForm() {
   })
 
   const [errors, setErrors] = useState({})
+  const [similarRecipes, setSimilarRecipes] = useState([])
+  const [showWarning, setShowWarning] = useState(false)
+  const [autofillData, setAutofillData] = useState(null)
 
   const difficultyOptions = ['Easy', 'Medium', 'Hard']
   const categoryOptions = ['Breakfast', 'Lunch', 'Dinner', 'Dessert', 'Snack', 'Appetizer']
 
   function validateForm() {
     const newErrors = {}
-    
     if (!form.title.trim()) newErrors.title = 'Recipe title is required'
     if (!form.description.trim()) newErrors.description = 'Description is required'
-    
     const validIngredients = form.ingredients.filter(ing => ing.trim() !== '')
     if (validIngredients.length === 0) newErrors.ingredients = 'At least one ingredient is required'
-    
     const validInstructions = form.instructions.filter(inst => inst.trim() !== '')
     if (validInstructions.length === 0) newErrors.instructions = 'At least one instruction is required'
-    
     return newErrors
+  }
+
+  // Unified handler for title autofill/warning
+  async function handleFieldChange(e) {
+    const { name, value } = e.target;
+    console.log('handleFieldChange', name, value);
+    setForm(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
+
+    if (name === 'title' && value.length >= 3) {
+      // Use the new value directly
+      const payload = {
+        title: value,
+        ingredients: form.ingredients
+      };
+      try {
+        const res = await fetch('/api/similar-recipes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        console.log('similar-recipes response (title):', data);
+        if (data.length > 0) {
+          setSimilarRecipes(data);
+          setShowWarning(true);
+          setAutofillData(null);
+          return;
+        } else {
+          setShowWarning(false);
+          setSimilarRecipes([]);
+        }
+      } catch (err) {
+        setShowWarning(false);
+        setSimilarRecipes([]);
+      }
+      // If no backend match, call Spoonacular autofill
+      try {
+        const res = await fetch(`/api/autofill-recipe?title=${encodeURIComponent(value)}`);
+        const data = await res.json();
+        console.log('autofill-recipe response:', data);
+        setAutofillData(data);
+      } catch (err) {
+        setAutofillData(null);
+      }
+    } else {
+      if (name === 'title') setAutofillData(null);
+    }
+  }
+
+  // Handler for ingredient changes with backend check
+  async function handleIngredientChangeAndCheck(index, value) {
+    console.log('handleIngredientChangeAndCheck', index, value);
+    const newIngredients = [...form.ingredients];
+    newIngredients[index] = value;
+    setForm(prev => ({ ...prev, ingredients: newIngredients }));
+    if (errors.ingredients) setErrors(prev => ({ ...prev, ingredients: '' }));
+
+    if (newIngredients.filter(ing => ing.trim() !== '').length > 0) {
+      // Use newIngredients directly
+      const payload = { title: form.title, ingredients: newIngredients };
+      try {
+        const res = await fetch('/api/similar-recipes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        console.log('similar-recipes response (ingredients):', data);
+        if (data.length > 0) {
+          setSimilarRecipes(data);
+          setShowWarning(true);
+          setAutofillData(null);
+          return;
+        } else {
+          setShowWarning(false);
+          setSimilarRecipes([]);
+        }
+      } catch (err) {
+        setShowWarning(false);
+        setSimilarRecipes([]);
+      }
+    }
+  }
+
+  const handleUseIngredients = (suggestedIngredients) => {
+    setForm(prev => ({ ...prev, ingredients: suggestedIngredients }))
+  }
+
+  const handleUseInstructions = (suggestedInstructions) => {
+    setForm(prev => ({ ...prev, instructions: suggestedInstructions }))
+  }
+
+  async function checkForSimilarRecipes() {
+    const res = await fetch('/api/similar-recipes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: form.title, ingredients: form.ingredients })
+    })
+    const data = await res.json()
+    if (data.length > 0) {
+      setSimilarRecipes(data)
+      setShowWarning(true)
+      return true
+    }
+    return false
   }
 
   function handleChange(e) {
@@ -165,6 +271,10 @@ function RecipeForm() {
       return
     }
 
+    // Similarity check before submit
+    const similar = await checkForSimilarRecipes()
+    if (similar) return // Show warning, don't submit yet
+
     setLoading(true)
     setSubmitError(null)
     
@@ -238,6 +348,29 @@ function RecipeForm() {
         </button>
       </div>
 
+      {autofillData && !showWarning && (
+        <SuggestedAutofillBox
+          data={autofillData}
+          onUseIngredients={handleUseIngredients}
+          onUseInstructions={handleUseInstructions}
+        />
+      )}
+
+      {showWarning && (
+        <div className="warning-box" style={{ background: '#fffbe6', border: '1px solid #ffe58f', padding: '1rem', borderRadius: 8, marginBottom: 16 }}>
+          <h4>⚠️ Similar Recipe Found</h4>
+          <ul>
+            {similarRecipes.map(({ recipe, score }) => (
+              <li key={recipe.id}>
+                {recipe.title} - {Math.round(score * 100)}% match
+                <a href={`/recipes/${recipe.id}`} target="_blank" rel="noopener noreferrer" style={{ marginLeft: 8 }}>View</a>
+              </li>
+            ))}
+          </ul>
+          <button onClick={() => setShowWarning(false)} style={{ marginTop: 8 }}>Ignore & Submit Anyway</button>
+        </div>
+      )}
+
       {submitError && (
         <div style={{ 
           background: '#ffebee', 
@@ -254,7 +387,8 @@ function RecipeForm() {
         <BasicInfoSection 
           form={form}
           errors={errors}
-          handleChange={handleChange}
+          handleChange={handleFieldChange}
+          handleTitleChange={handleFieldChange}
           imagePreview={imagePreview}
           handleImageChange={handleImageChange}
         />
@@ -262,13 +396,17 @@ function RecipeForm() {
         <RecipeStatsSection 
           form={form}
           errors={errors}
-          handleChange={handleChange}
+          handleChange={e => {
+            const { name, value } = e.target;
+            setForm(prev => ({ ...prev, [name]: value }));
+            if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
+          }}
         />
 
         <IngredientsSection 
           form={form}
           errors={errors}
-          handleIngredientChange={handleIngredientChange}
+          handleIngredientChange={handleIngredientChangeAndCheck}
           addIngredient={addIngredient}
           removeIngredient={removeIngredient}
         />

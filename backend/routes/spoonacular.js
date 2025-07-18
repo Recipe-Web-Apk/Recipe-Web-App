@@ -426,4 +426,20 @@ router.get('/suggest', async (req, res) => {
   }
 });
 
+router.get('/spoonacular/autocomplete', async (req, res) => {
+  const { query } = req.query;
+  try {
+    const response = await axiosInstance.get('https://api.spoonacular.com/recipes/autocomplete', {
+      params: {
+        query,
+        number: 5,
+        apiKey: process.env.SPOONACULAR_API_KEY
+      }
+    });
+    res.json(response.data);
+  } catch (error) {
+    res.json([]);
+  }
+});
+
 module.exports = router;
