@@ -142,6 +142,15 @@ function RecipeForm() {
     setForm(prev => ({ ...prev, instructions: suggestedInstructions }))
   }
 
+  const handleUseStats = (suggestedStats) => {
+    setForm(prev => ({
+      ...prev,
+      cookTime: suggestedStats.readyInMinutes || prev.cookTime,
+      calories: suggestedStats.calories ? Math.round(suggestedStats.calories) : prev.calories,
+      servings: suggestedStats.servings || prev.servings
+    }))
+  }
+
   async function checkForSimilarRecipes() {
     const res = await fetch('/api/similar-recipes', {
       method: 'POST',
@@ -348,11 +357,58 @@ function RecipeForm() {
         </button>
       </div>
 
+      {/* Buttons for Cooking Time, Calories, Servings */}
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
+        <button
+          type="button"
+          style={{ 
+            padding: '0.5rem 1.2rem', 
+            borderRadius: 6, 
+            border: '1px solid #ccc', 
+            background: form.cookTime ? '#e8f5e8' : '#fff', 
+            cursor: 'pointer',
+            fontWeight: form.cookTime ? 'bold' : 'normal'
+          }}
+          onClick={() => alert(`Cooking Time: ${form.cookTime || 'Not set'} minutes`)}
+        >
+          Cooking Time {form.cookTime && `(${form.cookTime} min)`}
+        </button>
+        <button
+          type="button"
+          style={{ 
+            padding: '0.5rem 1.2rem', 
+            borderRadius: 6, 
+            border: '1px solid #ccc', 
+            background: form.calories ? '#e8f5e8' : '#fff', 
+            cursor: 'pointer',
+            fontWeight: form.calories ? 'bold' : 'normal'
+          }}
+          onClick={() => alert(`Calories: ${form.calories || 'Not set'}`)}
+        >
+          Calories {form.calories && `(${form.calories})`}
+        </button>
+        <button
+          type="button"
+          style={{ 
+            padding: '0.5rem 1.2rem', 
+            borderRadius: 6, 
+            border: '1px solid #ccc', 
+            background: form.servings ? '#e8f5e8' : '#fff', 
+            cursor: 'pointer',
+            fontWeight: form.servings ? 'bold' : 'normal'
+          }}
+          onClick={() => alert(`Servings: ${form.servings || 'Not set'}`)}
+        >
+          Servings {form.servings && `(${form.servings})`}
+        </button>
+      </div>
+
       {autofillData && !showWarning && (
         <SuggestedAutofillBox
           data={autofillData}
           onUseIngredients={handleUseIngredients}
           onUseInstructions={handleUseInstructions}
+          onUseStats={handleUseStats}
         />
       )}
 
