@@ -54,10 +54,13 @@ router.get('/autofill-recipe', async (req, res) => {
     }
 
     res.json({
+      title: recipe.title || null,
       ingredients,
       instructions,
       image: recipe.image || null,
-      readyInMinutes: recipe.readyInMinutes || null
+      readyInMinutes: recipe.readyInMinutes || null,
+      calories: recipe.nutrition?.nutrients?.find(n => n.name === 'Calories')?.amount || null,
+      servings: recipe.servings || null
     });
   } catch (error) {
     if (error.response) {
