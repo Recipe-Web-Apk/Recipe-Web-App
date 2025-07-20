@@ -8,11 +8,20 @@ const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// Helper to get a Supabase client with the user's token for RLS
+function getUserSupabaseClient(token) {
+  return createClient(supabaseUrl, supabaseKey, {
+    global: { headers: { Authorization: `Bearer ${token}` } }
+  });
+}
+
 // POST /api/recipes - Create a new recipe
 router.post('/', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
     const recipeData = req.body;
+    const token = req.headers.authorization?.split(' ')[1];
+    const userSupabase = getUserSupabaseClient(token);
 
     // Validate required fields
     if (!recipeData.title || !recipeData.description || !recipeData.ingredients || !recipeData.instructions) {
@@ -44,7 +53,7 @@ router.post('/', authenticateToken, async (req, res) => {
 
     console.log('Creating recipe with data:', recipe);
 
-    const { data, error } = await supabase
+    const { data, error } = await userSupabase
       .from('recipes')
       .insert([recipe])
       .select();
@@ -69,8 +78,10 @@ router.post('/', authenticateToken, async (req, res) => {
 router.get('/', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
+    const token = req.headers.authorization?.split(' ')[1];
+    const userSupabase = getUserSupabaseClient(token);
     
-    const { data: recipes, error } = await supabase
+    const { data: recipes, error } = await userSupabase
       .from('recipes')
       .select('*')
       .eq('user_id', userId)
@@ -93,13 +104,15 @@ router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
     const recipeId = req.params.id;
+    const token = req.headers.authorization?.split(' ')[1];
+    const userSupabase = getUserSupabaseClient(token);
 
     // Validate that recipeId is a valid integer
     if (isNaN(recipeId)) {
       return res.status(400).json({ error: 'Invalid recipe ID' });
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await userSupabase
       .from('recipes')
       .select('*')
       .eq('id', Number(recipeId))
@@ -119,6 +132,75 @@ router.get('/:id', authenticateToken, async (req, res) => {
     res.json({ recipe: data });
   } catch (error) {
     console.error('Error in get recipe by id route:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PUT /api/recipes/:id - Update a user-created recipe by ID
+router.put('/:id', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const recipeId = req.params.id;
+    const updateData = req.body;
+    const token = req.headers.authorization?.split(' ')[1];
+    const userSupabase = getUserSupabaseClient(token);
+
+    // Validate that recipeId is a valid integer
+    if (isNaN(recipeId)) {
+      console.log('[EDIT RECIPE] Invalid recipe ID:', recipeId);
+      return res.status(400).json({ error: 'Invalid recipe ID' });
+    }
+
+    // Only allow updating fields that are present in the request body
+    const allowedFields = [
+      'title', 'description', 'ingredients', 'instructions', 'image', 'youtube_url',
+      'prepTime', 'cookTime', 'servings', 'calories', 'difficulty', 'category', 'tags'
+    ];
+    const updateFields = {};
+    for (const field of allowedFields) {
+      if (updateData[field] !== undefined) {
+        updateFields[field] = updateData[field];
+      }
+    }
+    // If ingredients is an array, format as PostgreSQL array string
+    if (Array.isArray(updateFields.ingredients)) {
+      updateFields.ingredients = `{${updateFields.ingredients.map(ing => `"${ing.replace(/"/g, '\\"')}"`).join(',')}}`;
+    }
+    // If tags is an array, format as comma-separated string
+    if (Array.isArray(updateFields.tags)) {
+      updateFields.tags = updateFields.tags.join(',');
+    }
+
+    // Debug logs
+    console.log('[EDIT RECIPE] Attempting update:', {
+      recipeId,
+      userId,
+      updateFields
+    });
+
+    // Update the recipe only if it belongs to the user
+    const { data, error } = await userSupabase
+      .from('recipes')
+      .update(updateFields)
+      .eq('id', Number(recipeId))
+      .eq('user_id', userId)
+      .select()
+      .single();
+
+    // Log the result of the update query
+    console.log('[EDIT RECIPE] Update result:', { data, error });
+
+    if (error) {
+      console.error('[EDIT RECIPE] Error updating recipe:', error);
+      return res.status(500).json({ error: error.message || 'Failed to update recipe' });
+    }
+    if (!data) {
+      console.warn('[EDIT RECIPE] No recipe found or permission denied for:', { recipeId, userId });
+      return res.status(404).json({ error: 'Recipe not found or you do not have permission to edit it' });
+    }
+    res.json({ success: true, message: 'Recipe updated successfully', recipe: data });
+  } catch (error) {
+    console.error('[EDIT RECIPE] Error in update recipe route:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

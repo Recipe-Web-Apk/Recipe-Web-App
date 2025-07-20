@@ -61,7 +61,7 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Failed to create user account' });
     }
 
-    // Create user profile in our users table
+    // Create user profile in our users table (insert if not exists)
     const { error: profileError } = await supabase
       .from('users')
       .insert([
@@ -71,22 +71,21 @@ router.post('/register', async (req, res) => {
           email,
           created_at: new Date().toISOString()
         }
-      ]);
+      ], { upsert: true }); // upsert ensures no duplicate error
 
     if (profileError) {
       console.error('Profile creation error:', profileError);
       return res.status(500).json({ error: 'Failed to create user profile' });
     }
 
-    res.status(201).json({
-      message: 'User registered successfully. Please check your email to confirm your account.',
+    res.json({
+      message: 'Registration successful',
       user: {
         id: authData.user.id,
         email: authData.user.email,
-        username
+        username: username
       }
     });
-
   } catch (error) {
     console.error('Registration error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -113,34 +112,35 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: error.message });
     }
 
-    // Get user profile by email (since IDs don't match between auth and users table)
+    // Get user profile by id (UUID)
     let profile = null;
     const { data: profileData, error: profileError } = await supabase
       .from('users')
       .select('*')
-      .eq('email', data.user.email)
-      .single();
+      .eq('id', data.user.id)
+      .maybeSingle();
 
     if (profileError) {
       console.error('Profile fetch error:', profileError);
-      
-      // If profile doesn't exist, try to create it
-      if (profileError.code === 'PGRST116') {
-        console.log('User profile not found, creating one...');
-        const { data: newProfile, error: createError } = await supabase
-          .from('users')
-          .insert([{
+    }
+
+    // If profile doesn't exist, create it
+    if (!profileData) {
+      const { data: newProfile, error: createError } = await supabase
+        .from('users')
+        .insert([
+          {
+            id: data.user.id,
             username: data.user.user_metadata?.username || data.user.email.split('@')[0],
-            email: data.user.email
-          }])
-          .select();
-        
-        if (createError) {
-          console.error('Failed to create profile on login:', createError);
-        } else {
-          console.log('Profile created successfully on login');
-          profile = newProfile[0];
-        }
+            email: data.user.email,
+            created_at: new Date().toISOString()
+          }
+        ], { upsert: true });
+      if (createError) {
+        console.error('Failed to create profile on login:', createError);
+      } else {
+        console.log('Profile created successfully on login');
+        profile = newProfile ? newProfile[0] : null;
       }
     } else {
       profile = profileData;
@@ -156,7 +156,6 @@ router.post('/login', async (req, res) => {
       },
       session: data.session
     });
-
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -206,12 +205,12 @@ router.get('/me', async (req, res) => {
       return res.status(401).json({ error: 'Invalid token' });
     }
 
-    // Get user profile by email
+    // Get user profile by id (UUID) instead of email
     const { data: profile, error: profileError } = await supabase
       .from('users')
       .select('*')
-      .eq('email', user.email)
-      .single();
+      .eq('id', user.id)
+      .maybeSingle(); // Use maybeSingle for graceful handling
 
     if (profileError) {
       console.error('Profile fetch error:', profileError);

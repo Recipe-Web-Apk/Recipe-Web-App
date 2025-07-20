@@ -107,27 +107,44 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     const userId = req.user.id;
     const recipeId = req.params.id;
 
-    // Determine if this is a Spoonacular recipe (integer ID) or local recipe (UUID)
+    // First, try to delete by the row's primary key (id)
+    const { data: rowById, error: rowByIdError } = await supabase
+      .from('saved_recipes')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('id', recipeId)
+      .single();
+
+    if (rowById && !rowByIdError) {
+      // Row exists, delete by PK
+      const { error } = await supabase
+        .from('saved_recipes')
+        .delete()
+        .eq('user_id', userId)
+        .eq('id', recipeId);
+      if (error) {
+        console.error('Error removing saved recipe by PK:', error);
+        return res.status(500).json({ error: 'Failed to remove recipe' });
+      }
+      return res.json({ success: true, message: 'Recipe removed successfully (by PK)' });
+    }
+
+    // Fallback: Determine if this is a Spoonacular recipe (integer ID) or local recipe (UUID)
     const isSpoonacularRecipe = !isNaN(recipeId);
-    
     let query = supabase
       .from('saved_recipes')
       .delete()
       .eq('user_id', userId);
-    
     if (isSpoonacularRecipe) {
       query = query.eq('spoonacular_id', parseInt(recipeId));
     } else {
       query = query.eq('recipe_id', recipeId);
     }
-    
     const { error } = await query;
-
     if (error) {
       console.error('Error removing saved recipe:', error);
       return res.status(500).json({ error: 'Failed to remove recipe' });
     }
-
     res.json({ success: true, message: 'Recipe removed successfully' });
   } catch (error) {
     console.error('Error in remove recipe route:', error);
