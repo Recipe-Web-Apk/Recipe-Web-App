@@ -52,6 +52,10 @@ function Recipes() {
     const params = new URLSearchParams(location.search);
     const urlQuery = params.get('query') || '';
     const urlDiet = params.get('diet') || '';
+    const urlTab = params.get('tab');
+    if (urlTab === 'my-recipes') {
+      setActiveTab('my-recipes');
+    }
     if (urlQuery) {
       setSearchQuery(urlQuery);
       setFilters(f => ({ ...f, diet: urlDiet }));
@@ -97,23 +101,16 @@ function Recipes() {
   }
 
   useEffect(() => {
-    if (activeTab === 'my-recipes') {
+    if (activeTab === 'my-recipes' && user) {
       fetchMyRecipes();
-    } else {
+    } else if (activeTab !== 'my-recipes') {
       setRecipes([]);
-      setLoading(false); // Set loading to false when switching to explore tab
-      // Don't clear search results when switching to explore tab
-      // setSearchResults([]);
-      // setFinderResults([]);
-      // setCurrentPage(0);
-      // setTotalResults(0);
-      // setHasMore(true);
+      setLoading(false);
     }
-  }, [activeTab]);
+  }, [activeTab, user]);
 
   async function fetchMyRecipes() {
     if (!user) return;
-    
     setLoading(true);
     setError('');
     try {
@@ -124,6 +121,7 @@ function Recipes() {
         .order('created_at', { ascending: false });
       if (error) throw error;
       setRecipes(data || []);
+      console.log('Fetched my recipes:', data);
     } catch (err) {
       setError('Failed to load your recipes.');
     } finally {
@@ -334,6 +332,9 @@ function Recipes() {
   const displayedRecipes = activeTab === 'explore' 
     ? (showRecipeFinder ? finderResults : searchResults) 
     : recipes;
+
+  // Debug log for displayed recipes
+  console.log('displayedRecipes:', displayedRecipes);
 
   const activeFilters = Object.values(filters).filter(value => value).length;
 
@@ -646,8 +647,8 @@ function Recipes() {
           </div>
         )}
 
-        {/* Recommendations Section */}
-        {user && (
+        {/* Recommended Recipes Section (only in Explore tab) */}
+        {user && activeTab === 'explore' && (
           <section style={{ marginBottom: '2rem' }}>
             <div className="sticky-heading">
               <h2>Recommended Recipes for You</h2>
