@@ -36,6 +36,7 @@ function RecipeForm() {
   const [similarRecipes, setSimilarRecipes] = useState([])
   const [showWarning, setShowWarning] = useState(false)
   const [autofillData, setAutofillData] = useState(null)
+  const [ignoredSimilarityWarning, setIgnoredSimilarityWarning] = useState(false);
 
   const difficultyOptions = ['Easy', 'Medium', 'Hard']
   const categoryOptions = ['Breakfast', 'Lunch', 'Dinner', 'Dessert', 'Snack', 'Appetizer']
@@ -58,12 +59,16 @@ function RecipeForm() {
     setForm(prev => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
 
+    // Reset ignore state if title changes
+    if (name === 'title') setIgnoredSimilarityWarning(false);
+
     if (name === 'title' && value.length >= 3) {
       // Use the new value directly
       const payload = {
         title: value,
         ingredients: form.ingredients
       };
+      console.log('[SIMILARITY] Sending payload:', payload);
       try {
         const res = await fetch('/api/similar-recipes', {
           method: 'POST',
@@ -71,19 +76,22 @@ function RecipeForm() {
           body: JSON.stringify(payload)
         });
         const data = await res.json();
-        console.log('similar-recipes response (title):', data);
+        console.log('[SIMILARITY] Response:', data);
         if (data.length > 0) {
           setSimilarRecipes(data);
           setShowWarning(true);
           setAutofillData(null);
+          console.log('[SIMILARITY] Showing warning!');
           return;
         } else {
           setShowWarning(false);
           setSimilarRecipes([]);
+          console.log('[SIMILARITY] No similar recipes found.');
         }
       } catch (err) {
         setShowWarning(false);
         setSimilarRecipes([]);
+        console.log('[SIMILARITY] Error:', err);
       }
       // If no backend match, call Spoonacular autofill
       try {
@@ -150,6 +158,26 @@ function RecipeForm() {
       servings: suggestedStats.servings || prev.servings
     }))
   }
+
+  const handleUseImage = (imageUrl) => {
+    setImagePreview(imageUrl);
+  };
+
+  const handleUseDescription = (desc) => {
+    setForm(prev => ({ ...prev, description: desc }));
+  };
+  const handleUseCategory = (cat) => {
+    setForm(prev => ({ ...prev, category: cat }));
+  };
+  const handleUseDifficulty = (diff) => {
+    setForm(prev => ({ ...prev, difficulty: diff }));
+  };
+  const handleUseTags = (tags) => {
+    setForm(prev => ({ ...prev, tags: tags }));
+  };
+  const handleUseYoutubeUrl = (url) => {
+    setForm(prev => ({ ...prev, youtube_url: url }));
+  };
 
   async function checkForSimilarRecipes() {
     const res = await fetch('/api/similar-recipes', {
@@ -280,6 +308,9 @@ function RecipeForm() {
       return
     }
 
+    // Block submission if warning is visible and not ignored
+    if (showWarning && !ignoredSimilarityWarning) return;
+
     // Similarity check before submit
     const similar = await checkForSimilarRecipes()
     if (similar) return // Show warning, don't submit yet
@@ -318,7 +349,7 @@ function RecipeForm() {
 
       if (response.data.success) {
         alert('Recipe created successfully!')
-        navigate('/recipes')
+        navigate('/recipes?tab=my-recipes') // Redirect to My Recipes tab
       } else {
         console.error('Recipe creation error:', response.data.error)
         setSubmitError(response.data.error || 'Failed to create recipe')
@@ -409,6 +440,12 @@ function RecipeForm() {
           onUseIngredients={handleUseIngredients}
           onUseInstructions={handleUseInstructions}
           onUseStats={handleUseStats}
+          onUseImage={handleUseImage}
+          onUseDescription={handleUseDescription}
+          onUseCategory={handleUseCategory}
+          onUseDifficulty={handleUseDifficulty}
+          onUseTags={handleUseTags}
+          onUseYoutubeUrl={handleUseYoutubeUrl}
         />
       )}
 
@@ -419,11 +456,16 @@ function RecipeForm() {
             {similarRecipes.map(({ recipe, score }) => (
               <li key={recipe.id}>
                 {recipe.title} - {Math.round(score * 100)}% match
-                <a href={`/recipes/${recipe.id}`} target="_blank" rel="noopener noreferrer" style={{ marginLeft: 8 }}>View</a>
+                {/* Removed View button */}
               </li>
             ))}
           </ul>
-          <button onClick={() => setShowWarning(false)} style={{ marginTop: 8 }}>Ignore & Submit Anyway</button>
+          <button onClick={() => { setShowWarning(false); setIgnoredSimilarityWarning(true); }} style={{ marginTop: 8 }}>
+            Ignore Warning & Submit Anyway
+          </button>
+          <div style={{ fontSize: '0.95em', color: '#b8860b', marginTop: 6 }}>
+            You can continue creating your recipe, or review the similar ones above.
+          </div>
         </div>
       )}
 

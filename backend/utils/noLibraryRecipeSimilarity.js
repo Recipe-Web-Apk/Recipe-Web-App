@@ -12,10 +12,20 @@ function jaccardSimilarity(arr1, arr2) {
 }
 
 function computeOptimizedSimilarity(newRecipe, existingRecipe) {
-  const titleScore = normalizeTitle(newRecipe.title) === normalizeTitle(existingRecipe.title) ? 1 : 0;
+  const normNew = normalizeTitle(newRecipe.title);
+  const normExist = normalizeTitle(existingRecipe.title);
+  let titleScore = 0;
+  if (normNew === normExist) {
+    titleScore = 1;
+  } else if (
+    normNew.length >= 3 &&
+    (normExist.includes(normNew) || normNew.includes(normExist))
+  ) {
+    titleScore = 0.7;
+  }
   const ingredientsScore = jaccardSimilarity(newRecipe.ingredients || [], existingRecipe.ingredients || []);
   const finalScore = 0.4 * titleScore + 0.6 * ingredientsScore;
   return { score: finalScore, titleScore, ingredientsScore };
 }
 
-module.exports = { computeOptimizedSimilarity }; 
+module.exports = { computeOptimizedSimilarity, normalizeTitle }; 
