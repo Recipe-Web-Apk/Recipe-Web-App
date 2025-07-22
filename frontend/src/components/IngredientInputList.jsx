@@ -1,4 +1,5 @@
 import React from 'react'
+import IngredientTooltip from './IngredientTooltip'
 import './IngredientInputList.css'
 
 function IngredientInputList({ ingredients, setIngredients, errors, setErrors }) {
@@ -39,14 +40,16 @@ function IngredientInputList({ ingredients, setIngredients, errors, setErrors })
       <div className="ingredient-inputs-container">
         {ingredients.map((ingredient, index) => (
           <div key={index} className="ingredient-input-row">
-            <input
-              type="text"
-              value={ingredient}
-              onChange={(e) => handleIngredientChange(index, e.target.value)}
-              onKeyPress={(e) => handleKeyPress(e, index)}
-              className="ingredient-input"
-              placeholder={`Ingredient ${index + 1}`}
-            />
+            <IngredientTooltip ingredient={ingredient}>
+              <input
+                type="text"
+                value={ingredient}
+                onChange={(e) => handleIngredientChange(index, e.target.value)}
+                onKeyPress={(e) => handleKeyPress(e, index)}
+                className="ingredient-input"
+                placeholder={`Ingredient ${index + 1}`}
+              />
+            </IngredientTooltip>
             {ingredients.length > 4 && (
               <button
                 type="button"
