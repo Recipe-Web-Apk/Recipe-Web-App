@@ -6,6 +6,7 @@ import { supabase } from '../supabaseClient';
 import SaveRecipeButton from '../components/SaveRecipeButton';
 import LikeButton from '../components/LikeButton';
 import AutoSuggestSearch from '../components/AutoSuggestSearch';
+import IngredientTooltip from '../components/IngredientTooltip';
 import './Recipes.css';
 import './Recommendations.css';
 import axiosInstance from '../api/axiosInstance';
@@ -575,13 +576,15 @@ function Recipes() {
                   <p className="ingredients-note">Find recipes that use ALL of these ingredients</p>
                   {ingredients.map((ingredient, index) => (
                     <div key={index} className="ingredient-input">
-                      <input
-                        type="text"
-                        value={ingredient}
-                        onChange={(e) => updateIngredient(index, e.target.value)}
-                        placeholder="e.g., chicken, pasta, tomatoes"
-                        className="ingredient-field"
-                      />
+                      <IngredientTooltip ingredient={ingredient}>
+                        <input
+                          type="text"
+                          value={ingredient}
+                          onChange={(e) => updateIngredient(index, e.target.value)}
+                          placeholder="e.g., chicken, pasta, tomatoes"
+                          className="ingredient-field"
+                        />
+                      </IngredientTooltip>
                       {ingredients.length > 1 && (
                         <button
                           type="button"

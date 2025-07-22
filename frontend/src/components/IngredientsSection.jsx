@@ -1,4 +1,5 @@
 import React from 'react'
+import IngredientTooltip from './IngredientTooltip'
 
 function IngredientsSection({ form, errors, handleIngredientChange, addIngredient, removeIngredient }) {
   return (
@@ -25,18 +26,20 @@ function IngredientsSection({ form, errors, handleIngredientChange, addIngredien
       </div>
       {form.ingredients.map((ingredient, index) => (
         <div key={index} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
-          <input
-            type="text"
-            value={ingredient}
-            onChange={(e) => handleIngredientChange(index, e.target.value)}
-            style={{ 
-              flex: 1, 
-              padding: '0.7rem', 
-              border: '1px solid #ccc', 
-              borderRadius: 4 
-            }}
-            placeholder={`Ingredient ${index + 1}`}
-          />
+          <IngredientTooltip ingredient={ingredient}>
+            <input
+              type="text"
+              value={ingredient}
+              onChange={(e) => handleIngredientChange(index, e.target.value)}
+              style={{ 
+                flex: 1, 
+                padding: '0.7rem', 
+                border: '1px solid #ccc', 
+                borderRadius: 4 
+              }}
+              placeholder={`Ingredient ${index + 1}`}
+            />
+          </IngredientTooltip>
           {form.ingredients.length > 1 && (
             <button
               type="button"

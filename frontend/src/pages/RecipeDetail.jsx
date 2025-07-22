@@ -18,6 +18,7 @@ import {
   FiZap
 } from 'react-icons/fi'
 import SimilarRecipes from '../components/SimilarRecipes'
+import IngredientTooltip from '../components/IngredientTooltip'
 import { supabase } from '../supabaseClient'
 import './RecipeDetail.css'
 import axiosInstance from '../api/axiosInstance';
@@ -398,6 +399,7 @@ function RecipeDetail() {
                 <ul className="ingredients-list">
                   {getIngredients().map((ingredient, index) => {
                     let ingredientText = ingredient
+                    const cleanIngredient = stripHtml(ingredientText)
                     
                     return (
                       <li 
@@ -408,9 +410,11 @@ function RecipeDetail() {
                         <div className="ingredient-checkbox">
                           {checkedIngredients.includes(index) && <FiCheck />}
                         </div>
-                        <span className="ingredient-name">
-                          {stripHtml(ingredientText)}
-                        </span>
+                        <IngredientTooltip ingredient={cleanIngredient}>
+                          <span className="ingredient-name">
+                            {cleanIngredient}
+                          </span>
+                        </IngredientTooltip>
                       </li>
                     )
                   })}
