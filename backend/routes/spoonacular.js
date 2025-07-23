@@ -49,7 +49,8 @@ router.get('/search', async (req, res) => {
       offset: parseInt(offset),
       addRecipeInformation: true,
       fillIngredients: true,
-      instructionsRequired: true
+      instructionsRequired: true,
+      addRecipeNutrition: true // Include nutrition information including calories
     };
 
     // Add optional parameters if they exist
@@ -142,7 +143,10 @@ router.get('/findByIngredients', async (req, res) => {
           const detailResponse = await axiosInstance.get(
             `https://api.spoonacular.com/recipes/${recipe.id}/information`,
             {
-              params: { apiKey: SPOONACULAR_API_KEY }
+              params: { 
+                apiKey: SPOONACULAR_API_KEY,
+                includeNutrition: true // Include nutrition information including calories
+              }
             }
           );
           return {
@@ -235,6 +239,7 @@ router.get('/recipe/:id', async (req, res) => {
     const response = await axiosInstance.get(`https://api.spoonacular.com/recipes/${id}/information`, {
       params: {
         apiKey: SPOONACULAR_API_KEY,
+        includeNutrition: true, // Include nutrition information including calories
       },
     });
     res.json(response.data);
@@ -310,7 +315,10 @@ router.get('/similar/:id', async (req, res) => {
           const detailResponse = await axiosInstance.get(
             `https://api.spoonacular.com/recipes/${recipe.id}/information`,
             {
-              params: { apiKey: apiKey }
+              params: { 
+                apiKey: apiKey,
+                includeNutrition: true // Include nutrition information including calories
+              }
             }
           )
           return detailResponse.data

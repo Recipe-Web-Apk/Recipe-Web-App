@@ -144,7 +144,8 @@ async function fetchSpoonacularRecipes(batchSize = 50) {
     number: batchSize,
     addRecipeInformation: true,
     fillIngredients: true,
-    instructionsRequired: false
+    instructionsRequired: false,
+    addRecipeNutrition: true // Include nutrition information including calories
   };
   try {
     const response = await axios.get('https://api.spoonacular.com/recipes/random', { params });

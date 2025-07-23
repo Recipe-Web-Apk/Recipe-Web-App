@@ -7,6 +7,7 @@ import SaveRecipeButton from '../components/SaveRecipeButton';
 import LikeButton from '../components/LikeButton';
 import AutoSuggestSearch from '../components/AutoSuggestSearch';
 import IngredientTooltip from '../components/IngredientTooltip';
+import { extractCalories, formatCalories } from '../utils/calorieUtils';
 import './Recipes.css';
 import './Recommendations.css';
 import axiosInstance from '../api/axiosInstance';
@@ -786,9 +787,9 @@ function Recipes() {
                               <span className="recipe-servings">👥 {recipe.servings || 'N/A'} servings</span>
                             </div>
                             
-                            {recipe.calories && (
+                            {extractCalories(recipe) && (
                               <div className="recipe-calories">
-                                🔥 {Math.round(recipe.calories)} cal
+                                🔥 {formatCalories(extractCalories(recipe))}
                               </div>
                             )}
                           </div>
