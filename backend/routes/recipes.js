@@ -49,7 +49,14 @@ router.post('/', authenticateToken, async (req, res) => {
     if (recipeData.calories) recipe.calories = parseInt(recipeData.calories);
     if (recipeData.difficulty) recipe.difficulty = recipeData.difficulty;
     if (recipeData.category) recipe.category = recipeData.category;
+    if (recipeData.cookingStyle) recipe.cookingStyle = recipeData.cookingStyle;
+    if (recipeData.cookingMethod) recipe.cookingMethod = recipeData.cookingMethod;
     if (recipeData.tags) recipe.tags = recipeData.tags.trim();
+    
+    // Calculate total time
+    if (recipe.prepTime || recipe.cookTime) {
+      recipe.totalTime = (recipe.prepTime || 0) + (recipe.cookTime || 0);
+    }
 
     console.log('Creating recipe with data:', recipe);
 

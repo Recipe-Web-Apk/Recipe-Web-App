@@ -28,6 +28,8 @@ function RecipeForm() {
     calories: '',
     cookTime: '',
     prepTime: '',
+    cookingStyle: '',
+    cookingMethod: '',
     tags: '',
     youtube_url: ''
   })
@@ -338,6 +340,8 @@ function RecipeForm() {
       if (form.calories) recipeData.calories = parseInt(form.calories)
       if (form.difficulty) recipeData.difficulty = form.difficulty
       if (form.category) recipeData.category = form.category
+      if (form.cookingStyle) recipeData.cookingStyle = form.cookingStyle
+      if (form.cookingMethod) recipeData.cookingMethod = form.cookingMethod
       if (form.tags) recipeData.tags = form.tags.trim()
 
       const response = await axiosInstance.post('/recipes', recipeData, {

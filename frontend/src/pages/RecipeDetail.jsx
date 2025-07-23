@@ -19,6 +19,9 @@ import {
 } from 'react-icons/fi'
 import SimilarRecipes from '../components/SimilarRecipes'
 import IngredientTooltip from '../components/IngredientTooltip'
+import NutritionDisplay from '../components/NutritionDisplay'
+import CookingDetails from '../components/CookingDetails'
+import { extractCalories, formatCalories } from '../utils/calorieUtils'
 import { supabase } from '../supabaseClient'
 import './RecipeDetail.css'
 import axiosInstance from '../api/axiosInstance';
@@ -319,7 +322,7 @@ function RecipeDetail() {
               <div className="stat-item">
                 <FiZap className="stat-icon" />
                 <span className="stat-label">Calories</span>
-                <span className="stat-value">{recipe.calories || recipe.nutrition?.nutrients?.find(n => n.name === 'Calories')?.amount || 'N/A'}</span>
+                <span className="stat-value">{formatCalories(extractCalories(recipe))}</span>
               </div>
               <div className="stat-item">
                 <FiClock className="stat-icon" />
@@ -440,24 +443,11 @@ function RecipeDetail() {
               </div>
             </div>
 
+            {/* Cooking Details */}
+            <CookingDetails recipe={recipe} />
+            
             {/* Nutrition Information */}
-            {recipe.nutrition?.nutrients && (
-              <div className="recipe-detail-section">
-                <h3>Nutrition Information</h3>
-                <div className="nutrition-grid">
-                  {recipe.nutrition.nutrients
-                    .filter(nutrient => ['Calories', 'Protein', 'Fat', 'Carbohydrates', 'Fiber', 'Sugar'].includes(nutrient.name))
-                    .map((nutrient, index) => (
-                      <div key={index} className="nutrition-item">
-                        <span className="nutrition-name">{nutrient.name}</span>
-                        <span className="nutrition-value">
-                          {Math.round(nutrient.amount)}{nutrient.unit}
-                        </span>
-                      </div>
-                    ))}
-                </div>
-              </div>
-            )}
+            <NutritionDisplay recipe={recipe} />
           </div>
         </div>
 

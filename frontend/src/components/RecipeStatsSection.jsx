@@ -2,6 +2,8 @@ import React from 'react'
 
 function RecipeStatsSection({ form, errors, handleChange }) {
   const difficultyOptions = ['Easy', 'Medium', 'Hard']
+  const cookingStyleOptions = ['Frying', 'Poaching', 'Braising', 'Sautéing', 'Searing', 'Steaming', 'Boiling', 'Simmering', 'Roasting', 'Grilling', 'Baking', 'Broiling', 'Smoking', 'Pickling', 'Fermenting', 'Curing', 'Smoking', 'Confit', 'Sous Vide', 'Blanching']
+  const cookingMethodOptions = ['Stovetop', 'Oven', 'Grill', 'Slow Cooker', 'Air Fryer', 'Pressure Cooker', 'Smoker', 'Steamer', 'Deep Fryer', 'Wok', 'Dutch Oven', 'Cast Iron', 'Non-stick Pan', 'Baking Sheet', 'Roasting Pan']
 
   return (
     <>
@@ -110,7 +112,62 @@ function RecipeStatsSection({ form, errors, handleChange }) {
         </div>
       </div>
 
-      <div>
+      {/* Cooking Technique and Equipment Section */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginTop: '1rem' }}>
+        <div>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+            Cooking Technique (Optional)
+          </label>
+          <select
+            name="cookingStyle"
+            value={form.cookingStyle}
+            onChange={handleChange}
+            style={{ 
+              width: '100%', 
+              padding: '0.7rem', 
+              border: `1px solid ${errors.cookingStyle ? '#ff4444' : '#ccc'}`, 
+              borderRadius: 4 
+            }}
+          >
+            <option value="">Select cooking technique (optional)</option>
+            {cookingStyleOptions.map(option => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
+          <small style={{ color: '#666', fontSize: '0.8rem', marginTop: '0.3rem' }}>
+            Leave blank for no-cook recipes (desserts, salads, etc.)
+          </small>
+          {errors.cookingStyle && <div style={{ color: '#ff4444', fontSize: '0.9rem', marginTop: '0.3rem' }}>{errors.cookingStyle}</div>}
+        </div>
+
+        <div>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+            Cooking Equipment (Optional)
+          </label>
+          <select
+            name="cookingMethod"
+            value={form.cookingMethod}
+            onChange={handleChange}
+            style={{ 
+              width: '100%', 
+              padding: '0.7rem', 
+              border: `1px solid ${errors.cookingMethod ? '#ff4444' : '#ccc'}`, 
+              borderRadius: 4 
+            }}
+          >
+            <option value="">Select cooking equipment (optional)</option>
+            {cookingMethodOptions.map(option => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
+          <small style={{ color: '#666', fontSize: '0.8rem', marginTop: '0.3rem' }}>
+            Leave blank if no specific equipment is needed
+          </small>
+          {errors.cookingMethod && <div style={{ color: '#ff4444', fontSize: '0.9rem', marginTop: '0.3rem' }}>{errors.cookingMethod}</div>}
+        </div>
+      </div>
+
+      <div style={{ marginTop: '1rem' }}>
         <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
           Tags
         </label>

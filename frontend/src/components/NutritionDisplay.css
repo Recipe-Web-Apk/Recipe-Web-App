@@ -1,0 +1,382 @@
+.nutrition-display {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 1rem 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dark-mode .nutrition-display {
+  background: var(--bg-card);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.nutrition-display h3 {
+  color: #333;
+  margin: 0 0 1.5rem 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+  border-bottom: 2px solid #e9ecef;
+  padding-bottom: 0.5rem;
+}
+
+.dark-mode .nutrition-display h3 {
+  color: var(--text-primary);
+  border-bottom-color: var(--border-color);
+}
+
+.nutrition-display h4 {
+  color: #555;
+  margin: 1rem 0 0.75rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.dark-mode .nutrition-display h4 {
+  color: var(--text-secondary);
+}
+
+.nutrition-section {
+  margin-bottom: 1.5rem;
+}
+
+.nutrition-section:last-child {
+  margin-bottom: 0;
+}
+
+/* Calories Display */
+.calories-display {
+  text-align: center;
+  padding: 1rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px;
+  color: white;
+  margin-bottom: 1rem;
+}
+
+.dark-mode .calories-display {
+  background: linear-gradient(135deg, #ff7849 0%, #ff6b6b 100%);
+}
+
+.calories-value {
+  display: block;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.calories-label {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+/* Macronutrients Grid */
+.macros-grid {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.macro-item {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.dark-mode .macro-item {
+  background: var(--bg-hover);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.macro-item:hover {
+  transform: translateY(-2px);
+}
+
+.macro-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.macro-name {
+  font-weight: 600;
+  color: #333;
+  font-size: 1rem;
+}
+
+.dark-mode .macro-name {
+  color: var(--text-primary);
+}
+
+.macro-value {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #555;
+}
+
+.dark-mode .macro-value {
+  color: var(--text-secondary);
+}
+
+/* Percentage Bars */
+.macro-percentage {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.percentage-bar {
+  flex: 1;
+  height: 8px;
+  background: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.dark-mode .percentage-bar {
+  background: var(--border-color);
+}
+
+.percentage-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.protein-fill {
+  background: linear-gradient(90deg, #4CAF50, #66BB6A);
+}
+
+.fat-fill {
+  background: linear-gradient(90deg, #FF9800, #FFB74D);
+}
+
+.carbs-fill {
+  background: linear-gradient(90deg, #2196F3, #42A5F5);
+}
+
+.percentage-text {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #666;
+  min-width: 35px;
+  text-align: right;
+}
+
+.dark-mode .percentage-text {
+  color: var(--text-secondary);
+}
+
+/* Macro Balance Indicator */
+.macro-balance {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.dark-mode .macro-balance {
+  background: var(--bg-hover);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.balance-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.balance-indicator.balanced {
+  color: #4CAF50;
+}
+
+.balance-indicator.unbalanced {
+  color: #FF9800;
+}
+
+.balance-icon {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.balance-text {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.balance-details {
+  color: #666;
+  font-size: 0.85rem;
+}
+
+.dark-mode .balance-details {
+  color: var(--text-secondary);
+}
+
+/* Other Nutrients Grid */
+.nutrients-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.75rem;
+}
+
+.nutrient-item {
+  background: white;
+  border-radius: 6px;
+  padding: 0.75rem;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.dark-mode .nutrient-item {
+  background: var(--bg-hover);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.nutrient-name {
+  display: block;
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 0.25rem;
+  font-weight: 500;
+}
+
+.dark-mode .nutrient-name {
+  color: var(--text-secondary);
+}
+
+.nutrient-value {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.dark-mode .nutrient-value {
+  color: var(--text-primary);
+}
+
+/* Nutrition Tips */
+.nutrition-tips {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid #667eea;
+}
+
+.dark-mode .nutrition-tips {
+  background: var(--bg-hover);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  border-left-color: #ff7849;
+}
+
+.tips-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.tips-list li {
+  padding: 0.5rem 0;
+  color: #555;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.dark-mode .tips-list li {
+  color: var(--text-secondary);
+  border-bottom-color: var(--border-color);
+}
+
+.tips-list li:last-child {
+  border-bottom: none;
+}
+
+.tips-list li::before {
+  content: "💡";
+  margin-right: 0.5rem;
+  font-size: 1rem;
+}
+
+/* Nutrition Unavailable */
+.nutrition-unavailable {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  padding: 2rem;
+  background: white;
+  border-radius: 8px;
+  border: 2px dashed #ddd;
+}
+
+.dark-mode .nutrition-unavailable {
+  color: var(--text-secondary);
+  background: var(--bg-hover);
+  border-color: var(--border-color);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .nutrition-display {
+    padding: 1rem;
+  }
+  
+  .calories-value {
+    font-size: 1.5rem;
+  }
+  
+  .macros-grid {
+    gap: 0.75rem;
+  }
+  
+  .macro-item {
+    padding: 0.75rem;
+  }
+  
+  .nutrients-grid {
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 0.5rem;
+  }
+  
+  .nutrient-item {
+    padding: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .nutrition-display {
+    padding: 0.75rem;
+  }
+  
+  .calories-value {
+    font-size: 1.25rem;
+  }
+  
+  .macro-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+  
+  .macro-percentage {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .percentage-text {
+    text-align: left;
+  }
+  
+  .nutrients-grid {
+    grid-template-columns: 1fr;
+  }
+} 
