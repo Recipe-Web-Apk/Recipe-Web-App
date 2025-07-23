@@ -1,9 +1,15 @@
 /* Recommendations Page Styles */
 
+.recommendations-section {
+  position: relative;
+  z-index: -1;
+  overflow: visible;
+}
+
 .sticky-heading {
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 1;
   background: var(--card-bg, #fff);
   color: var(--primary, #2d3748);
   padding: 1.2rem 1rem;
@@ -37,6 +43,8 @@
   grid-template-columns: 1fr;
   gap: 1.5rem;
   margin-top: 2rem;
+  position: relative;
+  z-index: -1;
 }
 @media (min-width: 600px) {
   .recommendations-grid {

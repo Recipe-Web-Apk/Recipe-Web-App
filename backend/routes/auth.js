@@ -123,11 +123,11 @@ router.post('/login', async (req, res) => {
     if (profileError) {
       console.error('Profile fetch error:', profileError);
     }
-
+      
     // If profile doesn't exist, create it
     if (!profileData) {
-      const { data: newProfile, error: createError } = await supabase
-        .from('users')
+        const { data: newProfile, error: createError } = await supabase
+          .from('users')
         .insert([
           {
             id: data.user.id,
@@ -136,10 +136,10 @@ router.post('/login', async (req, res) => {
             created_at: new Date().toISOString()
           }
         ], { upsert: true });
-      if (createError) {
-        console.error('Failed to create profile on login:', createError);
-      } else {
-        console.log('Profile created successfully on login');
+        if (createError) {
+          console.error('Failed to create profile on login:', createError);
+        } else {
+          console.log('Profile created successfully on login');
         profile = newProfile ? newProfile[0] : null;
       }
     } else {

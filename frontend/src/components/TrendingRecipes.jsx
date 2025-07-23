@@ -44,8 +44,8 @@ function TrendingRecipes() {
 
   return (
     <div className="trending-section">
-      <h2 className="section-title">Trending Recipes</h2>
-      <p className="section-subtitle">Discover what's popular right now</p>
+      <h2 className="section-title">Popular This Week</h2>
+      <p className="section-subtitle">Most viewed and saved recipes by our community</p>
       
       <div className="trending-grid">
         {trendingRecipes.map(recipe => (
@@ -82,7 +82,7 @@ function TrendingRecipes() {
           onClick={() => navigate('/recipes')}
           className="view-all-btn"
         >
-          View All Recipes
+          See More Popular Recipes
         </button>
       </div>
     </div>
