@@ -119,6 +119,9 @@
   margin-bottom: 2rem;
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  z-index: 1;
+  overflow: visible;
 }
 
 .dark-mode .search-section {
@@ -175,6 +178,8 @@
   align-items: center;
   margin-bottom: 1rem;
   position: relative;
+  z-index: 2;
+  overflow: visible;
 }
 
 .search-input {
@@ -208,6 +213,13 @@
 
 .search-input::placeholder {
   color: #666;
+}
+
+/* Auto-suggest specific styling for recipes page */
+.recipes-auto-suggest {
+  position: relative;
+  z-index: 99999;
+  overflow: visible;
 }
 
 .dark-mode .search-input::placeholder {

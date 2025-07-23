@@ -34,22 +34,22 @@ function RecipeFinder({ isOpen, onClose, onSearch }) {
     <div className="recipe-finder-modal" role="dialog" aria-modal="true" aria-label="Recipe Finder">
       <div className="recipe-finder-content">
         <button className="recipe-finder-close" onClick={onClose} aria-label="Close Recipe Finder">×</button>
-        <h2 className="recipe-finder-title">Find a Recipe</h2>
+        <h2 className="recipe-finder-title">Search Recipes</h2>
         <form className="recipe-finder-form" onSubmit={handleSubmit} autoComplete="off">
           <div>
-            <label className="recipe-finder-label" htmlFor="finder-query">Search</label>
+            <label className="recipe-finder-label" htmlFor="finder-query">What are you looking for?</label>
             <input
               id="finder-query"
               className="recipe-finder-input"
               type="text"
               value={query}
               onChange={e => setQuery(e.target.value)}
-              placeholder="e.g. pasta, chicken, vegan..."
+              placeholder="e.g. pasta, chicken, vegan, quick dinner..."
               autoFocus
             />
           </div>
           <div>
-            <label className="recipe-finder-label" htmlFor="finder-diet">Diet (optional)</label>
+            <label className="recipe-finder-label" htmlFor="finder-diet">Dietary preference (optional)</label>
             <select
               id="finder-diet"
               className="recipe-finder-select"

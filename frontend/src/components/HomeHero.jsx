@@ -17,33 +17,33 @@ function HomeHero() {
     <div className="home-hero">
       <div className="hero-content">
         <h1 className="hero-title">
-          Discover Amazing Recipes
+          Find Your Perfect Recipe
         </h1>
         <p className="hero-subtitle">
-          Find inspiration for your next meal and connect with a community of food lovers. 
-          Create, share, and explore delicious recipes from around the world.
+          Search thousands of recipes by ingredients, cuisine, or dietary preferences. 
+          Save your favorites and get personalized recommendations just for you.
         </p>
         
         {/* Enhanced auto-complete search with Downshift */}
         <div className="hero-search">
           <DownshiftAutoComplete
-            placeholder="Search for recipes, ingredients, or cuisines..."
+            placeholder="Try: pasta, chicken, vegan, Italian, quick meals..."
             className="hero-auto-suggest"
           />
         </div>
         
         <div className="hero-actions">
           <Link to="/recipes" className="hero-btn primary">
-            Explore Recipes
+            Browse All Recipes
           </Link>
           <Link to="/recipes/create" className="hero-btn secondary">
-            Create Recipe
+            Share Your Recipe
           </Link>
         </div>
       </div>
       <div className="hero-stats">
         <div className="stat-item">
-          <span className="stat-number">1000+</span>
+          <span className="stat-number">10,000+</span>
           <span className="stat-label">Recipes</span>
         </div>
         <div className="stat-item">
@@ -51,8 +51,8 @@ function HomeHero() {
           <span className="stat-label">Cuisines</span>
         </div>
         <div className="stat-item">
-          <span className="stat-number">24/7</span>
-          <span className="stat-label">Available</span>
+          <span className="stat-number">Free</span>
+          <span className="stat-label">Forever</span>
         </div>
       </div>
     </div>
