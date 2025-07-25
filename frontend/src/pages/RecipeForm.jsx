@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { useDarkMode } from '../contexts/DarkModeContext'
 import { supabase } from '../supabaseClient'
 import BasicInfoSection from '../components/BasicInfoSection'
 import RecipeStatsSection from '../components/RecipeStatsSection'
@@ -31,6 +32,7 @@ if (typeof document !== 'undefined') {
 function RecipeForm() {
   const navigate = useNavigate()
   const { token } = useAuth()
+  const { isDarkMode } = useDarkMode()
   const [loading, setLoading] = useState(false)
   const [imagePreview, setImagePreview] = useState(null)
   const [submitError, setSubmitError] = useState(null)
@@ -541,7 +543,7 @@ function RecipeForm() {
             borderRadius: '50%',
             animation: 'spin 1s linear infinite'
           }}></div>
-          <span style={{ color: '#1976d2', fontWeight: '500' }}>
+          <span style={{ color: isDarkMode ? '#64b5f6' : '#1976d2', fontWeight: '500' }}>
             Checking for similar recipes...
           </span>
         </div>
@@ -581,8 +583,8 @@ function RecipeForm() {
 
       {submitError && (
         <div style={{ 
-          background: '#ffebee', 
-          color: '#c62828', 
+          background: isDarkMode ? '#3a1a1a' : '#ffebee', 
+          color: isDarkMode ? '#ff6b6b' : '#c62828', 
           padding: '1rem', 
           borderRadius: 4, 
           marginBottom: '1rem' 

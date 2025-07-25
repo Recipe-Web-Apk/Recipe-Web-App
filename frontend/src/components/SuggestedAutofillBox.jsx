@@ -1,14 +1,17 @@
 import React from 'react';
+import { useDarkMode } from '../contexts/DarkModeContext';
 import './SuggestedAutofillBox.css';
 
 const SuggestedAutofillBox = ({ data, onUseIngredients, onUseInstructions, onUseStats, onUseImage, onUseDescription, onUseCategory, onUseDifficulty, onUseTags, onUseYoutubeUrl }) => {
+  const { isDarkMode } = useDarkMode();
+  
   if (!data || (!data.ingredients?.length && !data.instructions?.length)) return null;
 
   return (
     <div className="autofill-box">
       <h3>🍽 Suggested Recipe Details</h3>
       {data.title && (
-        <h4 style={{ marginTop: '0.5rem', marginBottom: '1rem', color: '#666' }}>
+        <h4 style={{ marginTop: '0.5rem', marginBottom: '1rem', color: isDarkMode ? '#b0b0b0' : '#666' }}>
           "{data.title}"
         </h4>
       )}
@@ -81,7 +84,7 @@ const SuggestedAutofillBox = ({ data, onUseIngredients, onUseInstructions, onUse
               <button onClick={() => onUseInstructions(data.instructions)}>Use These Instructions</button>
             </>
           ) : (
-            <p style={{ color: '#666', fontStyle: 'italic' }}>No instructions available</p>
+            <p style={{ color: isDarkMode ? '#b0b0b0' : '#666', fontStyle: 'italic' }}>No instructions available</p>
           )}
         </div>
       )}

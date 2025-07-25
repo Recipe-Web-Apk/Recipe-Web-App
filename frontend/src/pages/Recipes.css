@@ -111,6 +111,17 @@
   box-shadow: 0 6px 20px rgba(238, 90, 36, 0.4);
 }
 
+/* Dark mode support for add recipe button */
+.dark-mode .add-recipe-btn {
+  background: linear-gradient(135deg, #FF7849, #e65a2b);
+  color: white;
+  box-shadow: 0 4px 15px rgba(255, 120, 73, 0.4);
+}
+
+.dark-mode .add-recipe-btn:hover {
+  box-shadow: 0 6px 20px rgba(255, 120, 73, 0.5);
+}
+
 /* Search Section */
 .search-section {
   background: rgba(255, 255, 255, 0.1);

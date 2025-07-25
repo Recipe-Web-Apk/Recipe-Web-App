@@ -25,4 +25,47 @@
 
 .autofill-box li {
   margin-bottom: 0.5rem;
+}
+
+/* Dark mode support */
+.dark-mode .autofill-box {
+  background-color: #2d2d2d;
+  border-left-color: #f97316;
+  color: #e0e0e0;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+.dark-mode .autofill-box h3 {
+  color: #f97316;
+}
+
+.dark-mode .autofill-box h4 {
+  color: #e0e0e0;
+}
+
+.dark-mode .autofill-box button {
+  background-color: #404040;
+  color: #ffffff;
+  border: 1px solid #404040;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.dark-mode .autofill-box button:hover {
+  background-color: #505050;
+  border-color: #f97316;
+}
+
+.dark-mode .autofill-box strong {
+  color: #f97316;
+}
+
+.dark-mode .autofill-box a {
+  color: #3b82f6;
+}
+
+.dark-mode .autofill-box a:hover {
+  color: #f97316;
 } 
