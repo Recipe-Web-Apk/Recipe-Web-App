@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../supabaseClient'
@@ -7,8 +7,26 @@ import RecipeStatsSection from '../components/RecipeStatsSection'
 import IngredientsSection from '../components/IngredientsSection'
 import InstructionsSection from '../components/InstructionsSection'
 import FormActions from '../components/FormActions'
+import SimilarityWarning from '../components/SimilarityWarning'
+import SuggestedAutofillBox from '../components/SuggestedAutofillBox'
 import axiosInstance from '../api/axiosInstance';
-import SuggestedAutofillBox from '../components/SuggestedAutofillBox';
+// Autofill components removed - similarity only
+import similarityAPI from '../api/similarity';
+
+// Add CSS for loading animation
+const loadingStyles = `
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`;
+
+// Inject the styles
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement('style');
+  styleSheet.textContent = loadingStyles;
+  document.head.appendChild(styleSheet);
+}
 
 function RecipeForm() {
   const navigate = useNavigate()
@@ -35,10 +53,12 @@ function RecipeForm() {
   })
 
   const [errors, setErrors] = useState({})
-  const [similarRecipes, setSimilarRecipes] = useState([])
-  const [showWarning, setShowWarning] = useState(false)
-  const [autofillData, setAutofillData] = useState(null)
-  const [ignoredSimilarityWarning, setIgnoredSimilarityWarning] = useState(false);
+  const [similarityWarning, setSimilarityWarning] = useState(null)
+  const [autofillSuggestion, setAutofillSuggestion] = useState(null)
+  const [ignoredSimilarityWarning, setIgnoredSimilarityWarning] = useState(false)
+  const [isCheckingSimilarity, setIsCheckingSimilarity] = useState(false)
+  
+  // Autofill state removed - similarity only
 
   const difficultyOptions = ['Easy', 'Medium', 'Hard']
   const categoryOptions = ['Breakfast', 'Lunch', 'Dinner', 'Dessert', 'Snack', 'Appetizer']
@@ -54,92 +74,123 @@ function RecipeForm() {
     return newErrors
   }
 
-  // Unified handler for title autofill/warning
+  // Unified handler for field changes - SIMILARITY ONLY
   async function handleFieldChange(e) {
     const { name, value } = e.target;
-    console.log('handleFieldChange', name, value);
     setForm(prev => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
 
     // Reset ignore state if title changes
-    if (name === 'title') setIgnoredSimilarityWarning(false);
+    if (name === 'title') {
+      setIgnoredSimilarityWarning(false);
+      setSimilarityWarning(null);
+      setAutofillSuggestion(null);
+    }
 
+    // ONLY check similarity for title field - NO AUTOFILL
     if (name === 'title' && value.length >= 3) {
-      // Use the new value directly
-      const payload = {
-        title: value,
-        ingredients: form.ingredients
-      };
-      console.log('[SIMILARITY] Sending payload:', payload);
+      // PRIORITY 1: Check for similar recipes ONLY
+      setIsCheckingSimilarity(true);
+      setSimilarityWarning(null); // Clear any existing warnings
+      setAutofillSuggestion(null); // Clear any existing autofill
+      
       try {
-        const res = await fetch('/api/similar-recipes', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        console.log('[SIMILARITY] Response:', data);
-        if (data.length > 0) {
-          setSimilarRecipes(data);
-          setShowWarning(true);
-          setAutofillData(null);
-          console.log('[SIMILARITY] Showing warning!');
-          return;
+        const result = await similarityAPI.checkSimilarity(value, form.ingredients, form.category, form.cookTime, token);
+        
+        if (result.hasSimilarRecipes) {
+          setSimilarityWarning(result.warning);
+          setAutofillSuggestion(result.autofillSuggestion);
+          // NO AUTOFILL - similarity check is the only feature
         } else {
-          setShowWarning(false);
-          setSimilarRecipes([]);
-          console.log('[SIMILARITY] No similar recipes found.');
+          setSimilarityWarning(null);
+          
+          // Get autofill suggestions when no similar recipes found
+          try {
+            const autofillResult = await similarityAPI.getAutofillSuggestions(
+              value,
+              form.ingredients,
+              form.category,
+              form.cookTime,
+              token
+            );
+            
+            if (autofillResult.success && autofillResult.suggestion) {
+              setAutofillSuggestion({
+                title: autofillResult.suggestion.title,
+                ingredients: autofillResult.suggestion.ingredients || [],
+                instructions: autofillResult.suggestion.instructions || [],
+                image: autofillResult.suggestion.image,
+                cookingStats: autofillResult.suggestion.cookingStats || {}
+              });
+            } else {
+              setAutofillSuggestion(null);
+            }
+          } catch (autofillError) {
+            console.error('❌ [AUTOFILL] Error getting suggestions:', autofillError);
+            setAutofillSuggestion(null);
+          }
         }
-      } catch (err) {
-        setShowWarning(false);
-        setSimilarRecipes([]);
-        console.log('[SIMILARITY] Error:', err);
+      } catch (error) {
+        console.error('[SIMILARITY] Error checking similarity:', error);
+        setSimilarityWarning(null);
+        setAutofillSuggestion(null);
+      } finally {
+        setIsCheckingSimilarity(false);
       }
-      // If no backend match, call Spoonacular autofill
-      try {
-        const res = await fetch(`/api/autofill-recipe?title=${encodeURIComponent(value)}`);
-        const data = await res.json();
-        console.log('autofill-recipe response:', data);
-        setAutofillData(data);
-      } catch (err) {
-        setAutofillData(null);
-      }
-    } else {
-      if (name === 'title') setAutofillData(null);
     }
   }
 
   // Handler for ingredient changes with backend check
   async function handleIngredientChangeAndCheck(index, value) {
-    console.log('handleIngredientChangeAndCheck', index, value);
     const newIngredients = [...form.ingredients];
     newIngredients[index] = value;
     setForm(prev => ({ ...prev, ingredients: newIngredients }));
     if (errors.ingredients) setErrors(prev => ({ ...prev, ingredients: '' }));
 
-    if (newIngredients.filter(ing => ing.trim() !== '').length > 0) {
-      // Use newIngredients directly
-      const payload = { title: form.title, ingredients: newIngredients };
+    if (newIngredients.filter(ing => ing.trim() !== '').length > 0 && form.title.length >= 3) {
+      // Check for similar recipes with updated ingredients
+      setIsCheckingSimilarity(true);
       try {
-        const res = await fetch('/api/similar-recipes', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        console.log('similar-recipes response (ingredients):', data);
-        if (data.length > 0) {
-          setSimilarRecipes(data);
-          setShowWarning(true);
-          setAutofillData(null);
-          return;
+        const result = await similarityAPI.checkSimilarity(form.title, newIngredients, form.category, form.cookTime, token);
+        
+        if (result.hasSimilarRecipes) {
+          setSimilarityWarning(result.warning);
+          setAutofillSuggestion(result.autofillSuggestion);
         } else {
-          setShowWarning(false);
-          setSimilarRecipes([]);
+          setSimilarityWarning(null);
+          
+          // Get autofill suggestions when no similar recipes found
+          try {
+            const autofillResult = await similarityAPI.getAutofillSuggestions(
+              form.title,
+              newIngredients,
+              form.category,
+              form.cookTime,
+              token
+            );
+            
+            if (autofillResult.success && autofillResult.suggestion) {
+              setAutofillSuggestion({
+                title: autofillResult.suggestion.title,
+                ingredients: autofillResult.suggestion.ingredients || [],
+                instructions: autofillResult.suggestion.instructions || [],
+                image: autofillResult.suggestion.image,
+                cookingStats: autofillResult.suggestion.cookingStats || {}
+              });
+            } else {
+              setAutofillSuggestion(null);
+            }
+          } catch (autofillError) {
+            console.error('❌ [AUTOFILL] Error getting suggestions:', autofillError);
+            setAutofillSuggestion(null);
+          }
         }
-      } catch (err) {
-        setShowWarning(false);
-        setSimilarRecipes([]);
+      } catch (error) {
+        console.error('[SIMILARITY] Error checking similarity:', error);
+        setSimilarityWarning(null);
+        setAutofillSuggestion(null);
+      } finally {
+        setIsCheckingSimilarity(false);
       }
     }
   }
@@ -181,20 +232,47 @@ function RecipeForm() {
     setForm(prev => ({ ...prev, youtube_url: url }));
   };
 
-  async function checkForSimilarRecipes() {
-    const res = await fetch('/api/similar-recipes', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: form.title, ingredients: form.ingredients })
-    })
-    const data = await res.json()
-    if (data.length > 0) {
-      setSimilarRecipes(data)
-      setShowWarning(true)
-      return true
+  // Similarity warning handlers
+  const handleIgnoreSimilarityWarning = () => {
+    setSimilarityWarning(null);
+    setIgnoredSimilarityWarning(true);
+  };
+
+  const handleViewSimilarRecipe = (recipe) => {
+    // Navigate to recipe detail page
+    window.open(`/recipe/${recipe.id}`, '_blank');
+  };
+
+  const handleUseAutofillSuggestion = (autofillData) => {
+    // Apply autofill data to form
+    if (autofillData.ingredients) {
+      setForm(prev => ({ ...prev, ingredients: autofillData.ingredients }));
     }
-    return false
-  }
+    if (autofillData.instructions) {
+      setForm(prev => ({ ...prev, instructions: autofillData.instructions }));
+    }
+    if (autofillData.cookingTime) {
+      setForm(prev => ({ ...prev, cookTime: autofillData.cookingTime }));
+    }
+    if (autofillData.servings) {
+      setForm(prev => ({ ...prev, servings: autofillData.servings }));
+    }
+    if (autofillData.difficulty) {
+      setForm(prev => ({ ...prev, difficulty: autofillData.difficulty }));
+    }
+    if (autofillData.cuisine) {
+      setForm(prev => ({ ...prev, category: autofillData.cuisine }));
+    }
+    if (autofillData.dietaryTags) {
+      setForm(prev => ({ ...prev, tags: autofillData.dietaryTags.join(', ') }));
+    }
+    
+    // Clear the warning after autofill
+    setSimilarityWarning(null);
+    setIgnoredSimilarityWarning(true);
+  };
+
+  // Autofill functions removed - similarity only
 
   function handleChange(e) {
     const { name, value } = e.target
@@ -311,11 +389,7 @@ function RecipeForm() {
     }
 
     // Block submission if warning is visible and not ignored
-    if (showWarning && !ignoredSimilarityWarning) return;
-
-    // Similarity check before submit
-    const similar = await checkForSimilarRecipes()
-    if (similar) return // Show warning, don't submit yet
+    if (similarityWarning && !ignoredSimilarityWarning) return;
 
     setLoading(true)
     setSubmitError(null)
@@ -360,7 +434,11 @@ function RecipeForm() {
       }
     } catch (error) {
       console.error('Error creating recipe:', error)
-      setSubmitError('Network error. Please try again.')
+      if (error.response && error.response.data && error.response.data.error) {
+        setSubmitError(error.response.data.error)
+      } else {
+        setSubmitError('Failed to create recipe. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
@@ -438,38 +516,66 @@ function RecipeForm() {
         </button>
       </div>
 
-      {autofillData && !showWarning && (
-        <SuggestedAutofillBox
-          data={autofillData}
-          onUseIngredients={handleUseIngredients}
-          onUseInstructions={handleUseInstructions}
-          onUseStats={handleUseStats}
-          onUseImage={handleUseImage}
-          onUseDescription={handleUseDescription}
-          onUseCategory={handleUseCategory}
-          onUseDifficulty={handleUseDifficulty}
-          onUseTags={handleUseTags}
-          onUseYoutubeUrl={handleUseYoutubeUrl}
-        />
+      {/* Advanced Autofill Toggle */}
+            {/* Autofill toggle removed - similarity only */}
+
+
+
+      {/* Similarity Checking Loading Indicator */}
+      {isCheckingSimilarity && (
+        <div style={{
+          background: '#e3f2fd',
+          border: '1px solid #2196f3',
+          borderRadius: '8px',
+          padding: '16px',
+          marginBottom: '16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px'
+        }}>
+          <div style={{
+            width: '20px',
+            height: '20px',
+            border: '2px solid #2196f3',
+            borderTop: '2px solid transparent',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }}></div>
+          <span style={{ color: '#1976d2', fontWeight: '500' }}>
+            Checking for similar recipes...
+          </span>
+        </div>
       )}
 
-      {showWarning && (
-        <div className="warning-box" style={{ background: '#fffbe6', border: '1px solid #ffe58f', padding: '1rem', borderRadius: 8, marginBottom: 16 }}>
-          <h4>⚠️ Similar Recipe Found</h4>
-          <ul>
-            {similarRecipes.map(({ recipe, score }) => (
-              <li key={recipe.id}>
-                {recipe.title} - {Math.round(score * 100)}% match
-                {/* Removed View button */}
-              </li>
-            ))}
-          </ul>
-          <button onClick={() => { setShowWarning(false); setIgnoredSimilarityWarning(true); }} style={{ marginTop: 8 }}>
-            Ignore Warning & Submit Anyway
-          </button>
-          <div style={{ fontSize: '0.95em', color: '#b8860b', marginTop: 6 }}>
-            You can continue creating your recipe, or review the similar ones above.
-          </div>
+      {/* Similarity Warning Component - PRIORITY 1 */}
+      {similarityWarning && !ignoredSimilarityWarning && (
+        <div style={{ marginBottom: '20px' }}>
+          <SimilarityWarning
+            warning={similarityWarning}
+            autofillSuggestion={autofillSuggestion}
+            currentRecipeData={form}
+            onIgnore={handleIgnoreSimilarityWarning}
+            onViewRecipe={handleViewSimilarRecipe}
+            onUseAutofill={handleUseAutofillSuggestion}
+          />
+        </div>
+      )}
+
+      {/* Autofill Suggestion Component - Show when no similar recipes found */}
+      {autofillSuggestion && !similarityWarning && (
+        <div style={{ marginBottom: '20px' }}>
+          <SuggestedAutofillBox
+            data={autofillSuggestion}
+            onUseIngredients={handleUseIngredients}
+            onUseInstructions={handleUseInstructions}
+            onUseStats={handleUseStats}
+            onUseImage={handleUseImage}
+            onUseDescription={handleUseDescription}
+            onUseCategory={handleUseCategory}
+            onUseDifficulty={handleUseDifficulty}
+            onUseTags={handleUseTags}
+            onUseYoutubeUrl={handleUseYoutubeUrl}
+          />
         </div>
       )}
 

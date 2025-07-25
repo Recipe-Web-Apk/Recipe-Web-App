@@ -39,25 +39,23 @@ function Dashboard() {
 
   const fetchRecipes = useCallback(async () => {
     if (!token) {
-      console.log('Dashboard: No token available, skipping fetch');
+
       return;
     }
     
     try {
       setLoading(true);
-      console.log('Dashboard: Starting to fetch recipes...');
-      console.log('Dashboard: Token exists:', !!token);
-      console.log('Dashboard: Token preview:', token.substring(0, 20) + '...');
+
       
       const createdResponse = await axiosInstance.get('/recipes', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      console.log('Dashboard: Created recipes response:', createdResponse.data);
+      
       if (createdResponse.data.success) {
         setMyRecipes(createdResponse.data.recipes || []);
-        console.log('Dashboard: Set myRecipes to:', createdResponse.data.recipes);
+        
       } else {
         console.error('Dashboard: Error in created recipes response:', createdResponse.data.error);
         setMyRecipes([]);
@@ -68,12 +66,12 @@ function Dashboard() {
           'Authorization': `Bearer ${token}`
         }
       });
-      console.log('Dashboard: Saved recipes response:', response.data);
+      
 
       if (response.data.success) {
-        console.log('Dashboard: Setting saved recipes:', response.data.recipes);
+        
         setSavedRecipes(response.data.recipes || []);
-        console.log("Dashboard: Final saved recipes count:", response.data.recipes?.length || 0);
+
       } else {
         console.error('Dashboard: Error in saved recipes response:', response.data.error);
         setSavedRecipes([]);
@@ -84,10 +82,10 @@ function Dashboard() {
           'Authorization': `Bearer ${token}`
         }
       });
-      console.log('Dashboard: Liked recipes response:', likedResponse.data);
+      
 
       if (likedResponse.data.success) {
-        console.log('Dashboard: Setting liked recipes:', likedResponse.data.likes);
+        
         setLikedRecipes(likedResponse.data.likes || []);
       } else {
         console.error('Dashboard: Error in liked recipes response:', likedResponse.data.error);
@@ -102,7 +100,7 @@ function Dashboard() {
       setLikedRecipes([]);
     } finally {
       setLoading(false);
-      console.log('Dashboard: Finished fetching recipes');
+
     }
   }, [token]);
 
@@ -114,24 +112,22 @@ function Dashboard() {
 
   // Listen for recipe save/unsave events from other pages
   useEffect(() => {
-    console.log('Dashboard: Setting up event listeners for recipe save/unsave');
+    
     
     const handleRecipeSaved = (e) => {
-      console.log('Dashboard: Recipe saved event received', e.detail);
-      console.log('Dashboard: Current token exists?', !!token);
+      
       // Refresh saved recipes when user saves from other pages
       if (token) {
-        console.log('Dashboard: Calling fetchRecipes after save event');
+        
         fetchRecipes()
       }
     }
 
     const handleRecipeUnsaved = (e) => {
-      console.log('Dashboard: Recipe unsaved event received', e.detail);
-      console.log('Dashboard: Current token exists?', !!token);
+      
       // Refresh saved recipes when user unsaves from other pages
       if (token) {
-        console.log('Dashboard: Calling fetchRecipes after unsave event');
+        
         fetchRecipes()
       }
     }
@@ -140,7 +136,7 @@ function Dashboard() {
     window.addEventListener('recipeUnsaved', handleRecipeUnsaved)
     
     return () => {
-      console.log('Dashboard: Cleaning up event listeners');
+
       window.removeEventListener('recipeSaved', handleRecipeSaved)
       window.removeEventListener('recipeUnsaved', handleRecipeUnsaved)
     }
@@ -195,19 +191,7 @@ function Dashboard() {
   const normalizedSavedRecipes = savedRecipes.map(recipe => {
     return { ...recipe };
   });
-  console.log('Dashboard: Current user:', user);
-  console.log('Dashboard: Current user ID:', user?.id);
-  console.log('Dashboard: Token exists:', !!token);
-  console.log('Dashboard: myRecipes raw:', myRecipes);
-  console.log('Dashboard: savedRecipes raw:', savedRecipes);
-  console.log('Dashboard: normalizedMyRecipes:', normalizedMyRecipes);
-  console.log('Dashboard: normalizedSavedRecipes:', normalizedSavedRecipes);
-  console.log('Dashboard: myRecipes length:', normalizedMyRecipes.length);
-  console.log('Dashboard: savedRecipes length:', normalizedSavedRecipes.length);
-  console.log('Dashboard: likedRecipes:', likedRecipes);
-  if (likedRecipes.length > 0) {
-    console.log('Dashboard: first liked recipe:', likedRecipes[0]);
-  }
+
 
   const dashboardStyles = {
     container: {

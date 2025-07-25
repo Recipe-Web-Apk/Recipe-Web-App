@@ -33,7 +33,7 @@ function SimilarRecipes({ recipeId }) {
         }
       } catch (error) {
         console.error('Error fetching similar recipes:', error)
-        setError('Network error. Please try again.')
+        setError('Failed to load similar recipes. Please try again.')
       } finally {
         setLoading(false)
       }

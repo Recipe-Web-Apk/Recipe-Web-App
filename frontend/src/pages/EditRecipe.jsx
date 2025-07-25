@@ -54,8 +54,7 @@ function EditRecipe() {
     if (!user || !user.id) return
     if (!id) return
 
-    console.log('Recipe ID:', id);
-    console.log('User ID:', user.id);
+
 
     try {
       setLoading(true)
@@ -225,9 +224,7 @@ function EditRecipe() {
         updated_at: new Date().toISOString()
       }
 
-      console.log("Submitting update...", recipeData)
-      console.log("Recipe ID:", id)
-      console.log("User ID:", user.id)
+
 
       const { data, error } = await supabase
         .from('recipes')
@@ -236,7 +233,7 @@ function EditRecipe() {
         .eq('user_id', user.id)
         .select()
 
-      console.log("Update response:", { data, error })
+
 
       if (error) {
         setSubmitError(error.message || 'Failed to update recipe')
@@ -246,7 +243,11 @@ function EditRecipe() {
       }
     } catch (err) {
       console.error('Error updating recipe:', err)
-      setSubmitError('Network error. Please try again.')
+      if (err.response && err.response.data && err.response.data.error) {
+        setSubmitError(err.response.data.error)
+      } else {
+        setSubmitError('Failed to update recipe. Please try again.')
+      }
     } finally {
       setSaving(false)
     }
