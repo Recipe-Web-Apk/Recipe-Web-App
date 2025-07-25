@@ -19,7 +19,9 @@
   border-radius: var(--radius-2xl);
   box-shadow: var(--shadow-xl);
   width: 100%;
-  max-width: 480px;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
   padding: var(--spacing-2xl) var(--spacing-xl);
   position: relative;
   animation: fadeIn 0.4s;
@@ -57,6 +59,17 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);
+}
+
+.recipe-finder-ingredients-section {
+  margin-bottom: var(--spacing-md);
+}
+
+.ingredient-requirement-note {
+  text-align: center;
+  color: var(--color-gray-600);
+  margin-top: var(--spacing-sm);
+  font-style: italic;
 }
 
 .recipe-finder-label {
@@ -121,9 +134,16 @@
   .recipe-finder-content {
     padding: var(--spacing-xl) var(--spacing-md);
     max-width: 98vw;
+    max-height: 95vh;
   }
   .recipe-finder-title {
     font-size: var(--font-size-xl);
+  }
+  .recipe-finder-actions {
+    flex-direction: column;
+  }
+  .recipe-finder-btn {
+    width: 100%;
   }
 }
 

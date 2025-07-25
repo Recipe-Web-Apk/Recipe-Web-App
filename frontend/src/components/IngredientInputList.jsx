@@ -2,7 +2,15 @@ import React from 'react'
 import IngredientTooltip from './IngredientTooltip'
 import './IngredientInputList.css'
 
-function IngredientInputList({ ingredients, setIngredients, errors, setErrors }) {
+function IngredientInputList({ 
+  ingredients, 
+  setIngredients, 
+  errors, 
+  setErrors, 
+  minIngredients = 4,
+  allowRemovalBelowMin = false,
+  label = "Ingredients (minimum 4) *"
+}) {
   function addIngredient() {
     setIngredients(prev => [...prev, ''])
     if (errors.ingredients) {
@@ -11,7 +19,7 @@ function IngredientInputList({ ingredients, setIngredients, errors, setErrors })
   }
 
   function removeIngredient(index) {
-    if (ingredients.length > 4) {
+    if (allowRemovalBelowMin || ingredients.length > minIngredients) {
       setIngredients(prev => prev.filter((_, i) => i !== index))
     }
   }
@@ -35,7 +43,7 @@ function IngredientInputList({ ingredients, setIngredients, errors, setErrors })
   return (
     <div className="ingredient-input-list">
       <label className="ingredient-input-label">
-        Ingredients (minimum 4) *
+        {label}
       </label>
       <div className="ingredient-inputs-container">
         {ingredients.map((ingredient, index) => (
@@ -50,7 +58,7 @@ function IngredientInputList({ ingredients, setIngredients, errors, setErrors })
                 placeholder={`Ingredient ${index + 1}`}
               />
             </IngredientTooltip>
-            {ingredients.length > 4 && (
+            {(allowRemovalBelowMin || ingredients.length > minIngredients) && (
               <button
                 type="button"
                 onClick={() => removeIngredient(index)}

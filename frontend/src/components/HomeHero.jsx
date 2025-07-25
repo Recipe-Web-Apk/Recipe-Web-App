@@ -4,7 +4,7 @@ import { useDarkMode } from '../contexts/DarkModeContext';
 import DownshiftAutoComplete from './DownshiftAutoComplete';
 import './HomeHero.css';
 
-function HomeHero() {
+function HomeHero({ onOpenRecipeFinder }) {
   const navigate = useNavigate();
   const { isDarkMode } = useDarkMode();
   const [searchQuery, setSearchQuery] = useState('');
@@ -38,6 +38,12 @@ function HomeHero() {
           <Link to="/recipes" className="hero-btn primary">
             Browse All Recipes
           </Link>
+          <button 
+            onClick={onOpenRecipeFinder}
+            className="hero-btn secondary"
+          >
+            Find by Ingredients
+          </button>
           <Link to="/recipes/create" className="hero-btn secondary">
             Share Your Recipe
           </Link>
