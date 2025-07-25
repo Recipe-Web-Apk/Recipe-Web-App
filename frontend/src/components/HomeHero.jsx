@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useDarkMode } from '../contexts/DarkModeContext';
 import DownshiftAutoComplete from './DownshiftAutoComplete';
 import './HomeHero.css';
 
 function HomeHero() {
   const navigate = useNavigate();
+  const { isDarkMode } = useDarkMode();
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleSearch = (query) => {
@@ -14,7 +16,7 @@ function HomeHero() {
   };
 
   return (
-    <div className="home-hero">
+    <div className={`home-hero ${isDarkMode ? 'dark-mode' : ''}`}>
       <div className="hero-content">
         <h1 className="hero-title">
           Find Your Perfect Recipe

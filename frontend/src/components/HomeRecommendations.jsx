@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useDarkMode } from '../contexts/DarkModeContext';
 import { fetchRecommendations } from '../api/recommendations';
 import './HomeRecommendations.css';
 
 function HomeRecommendations() {
   const { user, token } = useAuth();
+  const { isDarkMode } = useDarkMode();
   const navigate = useNavigate();
   const [recommendations, setRecommendations] = useState([]);
   const [recommendLoading, setRecommendLoading] = useState(false);
@@ -29,7 +31,7 @@ function HomeRecommendations() {
   }
 
   return (
-    <section className="home-recommendations">
+    <section className={`home-recommendations ${isDarkMode ? 'dark-mode' : ''}`}>
       <div className="recommendations-container">
         <div className="recommendations-header">
           <h2>Just for You</h2>

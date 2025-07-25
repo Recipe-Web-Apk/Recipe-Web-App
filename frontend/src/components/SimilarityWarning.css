@@ -261,64 +261,62 @@
 }
 
 /* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .similarity-warning {
-    background: #2d3748;
-    color: #e2e8f0;
-    border-left-color: #ff9800;
-  }
+.dark-mode .similarity-warning {
+  background: #2d3748;
+  color: #e2e8f0;
+  border-left-color: #ff9800;
+}
 
-  .similarity-warning--high {
-    background: linear-gradient(135deg, #2d3748 0%, #3a1a1a 100%);
-  }
+.dark-mode .similarity-warning--high {
+  background: linear-gradient(135deg, #2d3748 0%, #3a1a1a 100%);
+}
 
-  .similarity-warning--moderate {
-    background: linear-gradient(135deg, #2d3748 0%, #3a2f1a 100%);
-  }
+.dark-mode .similarity-warning--moderate {
+  background: linear-gradient(135deg, #2d3748 0%, #3a2f1a 100%);
+}
 
-  .similarity-warning--info {
-    background: linear-gradient(135deg, #2d3748 0%, #1a2a3a 100%);
-  }
+.dark-mode .similarity-warning--info {
+  background: linear-gradient(135deg, #2d3748 0%, #1a2a3a 100%);
+}
 
-  .similarity-warning__title {
-    color: #e2e8f0;
-  }
+.dark-mode .similarity-warning__title {
+  color: #e2e8f0;
+}
 
-  .similarity-warning__message {
-    color: #a0aec0;
-  }
+.dark-mode .similarity-warning__message {
+  color: #a0aec0;
+}
 
-  .similarity-match {
-    background: #4a5568;
-    border-color: #718096;
-  }
+.dark-mode .similarity-match {
+  background: #4a5568;
+  border-color: #718096;
+}
 
-  .similarity-match__title {
-    color: #e2e8f0;
-  }
+.dark-mode .similarity-match__title {
+  color: #e2e8f0;
+}
 
-  .similarity-match__tag {
-    background: #2c5282;
-    color: #90cdf4;
-  }
+.dark-mode .similarity-match__tag {
+  background: #2c5282;
+  color: #90cdf4;
+}
 
-  .similarity-breakdown__item {
-    background: #4a5568;
-    border-color: #718096;
-  }
+.dark-mode .similarity-breakdown__item {
+  background: #4a5568;
+  border-color: #718096;
+}
 
-  .similarity-breakdown__feature {
-    color: #a0aec0;
-  }
+.dark-mode .similarity-breakdown__feature {
+  color: #a0aec0;
+}
 
-  .similarity-warning__info {
-    background: #2c5282;
-    border-left-color: #4299e1;
-  }
+.dark-mode .similarity-warning__info {
+  background: #2c5282;
+  border-left-color: #4299e1;
+}
 
-  .similarity-warning__info p {
-    color: #90cdf4;
-  }
+.dark-mode .similarity-warning__info p {
+  color: #90cdf4;
 }
 
 /* Responsive design */
