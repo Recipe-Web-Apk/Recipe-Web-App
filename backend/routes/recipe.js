@@ -217,8 +217,8 @@ router.post('/check-similarity', authenticateToken, async (req, res) => {
       ingredients: userWeights.ingredients ?? 0.6
     };
 
-    const { generateSimilarityWarning } = require('../utils/generateSimilarityWarning');
-    const warning = generateSimilarityWarning(inputRecipe, candidates, similarityWeights);
+    const { generateSimilarityWarning } = require('../utils/similarityUtils');
+    const warning = generateSimilarityWarning(inputRecipe, candidates, similarityWeights, 0.3);
 
     if (warning) {
       

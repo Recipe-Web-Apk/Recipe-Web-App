@@ -1,6 +1,6 @@
 const axios = require('axios');
 const { createClient } = require('@supabase/supabase-js');
-const { computeOptimizedSimilarity } = require('../utils/noLibraryRecipeSimilarity');
+const { computeOptimizedSimilarity } = require('../utils/similarityUtils');
 
 // Configuration
 const BASE_URL = 'http://localhost:5000';

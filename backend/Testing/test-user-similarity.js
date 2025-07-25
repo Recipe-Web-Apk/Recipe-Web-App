@@ -1,4 +1,4 @@
-const { generateSimilarityWarning } = require('../utils/computeSimilarity');
+const { generateSimilarityWarning } = require('../utils/similarityUtils');
 
 // Test data - simulate user's existing recipes
 const userRecipes = [
@@ -64,7 +64,7 @@ testCases.forEach((testCase, index) => {
   console.log(`New Recipe: "${testCase.newRecipe.title}"`);
   console.log(`Ingredients: [${testCase.newRecipe.ingredients.join(', ')}]`);
   
-  const warning = generateSimilarityWarning(testCase.newRecipe, userRecipes);
+      const warning = generateSimilarityWarning(testCase.newRecipe, userRecipes, undefined, 0.3);
   
   if (warning) {
     console.log(`✅ WARNING DETECTED: ${warning.type.toUpperCase()}`);

@@ -1,4 +1,4 @@
-const { generateSimilarityWarning } = require('../utils/computeSimilarity');
+const { generateSimilarityWarning } = require('../utils/similarityUtils');
 
 // Test the similarity system integration
 function testSimilarityIntegration() {
@@ -34,7 +34,7 @@ function testSimilarityIntegration() {
   console.log(`User creating: "${testRecipe1.title}"`);
   console.log(`User's existing: "Spaghetti Carbonara"`);
   
-  const warning1 = generateSimilarityWarning(testRecipe1, userRecipes);
+  const warning1 = generateSimilarityWarning(testRecipe1, userRecipes, undefined, 0.3);
   
   if (warning1) {
     console.log(`✅ WARNING: ${warning1.type.toUpperCase()}`);
@@ -58,7 +58,7 @@ function testSimilarityIntegration() {
   console.log(`User creating: "${testRecipe2.title}"`);
   console.log(`User's existing: Italian pasta recipes`);
   
-  const warning2 = generateSimilarityWarning(testRecipe2, userRecipes);
+  const warning2 = generateSimilarityWarning(testRecipe2, userRecipes, undefined, 0.3);
   
   if (warning2) {
     console.log(`❌ UNEXPECTED WARNING: ${warning2.type.toUpperCase()}`);
@@ -80,7 +80,7 @@ function testSimilarityIntegration() {
   console.log(`User creating: "${testRecipe3.title}"`);
   console.log(`Ingredients: [${testRecipe3.ingredients.join(', ')}]`);
   
-  const warning3 = generateSimilarityWarning(testRecipe3, userRecipes);
+  const warning3 = generateSimilarityWarning(testRecipe3, userRecipes, undefined, 0.3);
   
   if (warning3) {
     console.log(`✅ WARNING: ${warning3.type.toUpperCase()}`);

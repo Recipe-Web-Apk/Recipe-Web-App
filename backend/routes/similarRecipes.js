@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { computeOptimizedSimilarity } = require('../utils/noLibraryRecipeSimilarity');
+const { computeOptimizedSimilarity } = require('../utils/similarityUtils');
 const { 
   computeOptimizedSimilarityWithDynamicScoring,
   trackSimilarityInteraction,

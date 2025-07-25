@@ -1,4 +1,4 @@
-const { generateSimilarityWarning } = require('../utils/computeSimilarity');
+const { generateSimilarityWarning } = require('../utils/similarityUtils');
 
 console.log('🧪 Simple Similarity Test\n');
 
@@ -23,7 +23,7 @@ console.log('Testing similarity between:');
 console.log(`- New: "${newRecipe.title}"`);
 console.log(`- Existing: "${userRecipes[0].title}"`);
 
-const warning = generateSimilarityWarning(newRecipe, userRecipes);
+  const warning = generateSimilarityWarning(newRecipe, userRecipes, undefined, 0.3);
 
 if (warning) {
   console.log('\n✅ WARNING DETECTED!');
