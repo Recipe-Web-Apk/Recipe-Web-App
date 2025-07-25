@@ -1,4 +1,4 @@
-const { generateSimilarityWarning } = require('../utils/computeSimilarity');
+const { generateSimilarityWarning } = require('../utils/similarityUtils');
 
 console.log('🧪 Testing Specific Title Matching\n');
 
@@ -74,7 +74,7 @@ testCases.forEach((testCase, index) => {
       cuisine: 'Italian'
     };
     
-    const warning = generateSimilarityWarning(newRecipe, matchingRecipes);
+    const warning = generateSimilarityWarning(newRecipe, matchingRecipes, undefined, 0.3);
     
     if (warning) {
       console.log(`✅ WARNING DETECTED: ${warning.type.toUpperCase()}`);

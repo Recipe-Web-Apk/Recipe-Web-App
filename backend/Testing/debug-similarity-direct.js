@@ -1,5 +1,5 @@
 const { fetchRelevantRecipes } = require('../similarity/storage');
-const { generateSimilarityWarning } = require('../utils/computeSimilarity');
+const { generateSimilarityWarning } = require('../utils/similarityUtils');
 
 async function debugSimilarityDirect() {
   console.log('🧪 Debugging Similarity Logic Directly\n');
@@ -21,7 +21,7 @@ async function debugSimilarityDirect() {
         ingredients: ['test']
       };
       
-      const warning = generateSimilarityWarning(newRecipe, pastaResults);
+      const warning = generateSimilarityWarning(newRecipe, pastaResults, undefined, 0.3);
       console.log('Similarity warning result:', warning);
       
       if (warning) {

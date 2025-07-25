@@ -6,7 +6,7 @@ const express = require('express');
 const router = express.Router();
 const { authenticateToken } = require('../middleware/auth');
 
-const { generateSimilarityWarning } = require('../utils/computeSimilarity');
+const { generateSimilarityWarning } = require('../utils/similarityUtils');
 const { fetchRelevantRecipes, getUserWeights } = require('../similarity/storage');
 
 /**
@@ -54,7 +54,7 @@ router.post('/check-similarity', authenticateToken, async (req, res) => {
 
     // Use the new optimized similarity computation with dynamic weights
     console.log('🔍 SIMILARITY CHECK: Computing similarity with weights:', similarityWeights);
-    const warning = generateSimilarityWarning(inputRecipe, candidates, similarityWeights);
+    const warning = generateSimilarityWarning(inputRecipe, candidates, similarityWeights, 0.3);
     
     if (warning) {
       console.log('🔍 SIMILARITY CHECK: WARNING DETECTED!', warning.type, warning.message);
