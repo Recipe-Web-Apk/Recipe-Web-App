@@ -75,7 +75,7 @@ router.post('/register', async (req, res) => {
 
     if (profileError) {
       console.error('Profile creation error:', profileError);
-      return res.status(500).json({ error: 'Failed to create user profile' });
+      // Continue with registration even if profile creation fails
     }
 
     res.json({

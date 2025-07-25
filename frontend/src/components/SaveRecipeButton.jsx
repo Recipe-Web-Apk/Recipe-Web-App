@@ -22,12 +22,11 @@ const SaveRecipeButton = ({ recipe, onSave, onUnsave }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      console.log("✅ Saved recipes fetched:", response.data.recipes);
-      console.log("🔍 Matching saved recipe for:", recipe.id);
+
       const savedRecipe = response.data.recipes.find(
         r => r.spoonacular_id === recipe.id || r.id === recipe.id
       );
-      console.log("🔁 Matched saved recipe:", savedRecipe);
+      
       setIsSaved(!!savedRecipe);
       setSavedRecipeId(savedRecipe ? savedRecipe.saved_recipe_id : null);
     } catch (error) {
@@ -36,10 +35,7 @@ const SaveRecipeButton = ({ recipe, onSave, onUnsave }) => {
   };
 
   const handleSave = async () => {
-    console.log("🔥 Save button clicked");
-    console.log("👤 user:", user);
-    console.log("🔑 token:", token);
-    console.log("🍽️ recipe:", recipe);
+
 
     if (!user || !token) {
       console.warn("❗ Missing user or token — skipping save");
@@ -71,12 +67,11 @@ const SaveRecipeButton = ({ recipe, onSave, onUnsave }) => {
         }
       } else {
         // Save recipe
-        console.log("🚀 Sending POST to /saved-recipes with recipe ID:", recipe.id);
-        console.log('Attempting to save recipe:', recipe);
+        
         const response = await axiosInstance.post('/saved-recipes', { recipe }, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        console.log('Save response:', response);
+
 
         if (response.data.success) {
           // Use the backend's returned recipe object for state

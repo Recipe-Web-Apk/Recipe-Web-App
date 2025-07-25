@@ -59,27 +59,33 @@ export function AuthProvider({ children }) {
       }
     } catch (error) {
       console.error('Login error:', error)
-      return { success: false, error: 'Network error. Please try again.' }
+      if (error.response && error.response.data && error.response.data.error) {
+        return { success: false, error: error.response.data.error }
+      }
+      return { success: false, error: 'Login failed. Please check your credentials and try again.' }
     }
   }
 
   async function register(email, password, username) {
     try {
-      console.log('Sending registration request:', { email, username });
+
       
       const response = await axiosInstance.post('/auth/register', { email, password, username })
 
       const data = response.data;
-      console.log('Registration response:', response.status, data);
+      
 
-      if (response.data) {
+      if (data && !data.error) {
         return { success: true, message: data.message }
       } else {
-        return { success: false, error: data.error }
+        return { success: false, error: data.error || 'Registration failed.' }
       }
     } catch (error) {
-      console.error('Registration network error:', error);
-      return { success: false, error: 'Network error. Please try again.' }
+      // If backend sent a response, show its error message
+      if (error.response && error.response.data && error.response.data.error) {
+        return { success: false, error: error.response.data.error };
+      }
+      return { success: false, error: '' }
     }
   }
 
@@ -138,7 +144,10 @@ export function AuthProvider({ children }) {
         return { success: false, error: data.error }
       }
     } catch (error) {
-      return { success: false, error: 'Network error. Please try again.' }
+      if (error.response && error.response.data && error.response.data.error) {
+        return { success: false, error: error.response.data.error }
+      }
+      return { success: false, error: 'Password change failed. Please try again.' }
     }
   }
 
@@ -157,7 +166,10 @@ export function AuthProvider({ children }) {
         return { success: false, error: data.error }
       }
     } catch (error) {
-      return { success: false, error: 'Network error. Please try again.' }
+      if (error.response && error.response.data && error.response.data.error) {
+        return { success: false, error: error.response.data.error }
+      }
+      return { success: false, error: 'Profile update failed. Please try again.' }
     }
   }
 

@@ -124,7 +124,7 @@ function RecipeDetail() {
       } catch (err) { /* ignore and fallback */ }
       setError('Recipe not found')
     } catch (error) {
-      setError('Network error. Please try again.')
+      setError('Failed to load recipe details. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -269,7 +269,7 @@ function RecipeDetail() {
   }
 
   // Debug log for recipe object
-  console.log('RecipeDetail: recipe object:', recipe);
+  
 
   return (
     <div className={`recipe-detail ${isDarkMode ? 'dark-mode' : ''}`}>

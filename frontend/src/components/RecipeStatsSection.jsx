@@ -2,7 +2,7 @@ import React from 'react'
 
 function RecipeStatsSection({ form, errors, handleChange }) {
   const difficultyOptions = ['Easy', 'Medium', 'Hard']
-  const cookingStyleOptions = ['Frying', 'Poaching', 'Braising', 'Sautéing', 'Searing', 'Steaming', 'Boiling', 'Simmering', 'Roasting', 'Grilling', 'Baking', 'Broiling', 'Smoking', 'Pickling', 'Fermenting', 'Curing', 'Smoking', 'Confit', 'Sous Vide', 'Blanching']
+  const cookingStyleOptions = ['Frying', 'Poaching', 'Braising', 'Sautéing', 'Searing', 'Steaming', 'Boiling', 'Simmering', 'Roasting', 'Grilling', 'Baking', 'Broiling', 'Smoking', 'Pickling', 'Fermenting', 'Curing', 'Confit', 'Sous Vide', 'Blanching']
   const cookingMethodOptions = ['Stovetop', 'Oven', 'Grill', 'Slow Cooker', 'Air Fryer', 'Pressure Cooker', 'Smoker', 'Steamer', 'Deep Fryer', 'Wok', 'Dutch Oven', 'Cast Iron', 'Non-stick Pan', 'Baking Sheet', 'Roasting Pan']
 
   return (

@@ -70,25 +70,31 @@ const SuggestedAutofillBox = ({ data, onUseIngredients, onUseInstructions, onUse
         </div>
       )}
 
-      {data.instructions?.length > 0 && (
+      {data.instructions && (
         <div>
           <h4>Instructions</h4>
-          <ol>
-            {data.instructions.map((step, i) => <li key={i}>{step}</li>)}
-          </ol>
-          <button onClick={() => onUseInstructions(data.instructions)}>Use These Instructions</button>
+          {data.instructions.length > 0 ? (
+            <>
+              <ol>
+                {data.instructions.map((step, i) => <li key={i}>{step}</li>)}
+              </ol>
+              <button onClick={() => onUseInstructions(data.instructions)}>Use These Instructions</button>
+            </>
+          ) : (
+            <p style={{ color: '#666', fontStyle: 'italic' }}>No instructions available</p>
+          )}
         </div>
       )}
 
-      {(data.readyInMinutes || data.calories || data.servings) && (
+      {(data.cookingStats?.readyInMinutes || data.cookingStats?.calories || data.cookingStats?.servings) && (
         <div>
           <h4>Recipe Stats</h4>
           <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
-            {data.readyInMinutes && <span><strong>Cooking Time:</strong> {data.readyInMinutes} min</span>}
-            {data.calories && <span><strong>Calories:</strong> {Math.round(data.calories)}</span>}
-            {data.servings && <span><strong>Servings:</strong> {data.servings}</span>}
+            {data.cookingStats?.readyInMinutes && <span><strong>Cooking Time:</strong> {data.cookingStats.readyInMinutes} min</span>}
+            {data.cookingStats?.calories && <span><strong>Calories:</strong> {Math.round(data.cookingStats.calories)}</span>}
+            {data.cookingStats?.servings && <span><strong>Servings:</strong> {data.cookingStats.servings}</span>}
           </div>
-          <button onClick={() => onUseStats && onUseStats(data)}>Use These Stats</button>
+          <button onClick={() => onUseStats && onUseStats(data.cookingStats)}>Use These Stats</button>
         </div>
       )}
     </div>

@@ -79,11 +79,11 @@ function Recipes() {
       if (diet) params.append('diet', diet);
       // Add other filters if needed
       
-      console.log('Searching from params:', params.toString());
+  
       const response = await axiosInstance.get(`/spoonacular/search?${params.toString()}`);
       const data = response.data;
       
-      console.log('Search from params response:', response.status, data);
+
       
       if (response.status === 200) {
         setSearchResults(data.results || []);
@@ -94,7 +94,7 @@ function Recipes() {
       }
     } catch (err) {
       console.error('Search from params error:', err);
-      setError('Network error. Please try again.');
+      setError('Failed to search recipes. Please try again.');
     } finally {
       setSearchLoading(false);
     }
@@ -121,7 +121,7 @@ function Recipes() {
         .order('created_at', { ascending: false });
       if (error) throw error;
       setRecipes(data || []);
-      console.log('Fetched my recipes:', data);
+
     } catch (err) {
       setError('Failed to load your recipes.');
     } finally {
@@ -154,11 +154,11 @@ function Recipes() {
         if (value) params.append(key, value);
       });
 
-      console.log('Searching with params:', params.toString());
+
       const response = await axiosInstance.get(`/spoonacular/search?${params.toString()}`);
       const data = response.data;
       
-      console.log('Search response:', response.status, data);
+
       
       if (response.status === 200) {
         if (append) {
@@ -178,7 +178,7 @@ function Recipes() {
       }
     } catch (err) {
       console.error('Search error:', err);
-      setError('Network error. Please try again.');
+      setError('Failed to search recipes. Please try again.');
     } finally {
       setSearchLoading(false);
       setLoadingMore(false);
@@ -219,7 +219,7 @@ function Recipes() {
         }
       }
     } catch (err) {
-      setError('Network error. Please try again.');
+      setError('Failed to find recipes by ingredients. Please try again.');
     } finally {
       setFinderLoading(false);
     }
@@ -334,7 +334,7 @@ function Recipes() {
     : recipes;
 
   // Debug log for displayed recipes
-  console.log('displayedRecipes:', displayedRecipes);
+  
 
   const activeFilters = Object.values(filters).filter(value => value).length;
 
