@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import './SimilarityWarning.css';
 
 const SimilarityWarning = ({ 
@@ -9,9 +9,6 @@ const SimilarityWarning = ({
   autofillSuggestion,
   currentRecipeData 
 }) => {
-  const [selectedMatch, setSelectedMatch] = useState(null);
-  const [showDetails, setShowDetails] = useState(false);
-
   if (!warning || !warning.matches || !Array.isArray(warning.matches)) {
     console.warn('Invalid warning prop:', warning);
     return null;
@@ -22,10 +19,6 @@ const SimilarityWarning = ({
 
   const handleIgnore = () => {
     onIgnore();
-  };
-
-  const handleViewRecipe = (recipe) => {
-    onViewRecipe(recipe);
   };
 
   const handleUseAutofill = () => {
@@ -100,7 +93,8 @@ const SimilarityWarning = ({
             
 
             
-            {selectedMatch === index && (
+            {/* The selectedMatch and showDetails state/handlers were removed, so this block is no longer relevant */}
+            {/* {selectedMatch === index && (
               <div className="similarity-match__breakdown">
                 <h5>Similarity Breakdown:</h5>
                 <div className="similarity-breakdown">
@@ -122,7 +116,7 @@ const SimilarityWarning = ({
                   })}
                 </div>
               </div>
-            )}
+            )} */}
           </div>
         );
         })}

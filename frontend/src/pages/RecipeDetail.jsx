@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useDarkMode } from '../contexts/DarkModeContext'
 import { useAuth } from '../contexts/AuthContext'
@@ -6,13 +6,11 @@ import {
   FiClock, 
   FiUsers, 
   FiTarget, 
-  FiHeart, 
   FiShare2, 
   FiArrowLeft,
   FiCheck,
   FiChevronDown,
   FiChevronUp,
-  FiPlay,
   FiYoutube,
   FiCalendar,
   FiZap
@@ -22,7 +20,6 @@ import IngredientTooltip from '../components/IngredientTooltip'
 import NutritionDisplay from '../components/NutritionDisplay'
 import CookingDetails from '../components/CookingDetails'
 import { extractCalories, formatCalories } from '../utils/calorieUtils'
-import { supabase } from '../supabaseClient'
 import './RecipeDetail.css'
 import axiosInstance from '../api/axiosInstance';
 import SaveRecipeButton from '../components/SaveRecipeButton';
@@ -39,48 +36,15 @@ function RecipeDetail() {
   const [recipe, setRecipe] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [saved, setSaved] = useState(false)
   const [checkedIngredients, setCheckedIngredients] = useState([])
   const [expandedInstructions, setExpandedInstructions] = useState(true)
   const [showShareToast, setShowShareToast] = useState(false)
   const [dataSource, setDataSource] = useState('spoonacular') // Default to spoonacular
 
-  useEffect(() => {
-    if (passedRecipeData) {
-      // Ensure recipe.id is set for API liked recipes
-      let recipeObj = { ...passedRecipeData };
-      if (!recipeObj.id && recipeObj.recipe_id) {
-        recipeObj.id = recipeObj.recipe_id;
-      }
-      // Detect if it's an API recipe (spoonacular)
-      const isApiRecipe = recipeObj.readyInMinutes !== undefined || recipeObj.spoonacularSourceUrl !== undefined;
-      setRecipe(recipeObj);
-      setDataSource(source || (isApiRecipe ? 'spoonacular' : 'user'));
-      setLoading(false);
-    } else {
-      fetchRecipeDetails();
-    }
-    // Check if recipe is saved in localStorage
-    const savedRecipes = JSON.parse(localStorage.getItem('savedRecipes') || '[]')
-    setSaved(savedRecipes.includes(parseInt(id)))
-  }, [id, passedRecipeData, source]);
-
-  // Record a view when the recipe is loaded and user is logged in
-  useEffect(() => {
-    if (recipe && recipe.id && token) {
-      axiosInstance.post('/views', { recipe_id: recipe.id }, {
-        headers: { Authorization: `Bearer ${token}` }
-      }).catch(err => {
-        // Silent fail, but log for debugging
-        console.warn('Failed to record view:', err);
-      });
-    }
-  }, [recipe, token]);
-
-  async function fetchRecipeDetails() {
+  const fetchRecipeDetails = useCallback(async () => {
     try {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
       if (source === 'user') {
         const response = await axiosInstance.get(`/recipes/${id}`, {
           headers: token ? { 'Authorization': `Bearer ${token}` } : {}
@@ -103,47 +67,80 @@ function RecipeDetail() {
         setError('Recipe not found');
         return;
       }
-      // Fallback: try both (current logic)
-      try {
-        const response = await axiosInstance.get(`/recipes/${id}`, {
-          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-        });
-        if (response.data.recipe) {
-          setRecipe(response.data.recipe);
-          setDataSource('user');
-          return;
-        }
-      } catch (err) { /* ignore and fallback */ }
-      try {
-        const response = await axiosInstance.get(`/spoonacular/recipe/${id}`)
-        if (response.data) {
-          setRecipe(response.data)
-          setDataSource('spoonacular')
-          return
-        }
-      } catch (err) { /* ignore and fallback */ }
-      setError('Recipe not found')
+      // Default to spoonacular if no source specified
+      const response = await axiosInstance.get(`/spoonacular/recipe/${id}`);
+      if (response.data) {
+        setRecipe(response.data);
+        setDataSource('spoonacular');
+      } else {
+        setError('Recipe not found');
+      }
     } catch (error) {
-      setError('Failed to load recipe details. Please try again.')
+      console.error('Error fetching recipe details:', error);
+      setError('Failed to load recipe');
     } finally {
-      setLoading(false)
+      setLoading(false);
+    }
+  }, [id, source, token]);
+
+  useEffect(() => {
+    if (passedRecipeData) {
+      // Ensure recipe.id is set for API liked recipes
+      let recipeObj = { ...passedRecipeData };
+      if (!recipeObj.id && recipeObj.recipe_id) {
+        recipeObj.id = recipeObj.recipe_id;
+      }
+      // Detect if it's an API recipe (spoonacular)
+      const isApiRecipe = recipeObj.readyInMinutes !== undefined || recipeObj.spoonacularSourceUrl !== undefined;
+      setRecipe(recipeObj);
+      setDataSource(source || (isApiRecipe ? 'spoonacular' : 'user'));
+      setLoading(false);
+    } else {
+      fetchRecipeDetails();
+    }
+    // Check if recipe is saved in localStorage - removed for now
+    // const savedRecipes = JSON.parse(localStorage.getItem('savedRecipes') || '[]');
+    // setSaved(savedRecipes.includes(parseInt(id)));
+  }, [id, passedRecipeData, source, fetchRecipeDetails]);
+
+  // Record a view when the recipe is loaded and user is logged in
+  useEffect(() => {
+    if (recipe && recipe.id && token) {
+      axiosInstance.post('/views', { recipe_id: recipe.id }, {
+        headers: { Authorization: `Bearer ${token}` }
+      }).catch(err => {
+        // Silent fail, but log for debugging
+        console.warn('Failed to record view:', err);
+      });
+    }
+  }, [recipe, token]);
+
+  function toggleIngredient(index) {
+    setCheckedIngredients(prev => 
+      prev.includes(index) 
+        ? prev.filter(i => i !== index)
+        : [...prev, index]
+    );
+  }
+
+  function getDifficulty() {
+    if (!recipe.readyInMinutes) return 'Unknown';
+    if (recipe.readyInMinutes <= 15) return 'Easy';
+    if (recipe.readyInMinutes <= 30) return 'Medium';
+    return 'Hard';
+  }
+
+  function openYouTubeVideo() {
+    if (recipe.youtube_url) {
+      window.open(recipe.youtube_url, '_blank');
     }
   }
 
-  function handleSaveRecipe() {
-    const savedRecipes = JSON.parse(localStorage.getItem('savedRecipes') || '[]')
-    
-    if (saved) {
-      // Remove from saved
-      const updatedRecipes = savedRecipes.filter(recipeId => recipeId !== parseInt(id))
-      localStorage.setItem('savedRecipes', JSON.stringify(updatedRecipes))
-      setSaved(false)
-    } else {
-      // Add to saved
-      savedRecipes.push(parseInt(id))
-      localStorage.setItem('savedRecipes', JSON.stringify(savedRecipes))
-      setSaved(true)
-    }
+  function stripHtml(html) {
+    if (!html) return '';
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || '';
   }
 
   async function handleShareRecipe() {
@@ -153,54 +150,16 @@ function RecipeDetail() {
           title: recipe.title,
           text: `Check out this recipe: ${recipe.title}`,
           url: window.location.href,
-        })
+        });
       } catch (error) {
-        // console.log('Error sharing:', error) // Removed console.log
+        // Silent fail
       }
     } else {
       // Fallback: copy to clipboard
-      navigator.clipboard.writeText(window.location.href)
-      setShowShareToast(true)
-      setTimeout(() => setShowShareToast(false), 2000)
+      navigator.clipboard.writeText(window.location.href);
+      setShowShareToast(true);
+      setTimeout(() => setShowShareToast(false), 2000);
     }
-  }
-
-  function toggleIngredient(index) {
-    setCheckedIngredients(prev => 
-      prev.includes(index) 
-        ? prev.filter(i => i !== index)
-        : [...prev, index]
-    )
-  }
-
-  function getDifficulty() {
-    if (!recipe) return 'Medium'
-    const ingredientCount = recipe.ingredients?.length || 0
-    if (ingredientCount <= 5) return 'Easy'
-    if (ingredientCount <= 10) return 'Medium'
-    return 'Hard'
-  }
-
-  function openYouTubeVideo() {
-    if (recipe.youtube_url) {
-      window.open(recipe.youtube_url, '_blank')
-    }
-  }
-
-  // Extract YouTube video ID from URL
-  function getYouTubeVideoId(url) {
-    if (!url) return null
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
-    const match = url.match(regExp)
-    return (match && match[2].length === 11) ? match[2] : null
-  }
-
-  // Strip HTML tags from text
-  function stripHtml(html) {
-    if (!html) return ''
-    const tmp = document.createElement('div')
-    tmp.innerHTML = html
-    return tmp.textContent || tmp.innerText || ''
   }
 
   // Helper function to extract ingredients properly
@@ -467,4 +426,4 @@ function RecipeDetail() {
   )
 }
 
-export default RecipeDetail 
+export default RecipeDetail; 

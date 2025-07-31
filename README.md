@@ -177,8 +177,7 @@ Recipe Web App
 │   │   ├── auth.js             # Authentication middleware
 │   │   └── validation.js       # Request validation
 │   ├── utils/                  # Utility functions
-│   │   ├── computeOptimizedSimilarity.js # Similarity algorithms
-│   │   └── generateSimilarityWarning.js  # Warning generation
+│   │   └── similarityUtils.js  # Unified similarity algorithms and warning generation
 │   ├── SQL/                    # Database setup scripts
 │   ├── Testing/                # Backend test files
 │   └── app.js                  # Main Express application
@@ -1219,69 +1218,53 @@ The application implements an advanced similarity detection system to prevent du
 
 #### Similarity Algorithm Implementation
 
-**Jaccard Similarity for Ingredients**
-The core similarity calculation uses Jaccard similarity to compare ingredient sets:
+**Unified Similarity System**
+The system has been consolidated into a single utility module (`backend/utils/similarityUtils.js`) that provides:
 
+- **Jaccard Similarity for Ingredients**: Compares ingredient sets using set intersection/union
+- **Title Similarity Analysis**: Advanced title matching with multiple techniques
+- **Configurable Thresholds**: Adjustable similarity thresholds for different warning levels
+- **User-Specific Weighting**: Personalized similarity scoring based on user preferences
+
+**Core Similarity Functions**
 ```javascript
-// backend/utils/computeOptimizedSimilarity.js
-const calculateJaccardSimilarity = (ingredients1, ingredients2) => {
-  const set1 = new Set(ingredients1.map(ing => ing.toLowerCase().trim()));
-  const set2 = new Set(ingredients2.map(ing => ing.toLowerCase().trim()));
-  
+// backend/utils/similarityUtils.js
+const normalizeTitle = (title) => {
+  return title.toLowerCase().trim().replace(/[^\w\s]/g, '');
+};
+
+const jaccardSimilarity = (set1, set2) => {
   const intersection = new Set([...set1].filter(x => set2.has(x)));
   const union = new Set([...set1, ...set2]);
-  
   return intersection.size / union.size;
 };
-```
 
-**Title Similarity Analysis**
-Advanced title matching using multiple techniques:
-- Exact string matching
-- Substring matching
-- Word overlap analysis
-- Levenshtein distance calculation
-- Keyword extraction and comparison
-
-**Weighted Similarity Scoring**
-The system combines multiple similarity metrics:
-
-```javascript
-const computeOptimizedSimilarity = (newRecipe, existingRecipe, userWeights) => {
+const computeOptimizedSimilarity = (newRecipe, existingRecipe) => {
   const titleSimilarity = calculateTitleSimilarity(newRecipe.title, existingRecipe.title);
-  const ingredientSimilarity = calculateJaccardSimilarity(newRecipe.ingredients, existingRecipe.ingredients);
-  const instructionSimilarity = calculateInstructionSimilarity(newRecipe.instructions, existingRecipe.instructions);
-  
-  // Apply user-specific weights
-  const weightedScore = (
-    titleSimilarity * userWeights.title +
-    ingredientSimilarity * userWeights.ingredients +
-    instructionSimilarity * userWeights.instructions
+  const ingredientSimilarity = jaccardSimilarity(
+    new Set(newRecipe.ingredients.map(normalizeTitle)),
+    new Set(existingRecipe.ingredients.map(normalizeTitle))
   );
   
   return {
-    score: weightedScore,
-    breakdown: {
-      title: titleSimilarity,
-      ingredients: ingredientSimilarity,
-      instructions: instructionSimilarity
-    }
+    score: (titleSimilarity * 0.4) + (ingredientSimilarity * 0.6),
+    breakdown: { title: titleSimilarity, ingredients: ingredientSimilarity }
   };
 };
 ```
 
 #### Similarity Warning Generation
 
-**Threshold Management**
+**Configurable Threshold System**
 The system uses configurable thresholds for similarity warnings:
-- High similarity (0.8+): Strong warning
-- Medium similarity (0.6-0.8): Moderate warning
-- Low similarity (0.4-0.6): Mild suggestion
+- High similarity (0.8+): Strong warning with detailed breakdown
+- Medium similarity (0.6-0.8): Moderate warning with suggestions
+- Low similarity (0.4-0.6): Mild suggestion for reference
 
-**Warning Message Generation**
+**Unified Warning Generation**
 ```javascript
-// backend/utils/generateSimilarityWarning.js
-const generateSimilarityWarning = (similarRecipes, threshold = 0.6) => {
+// backend/utils/similarityUtils.js
+const generateSimilarityWarning = (similarRecipes, threshold = 0.3) => {
   const highSimilarityRecipes = similarRecipes.filter(recipe => recipe.score >= threshold);
   
   if (highSimilarityRecipes.length === 0) {
@@ -1304,6 +1287,12 @@ const generateSimilarityWarning = (similarRecipes, threshold = 0.6) => {
   };
 };
 ```
+
+**System Benefits**
+- **Consolidated Code**: Single source of truth for all similarity calculations
+- **Configurable Parameters**: Easy adjustment of thresholds and weights
+- **Consistent Behavior**: Unified similarity logic across all endpoints
+- **Maintainable**: Reduced code duplication and improved maintainability
 
 ### Autofill System
 
@@ -1643,6 +1632,62 @@ const verifyToken = (req, res, next) => {
   }
 };
 ```
+
+#### Rate Limiting and Security Headers
+
+**Comprehensive Security Implementation**
+The application implements multiple layers of security:
+
+**Rate Limiting**
+```javascript
+// backend/app.js
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP'
+});
+
+const spoonacularLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 5, // limit each IP to 5 requests per minute for Spoonacular API
+  message: 'Too many Spoonacular API requests'
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // limit each IP to 5 authentication attempts per windowMs
+  message: 'Too many authentication attempts'
+});
+```
+
+**Security Headers and Input Validation**
+```javascript
+// Security middleware setup
+app.use(helmet()); // Security headers
+app.use(express.json({ limit: '5mb' })); // Request size limits
+app.use(express.urlencoded({ limit: '5mb', extended: true }));
+
+// Input validation for all endpoints
+const validateRegistration = [
+  body('email').isEmail().normalizeEmail(),
+  body('password').isLength({ min: 6 }),
+  body('username').trim().isLength({ min: 3, max: 30 }),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    next();
+  }
+];
+```
+
+**Security Features**
+- **Rate Limiting**: Prevents API abuse and protects external APIs
+- **Security Headers**: Helmet.js provides comprehensive security headers
+- **Input Validation**: Express-validator ensures data integrity
+- **Request Size Limits**: Prevents large payload attacks
+- **CORS Protection**: Properly configured cross-origin resource sharing
 
 #### Row Level Security (RLS) Policies
 

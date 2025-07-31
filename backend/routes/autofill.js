@@ -27,105 +27,69 @@ const AUTOFILL_CONFIG = {
   ]
 };
 
-// Enhanced autofill with multi-source intelligence
-router.get('/advanced-autofill', async (req, res) => {
+// Advanced autofill endpoint with multi-source suggestions
+router.get('/advanced-autofill', authenticateToken, async (req, res) => {
   try {
     const { title, field, context } = req.query;
-    const userId = req.user?.id || 'test-user-id';
-    
-    if (!title || title.length < AUTOFILL_CONFIG.MIN_TITLE_LENGTH) {
-      return res.status(400).json({ error: "Title too short for search" });
+    const userId = req.user.id;
+
+    if (!title || !field) {
+      return res.status(400).json({ error: 'Title and field are required' });
     }
 
-    console.log(`🔍 Advanced autofill for user ${userId}, field: ${field}, title: ${title}`);
-    console.log(`🔍 Context:`, context);
-
-    // Get multi-source suggestions
     const suggestions = await getMultiSourceSuggestions(title, field, context, userId);
-    console.log(`📊 Found ${suggestions.length} total suggestions`);
-    
-    // Rank and deduplicate suggestions
-    const rankedSuggestions = rankAndDeduplicateSuggestions(suggestions);
-    console.log(`📊 Ranked to ${rankedSuggestions.length} suggestions`);
-    
-    const finalSuggestions = rankedSuggestions.slice(0, AUTOFILL_CONFIG.MAX_SUGGESTIONS);
-    console.log(`📊 Returning ${finalSuggestions.length} final suggestions`);
-    
+
     res.json({
-      suggestions: finalSuggestions,
-      totalSources: suggestions.length,
-      context: context || null
+      success: true,
+      suggestions: suggestions.slice(0, 5) // Limit to top 5 suggestions
     });
 
   } catch (error) {
     console.error('Advanced autofill error:', error);
-    res.status(500).json({ error: 'Failed to get advanced autofill suggestions' });
+    res.status(500).json({ error: 'Failed to validate field' });
   }
 });
 
-// Multi-source suggestion gathering
 async function getMultiSourceSuggestions(title, field, context, userId) {
-  console.log(`🔍 Getting multi-source suggestions for: ${title}, field: ${field}`);
   const suggestions = [];
 
-  // Source 1: Spoonacular API
+  // 1. Spoonacular API suggestions
   try {
-    console.log('🌐 Fetching Spoonacular suggestions...');
-    const spoonacularSuggestions = await getSpoonacularSuggestions(title, field, context);
-    console.log(`🌐 Found ${spoonacularSuggestions.length} Spoonacular suggestions`);
-    suggestions.push(...spoonacularSuggestions.map(s => ({
-      ...s,
-      source: 'spoonacular',
-      confidence: AUTOFILL_CONFIG.CONFIDENCE_THRESHOLDS.SPOONACULAR
-    })));
+    const spoonacularSuggestions = await getSpoonacularSuggestions(title, field);
+    suggestions.push(...spoonacularSuggestions);
   } catch (error) {
-    console.log('❌ Spoonacular suggestions failed:', error.message);
+    console.error('Spoonacular suggestions failed:', error.message);
   }
 
-  // Source 2: User-created recipes
+  // 2. User's own recipe suggestions
   try {
-    console.log('👤 Fetching user recipe suggestions...');
-    const userSuggestions = await getUserRecipeSuggestions(title, field, userId);
-    console.log(`👤 Found ${userSuggestions.length} user recipe suggestions`);
-    suggestions.push(...userSuggestions.map(s => ({
-      ...s,
-      source: 'user_created',
-      confidence: AUTOFILL_CONFIG.CONFIDENCE_THRESHOLDS.USER_CREATED
-    })));
+    const userSuggestions = await getUserSuggestions(title, field, userId);
+    suggestions.push(...userSuggestions);
   } catch (error) {
-    console.log('❌ User recipe suggestions failed:', error.message);
+    console.error('User recipe suggestions failed:', error.message);
   }
 
-  // Source 3: Popular patterns
+  // 3. Pattern-based suggestions
   try {
-    console.log('📊 Fetching pattern suggestions...');
-    const patternSuggestions = await getPopularPatterns(title, field, context);
-    console.log(`📊 Found ${patternSuggestions.length} pattern suggestions`);
-    suggestions.push(...patternSuggestions.map(s => ({
-      ...s,
-      source: 'patterns',
-      confidence: AUTOFILL_CONFIG.CONFIDENCE_THRESHOLDS.PATTERNS
-    })));
+    const patternSuggestions = await getPatternSuggestions(title, field);
+    suggestions.push(...patternSuggestions);
   } catch (error) {
-    console.log('❌ Pattern suggestions failed:', error.message);
+    console.error('Pattern suggestions failed:', error.message);
   }
 
-  // Source 4: AI-generated suggestions
+  // 4. AI-generated suggestions
   try {
-    console.log('🤖 Generating AI suggestions...');
-    const aiSuggestions = await generateAISuggestions(title, field, context);
-    console.log(`🤖 Generated ${aiSuggestions.length} AI suggestions`);
-    suggestions.push(...aiSuggestions.map(s => ({
-      ...s,
-      source: 'ai',
-      confidence: AUTOFILL_CONFIG.CONFIDENCE_THRESHOLDS.AI_GENERATED
-    })));
+    const aiSuggestions = await getAISuggestions(title, field, context);
+    suggestions.push(...aiSuggestions);
   } catch (error) {
-    console.log('❌ AI suggestions failed:', error.message);
+    console.error('AI suggestions failed:', error.message);
   }
 
-  console.log(`📊 Total suggestions collected: ${suggestions.length}`);
-  return suggestions;
+  // Rank and deduplicate suggestions
+  const rankedSuggestions = rankSuggestions(suggestions, title, field);
+  const finalSuggestions = deduplicateSuggestions(rankedSuggestions);
+
+  return finalSuggestions;
 }
 
 // Spoonacular API suggestions

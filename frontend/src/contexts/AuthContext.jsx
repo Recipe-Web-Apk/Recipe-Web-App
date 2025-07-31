@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import axiosInstance from '../api/axiosInstance';
 
 const AuthContext = createContext()
@@ -13,11 +13,7 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(localStorage.getItem('token'))
 
   // Check if user is authenticated on app load
-  useEffect(() => {
-    checkAuthStatus()
-  }, [])
-
-  async function checkAuthStatus() {
+  const checkAuthStatus = useCallback(async () => {
     try {
       if (!token) {
         setLoading(false)
@@ -42,7 +38,11 @@ export function AuthProvider({ children }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [token]);
+
+  useEffect(() => {
+    checkAuthStatus();
+  }, [checkAuthStatus]);
 
   async function login(email, password) {
     try {

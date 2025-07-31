@@ -1,18 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useDarkMode } from '../contexts/DarkModeContext';
-import { supabase } from '../supabaseClient';
-import SaveRecipeButton from '../components/SaveRecipeButton';
-import LikeButton from '../components/LikeButton';
-import AutoSuggestSearch from '../components/AutoSuggestSearch';
-import IngredientTooltip from '../components/IngredientTooltip';
+import CalorieRangeInput from '../components/CalorieRangeInput';
 import { extractCalories, formatCalories } from '../utils/calorieUtils';
 import './Recipes.css';
 import axiosInstance from '../api/axiosInstance';
 
 function Recipes() {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const { isDarkMode } = useDarkMode();
   const navigate = useNavigate();
   const location = useLocation();
@@ -30,6 +26,7 @@ function Recipes() {
   const [calorieRange, setCalorieRange] = useState({ min: '', max: '' });
   const [finderResults, setFinderResults] = useState([]);
   const [finderLoading, setFinderLoading] = useState(false);
+  const [finderErrors, setFinderErrors] = useState({});
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(0);
@@ -100,6 +97,31 @@ function Recipes() {
     }
   }
 
+  const fetchMyRecipes = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      setLoading(true);
+      const response = await axiosInstance.get('/recipes', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.data.success) {
+        setRecipes(response.data.recipes || []);
+      } else {
+        console.error('Error fetching my recipes:', response.data.error);
+        setRecipes([]);
+      }
+    } catch (error) {
+      console.error('Error fetching my recipes:', error);
+      setRecipes([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
   useEffect(() => {
     if (activeTab === 'my-recipes' && user) {
       fetchMyRecipes();
@@ -107,27 +129,7 @@ function Recipes() {
       setRecipes([]);
       setLoading(false);
     }
-  }, [activeTab, user]);
-
-  async function fetchMyRecipes() {
-    if (!user) return;
-    setLoading(true);
-    setError('');
-    try {
-      const { data, error } = await supabase
-        .from('recipes')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      setRecipes(data || []);
-
-    } catch (err) {
-      setError('Failed to load your recipes.');
-    } finally {
-      setLoading(false);
-    }
-  }
+  }, [activeTab, user, fetchMyRecipes]);
 
   async function searchSpoonacularRecipes(page = 0, append = false) {
     if (!searchQuery.trim() && page === 0) {
@@ -225,12 +227,6 @@ function Recipes() {
     }
   }
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    setCurrentPage(0);
-    searchSpoonacularRecipes(0, false);
-  };
-
   const handleFinderSearch = (e) => {
     e.preventDefault();
     findRecipesByIngredients();
@@ -240,14 +236,6 @@ function Recipes() {
     const nextPage = currentPage + 1;
     setCurrentPage(nextPage);
     searchSpoonacularRecipes(nextPage, true);
-  };
-
-  const clearSearch = () => {
-    setSearchQuery('');
-    setSearchResults([]);
-    setCurrentPage(0);
-    setTotalResults(0);
-    setHasMore(true);
   };
 
   const clearFinder = () => {
@@ -285,32 +273,6 @@ function Recipes() {
     const newIngredients = [...ingredients];
     newIngredients[index] = value;
     setIngredients(newIngredients);
-  };
-
-  const handleRecipeSave = (recipe) => {
-    // Update the recipe in the list to show it's saved
-    if (activeTab === 'explore' && !showRecipeFinder) {
-      setSearchResults(prev => 
-        prev.map(r => r.id === recipe.id ? { ...r, isSaved: true } : r)
-      );
-    } else if (activeTab === 'explore' && showRecipeFinder) {
-      setFinderResults(prev => 
-        prev.map(r => r.id === recipe.id ? { ...r, isSaved: true } : r)
-      );
-    }
-  };
-
-  const handleRecipeUnsave = (recipe) => {
-    // Update the recipe in the list to show it's not saved
-    if (activeTab === 'explore' && !showRecipeFinder) {
-      setSearchResults(prev => 
-        prev.map(r => r.id === recipe.id ? { ...r, isSaved: false } : r)
-      );
-    } else if (activeTab === 'explore' && showRecipeFinder) {
-      setFinderResults(prev => 
-        prev.map(r => r.id === recipe.id ? { ...r, isSaved: false } : r)
-      );
-    }
   };
 
   const getDifficulty = (readyInMinutes) => {
@@ -405,16 +367,18 @@ function Recipes() {
             {!showRecipeFinder && (
               <>
                 <div className="search-form">
-                  <AutoSuggestSearch
+                  <input
+                    type="text"
                     value={searchQuery}
-                    onChange={setSearchQuery}
-                    onSearch={(query) => {
-                      setSearchQuery(query);
-                      setCurrentPage(0);
-                      searchSpoonacularRecipes(0, false);
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        setCurrentPage(0);
+                        searchSpoonacularRecipes(0, false);
+                      }
                     }}
                     placeholder="Search recipes by name or ingredient (e.g., pasta, chicken, vegan)"
-                    className="recipes-auto-suggest"
+                    className="recipes-search-input"
                   />
                 </div>
 
@@ -561,15 +525,13 @@ function Recipes() {
                   <p className="ingredients-note">Find recipes that use ALL of these ingredients</p>
                   {ingredients.map((ingredient, index) => (
                     <div key={index} className="ingredient-input">
-                      <IngredientTooltip ingredient={ingredient}>
-                        <input
-                          type="text"
-                          value={ingredient}
-                          onChange={(e) => updateIngredient(index, e.target.value)}
-                          placeholder="e.g., chicken, pasta, tomatoes"
-                          className="ingredient-field"
-                        />
-                      </IngredientTooltip>
+                      <input
+                        type="text"
+                        value={ingredient}
+                        onChange={(e) => updateIngredient(index, e.target.value)}
+                        placeholder="e.g., chicken, pasta, tomatoes"
+                        className="ingredient-field"
+                      />
                       {ingredients.length > 1 && (
                         <button
                           type="button"
@@ -592,23 +554,14 @@ function Recipes() {
 
                 <div className="calorie-section">
                   <h3>Calorie Range (optional)</h3>
-                  <div className="calorie-inputs">
-                    <input
-                      type="number"
-                      value={calorieRange.min}
-                      onChange={(e) => setCalorieRange({...calorieRange, min: e.target.value})}
-                      placeholder="Min calories"
-                      className="calorie-field"
-                    />
-                    <span>to</span>
-                    <input
-                      type="number"
-                      value={calorieRange.max}
-                      onChange={(e) => setCalorieRange({...calorieRange, max: e.target.value})}
-                      placeholder="Max calories"
-                      className="calorie-field"
-                    />
-                  </div>
+                  <CalorieRangeInput
+                    minCalories={calorieRange.min}
+                    maxCalories={calorieRange.max}
+                    setMinCalories={(value) => setCalorieRange({...calorieRange, min: value})}
+                    setMaxCalories={(value) => setCalorieRange({...calorieRange, max: value})}
+                    errors={finderErrors}
+                    setErrors={setFinderErrors}
+                  />
                 </div>
 
                 <div className="finder-actions">
@@ -672,13 +625,7 @@ function Recipes() {
                         }}
                       >
                         {/* Save Button */}
-                        <SaveRecipeButton 
-                          recipe={recipe}
-                          onSave={handleRecipeSave}
-                          onUnsave={handleRecipeUnsave}
-                        />
                         {/* Like Button */}
-                        <LikeButton recipe={recipe} />
                         {/* Difficulty Badge */}
                         <div 
                           className="difficulty-badge"

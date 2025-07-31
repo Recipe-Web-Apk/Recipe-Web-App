@@ -19,20 +19,14 @@ const AutoSuggestSearch = ({
   const [loading, setLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [trie, setTrie] = useState(new Trie());
-  const [trieInitialized, setTrieInitialized] = useState(false);
+  const [trie] = useState(new Trie());
   
   const inputRef = useRef(null);
   const dropdownRef = useRef(null);
   const debounceTimeoutRef = useRef(null);
 
-  // Initialize Trie with static data on mount
-  useEffect(() => {
-    initializeTrie();
-  }, []);
-
   // Initialize Trie with some common recipe terms (optional - can be removed for recipe-only suggestions)
-  const initializeTrie = async () => {
+  const initializeTrie = useCallback(async () => {
     // We can keep some basic terms for fallback, but focus on actual recipes
     const staticTerms = [
       'pasta', 'chicken', 'salad', 'soup', 'dessert', 'breakfast', 'lunch', 'dinner'
@@ -54,23 +48,15 @@ const AutoSuggestSearch = ({
     } catch (error) {
       console.warn('Failed to load cached suggestions:', error);
     }
+  }, [trie]);
 
-    setTrieInitialized(true);
-  };
-
-  // Debounced search function
-  const debouncedSearch = useCallback((query) => {
-    if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current);
-    }
-
-    debounceTimeoutRef.current = setTimeout(() => {
-      performSearch(query);
-    }, debounceMs);
-  }, [debounceMs]);
+  // Initialize Trie with static data on mount
+  useEffect(() => {
+    initializeTrie();
+  }, [initializeTrie]);
 
   // Perform the actual search
-  const performSearch = async (query) => {
+  const performSearch = useCallback(async (query) => {
     if (!query || query.length < 2) {
       setSuggestions([]);
       setShowDropdown(false);
@@ -120,14 +106,22 @@ const AutoSuggestSearch = ({
       }
     } catch (error) {
       console.error('Search error:', error);
-      
-      // Fallback to Trie search on API error
-      const trieResults = trie.search(query, maxSuggestions);
-      setSuggestions(trieResults.map(result => result.data));
+      setSuggestions([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [trie, maxSuggestions]);
+
+  // Debounced search function
+  const debouncedSearch = useCallback((query) => {
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+
+    debounceTimeoutRef.current = setTimeout(() => {
+      performSearch(query);
+    }, debounceMs);
+  }, [debounceMs, performSearch]);
 
   // Handle input changes
   const handleInputChange = (e) => {
@@ -170,6 +164,9 @@ const AutoSuggestSearch = ({
         setShowDropdown(false);
         setSelectedIndex(-1);
         inputRef.current?.blur();
+        break;
+      default:
+        // Handle other keys normally
         break;
     }
   };

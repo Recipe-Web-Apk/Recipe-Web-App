@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FiHeart } from 'react-icons/fi';
 import { useAuth } from '../contexts/AuthContext';
 import axiosInstance from '../api/axiosInstance';
@@ -11,13 +11,7 @@ function LikeButton({ recipe, recipeId, initialLiked = false, onLikeChange }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    if (token && id) {
-      checkLikeStatus();
-    }
-  }, [token, id]);
-
-  const checkLikeStatus = async () => {
+  const checkLikeStatus = useCallback(async () => {
     try {
       const response = await axiosInstance.get(`/likes/check/${id}`, {
         headers: {
@@ -30,7 +24,13 @@ function LikeButton({ recipe, recipeId, initialLiked = false, onLikeChange }) {
     } catch (error) {
       // Silent fail
     }
-  };
+  }, [id, token]);
+
+  useEffect(() => {
+    if (token && id) {
+      checkLikeStatus();
+    }
+  }, [token, id, checkLikeStatus]);
 
   const handleLikeToggle = async () => {
     if (!token) {
