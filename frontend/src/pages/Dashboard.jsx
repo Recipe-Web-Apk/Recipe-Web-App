@@ -2,51 +2,30 @@ import React, { useState, useEffect, useCallback } from 'react'
 import UserInfoCard from '../components/UserInfoCard'
 import RecipeCard from '../components/RecipeCard'
 import { useAuth } from '../contexts/AuthContext'
-import { supabase } from '../supabaseClient'
 import axiosInstance from '../api/axiosInstance';
 import { useDarkMode } from '../contexts/DarkModeContext';
-import { FiPlus, FiBookmark, FiEdit3, FiClock, FiUsers, FiEye, FiHeart } from 'react-icons/fi';
+import { FiPlus, FiBookmark, FiEdit3, FiHeart } from 'react-icons/fi';
 
 function Dashboard() {
-  const { user, changePassword, updateProfile, token } = useAuth()
+  const { user, updateProfile, token } = useAuth()
   const { isDarkMode } = useDarkMode()
   const [savedRecipes, setSavedRecipes] = useState([])
   const [myRecipes, setMyRecipes] = useState([])
   const [likedRecipes, setLikedRecipes] = useState([])
   const [loading, setLoading] = useState(true)
-  const [currentPassword, setCurrentPassword] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [changeStatus, setChangeStatus] = useState(null)
   const [editing, setEditing] = useState(false)
   const [editUsername, setEditUsername] = useState(user?.username || '')
   const [editEmail, setEditEmail] = useState(user?.email || '')
   const [editStatus, setEditStatus] = useState(null)
 
-  // Extract user ID from JWT token
-  const getUserId = () => {
-    if (!token) return null
-    try {
-      const tokenParts = token.split('.')
-      if (tokenParts.length === 3) {
-        const payload = JSON.parse(atob(tokenParts[1]))
-        return payload.sub
-      }
-    } catch (error) {
-      console.error('Error parsing token:', error)
-    }
-    return null
-  }
-
   const fetchRecipes = useCallback(async () => {
     if (!token) {
-
       return;
     }
     
     try {
       setLoading(true);
 
-      
       const createdResponse = await axiosInstance.get('/recipes', {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -55,7 +34,6 @@ function Dashboard() {
       
       if (createdResponse.data.success) {
         setMyRecipes(createdResponse.data.recipes || []);
-        
       } else {
         console.error('Dashboard: Error in created recipes response:', createdResponse.data.error);
         setMyRecipes([]);
@@ -66,12 +44,9 @@ function Dashboard() {
           'Authorization': `Bearer ${token}`
         }
       });
-      
 
       if (response.data.success) {
-        
         setSavedRecipes(response.data.recipes || []);
-
       } else {
         console.error('Dashboard: Error in saved recipes response:', response.data.error);
         setSavedRecipes([]);
@@ -82,10 +57,8 @@ function Dashboard() {
           'Authorization': `Bearer ${token}`
         }
       });
-      
 
       if (likedResponse.data.success) {
-        
         setLikedRecipes(likedResponse.data.likes || []);
       } else {
         console.error('Dashboard: Error in liked recipes response:', likedResponse.data.error);
@@ -93,14 +66,11 @@ function Dashboard() {
       }
     } catch (error) {
       console.error('Dashboard: Error fetching recipes:', error);
-      console.error('Dashboard: Error response:', error.response?.data);
-      console.error('Dashboard: Error status:', error.response?.status);
       setSavedRecipes([]);
       setMyRecipes([]);
       setLikedRecipes([]);
     } finally {
       setLoading(false);
-
     }
   }, [token]);
 
@@ -151,19 +121,6 @@ function Dashboard() {
     window.addEventListener('focus', handleFocus)
     return () => window.removeEventListener('focus', handleFocus)
   }, [fetchRecipes])
-
-  async function handleChangePassword(e) {
-    e.preventDefault()
-    setChangeStatus(null)
-    const result = await changePassword(currentPassword, newPassword)
-    if (result.success) {
-      setChangeStatus('Password changed successfully')
-      setCurrentPassword('')
-      setNewPassword('')
-    } else {
-      setChangeStatus(result.error || 'Failed to change password')
-    }
-  }
 
   function handleEditProfile() {
     setEditUsername(user?.username || '')

@@ -60,7 +60,6 @@ const DownshiftAutoComplete = ({
     highlightedIndex,
     getItemProps,
     selectedItem,
-    setInputValue,
     inputValue,
   } = useCombobox({
     items: suggestions,

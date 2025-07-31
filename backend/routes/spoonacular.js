@@ -1,15 +1,61 @@
 const express = require('express');
 const axiosInstance = require('../axiosInstance');
+const { body, validationResult } = require('express-validator');
 const router = express.Router();
 const { sampleRecipes, filterRecipes, findRecipesByIngredients } = require('../data/sampleRecipes');
 
-// Test route to check if this router is working
+const validateSearch = [
+  body('query').trim().isLength({ min: 1, max: 100 }),
+  body('offset').optional().isInt({ min: 0 }),
+  body('sort').optional().isIn(['relevance', 'time', 'calories']),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    next();
+  }
+];
+
+const validateIngredients = [
+  body('ingredients').isArray({ min: 1 }),
+  body('ingredients.*').trim().isLength({ min: 1, max: 50 }),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    next();
+  }
+];
+
+const validateRecipeId = [
+  body('id').isInt({ min: 1 }),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    next();
+  }
+];
+
+const validateSuggest = [
+  body('query').trim().isLength({ min: 1, max: 50 }),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    next();
+  }
+];
+
 router.get('/test', (req, res) => {
   const SPOONACULAR_API_KEY = process.env.SPOONACULAR_API_KEY;
   res.json({ message: 'Spoonacular router is working', apiKey: SPOONACULAR_API_KEY ? 'Present' : 'Missing' });
 });
 
-// Test route to simulate API limit error
 router.get('/test-limit', (req, res) => {
   res.status(429).json({ 
     error: 'API rate limit reached',
@@ -18,8 +64,7 @@ router.get('/test-limit', (req, res) => {
   });
 });
 
-// Proxy endpoint for searching recipes
-router.get('/search', async (req, res) => {
+router.get('/search', validateSearch, async (req, res) => {
   const { 
     query, 
     offset = 0, 
@@ -104,7 +149,7 @@ router.get('/search', async (req, res) => {
 });
 
 // Find recipes by ingredients
-router.get('/findByIngredients', async (req, res) => {
+router.get('/findByIngredients', validateIngredients, async (req, res) => {
   const { 
     ingredients, 
     ranking = 2, 
@@ -229,7 +274,7 @@ router.get('/findByIngredients', async (req, res) => {
 });
 
 // Get detailed recipe information by ID
-router.get('/recipe/:id', async (req, res) => {
+router.get('/recipe/:id', validateRecipeId, async (req, res) => {
   const { id } = req.params;
   if (!id) return res.status(400).json({ error: 'Recipe ID is required' });
 
@@ -366,7 +411,7 @@ router.get('/similar/:id', async (req, res) => {
 })
 
 // GET /api/spoonacular/suggest - Get recipe suggestions for auto-complete
-router.get('/suggest', async (req, res) => {
+router.get('/suggest', validateSuggest, async (req, res) => {
   try {
     const { query } = req.query;
     

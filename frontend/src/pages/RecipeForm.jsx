@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useDarkMode } from '../contexts/DarkModeContext'
-import { supabase } from '../supabaseClient'
 import BasicInfoSection from '../components/BasicInfoSection'
 import RecipeStatsSection from '../components/RecipeStatsSection'
 import IngredientsSection from '../components/IngredientsSection'
@@ -61,9 +60,6 @@ function RecipeForm() {
   const [isCheckingSimilarity, setIsCheckingSimilarity] = useState(false)
   
   // Autofill state removed - similarity only
-
-  const difficultyOptions = ['Easy', 'Medium', 'Hard']
-  const categoryOptions = ['Breakfast', 'Lunch', 'Dinner', 'Dessert', 'Snack', 'Appetizer']
 
   function validateForm() {
     const newErrors = {}
@@ -275,23 +271,6 @@ function RecipeForm() {
   };
 
   // Autofill functions removed - similarity only
-
-  function handleChange(e) {
-    const { name, value } = e.target
-    setForm(prev => ({ ...prev, [name]: value }))
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }))
-    }
-  }
-
-  function handleIngredientChange(index, value) {
-    const newIngredients = [...form.ingredients]
-    newIngredients[index] = value
-    setForm(prev => ({ ...prev, ingredients: newIngredients }))
-    if (errors.ingredients) {
-      setErrors(prev => ({ ...prev, ingredients: '' }))
-    }
-  }
 
   function handleInstructionChange(index, value) {
     const newInstructions = [...form.instructions]

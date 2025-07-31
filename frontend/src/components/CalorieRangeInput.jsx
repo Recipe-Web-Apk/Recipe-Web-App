@@ -1,17 +1,17 @@
 import React from 'react'
 import './CalorieRangeInput.css'
 
-function CalorieRangeInput({ minCalories, maxCalories, setMinCalories, setMaxCalories, errors, setErrors }) {
+function CalorieRangeInput({ minCalories, maxCalories, setMinCalories, setMaxCalories, errors = {}, setErrors }) {
   function handleMinChange(value) {
     setMinCalories(value)
-    if (errors.calories) {
+    if (errors?.calories) {
       setErrors(prev => ({ ...prev, calories: '' }))
     }
   }
 
   function handleMaxChange(value) {
     setMaxCalories(value)
-    if (errors.calories) {
+    if (errors?.calories) {
       setErrors(prev => ({ ...prev, calories: '' }))
     }
   }
@@ -49,7 +49,7 @@ function CalorieRangeInput({ minCalories, maxCalories, setMinCalories, setMaxCal
           />
         </div>
       </div>
-      {errors.calories && (
+      {errors?.calories && (
         <div className="calorie-error">
           {errors.calories}
         </div>

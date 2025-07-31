@@ -125,9 +125,9 @@
 /* Search Section */
 .search-section {
   background: rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
-  padding: 2rem;
-  margin-bottom: 2rem;
+  border-radius: 25px;
+  padding: 3rem;
+  margin-bottom: 2.5rem;
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   position: relative;
@@ -185,45 +185,53 @@
 /* Search Form */
 .search-form {
   display: flex;
-  gap: 1rem;
+  gap: 2rem;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 2rem;
   position: relative;
   z-index: 2;
   overflow: visible;
+  padding: 1rem 0;
 }
 
 .search-input {
   flex: 1;
-  padding: 1rem 1.5rem;
+  padding: 1.5rem 2rem;
   border: none;
-  border-radius: 25px;
-  font-size: 1rem;
-  background: rgba(255, 255, 255, 0.9);
+  border-radius: 35px;
+  font-size: 1.2rem;
+  background: rgba(255, 255, 255, 0.95);
   color: #333;
   transition: all 0.3s ease;
+  min-height: 75px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  font-weight: 500;
 }
 
 .dark-mode .search-input {
   background: var(--bg-card);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 .search-input:focus {
   outline: none;
   background: white;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 0 0 5px rgba(102, 126, 234, 0.3), 0 6px 20px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
 }
 
 .dark-mode .search-input:focus {
   background: var(--bg-card);
   border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px rgba(255, 120, 73, 0.2);
+  box-shadow: 0 0 0 5px rgba(255, 120, 73, 0.2), 0 6px 20px rgba(0, 0, 0, 0.4);
 }
 
 .search-input::placeholder {
   color: #666;
+  font-size: 1.15rem;
+  font-weight: 400;
 }
 
 /* Auto-suggest specific styling for recipes page */
@@ -262,14 +270,16 @@
 .search-btn {
   background: var(--gradient-primary);
   color: white;
-  padding: 1rem 2rem;
+  padding: 1.5rem 3rem;
   border: none;
-  border-radius: 25px;
+  border-radius: 35px;
   font-weight: 600;
+  font-size: 1.2rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-  min-width: 100px;
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  min-width: 140px;
+  min-height: 75px;
 }
 
 .search-btn:hover {
@@ -900,11 +910,28 @@
   
   .search-form {
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 1rem;
   }
   
   .search-input {
     width: 100%;
+    min-height: 65px;
+    font-size: 1.1rem;
+    padding: 1.25rem 1.75rem;
+  }
+  
+  .recipes-search-input {
+    width: 100%;
+    min-height: 56px;
+    font-size: 1rem;
+    padding: 1rem 1.4rem;
+  }
+  
+  .search-btn {
+    width: 100%;
+    min-height: 65px;
+    font-size: 1.1rem;
+    padding: 1.25rem 2.5rem;
   }
   
   .clear-btn {
@@ -979,7 +1006,7 @@
   }
   
   .search-section {
-    padding: 1.5rem;
+    padding: 2rem;
   }
   
   .recipe-content {
@@ -997,4 +1024,46 @@
     font-size: 0.7rem;
     padding: 0.2rem 0.5rem;
   }
+} 
+
+/* Specific styling for the main search input in recipes page */
+.recipes-search-input {
+  flex: 1;
+  padding: 1.2rem 1.8rem;
+  border: none;
+  border-radius: 30px;
+  font-size: 1.1rem;
+  background: rgba(255, 255, 255, 0.95);
+  color: #333;
+  transition: all 0.3s ease;
+  min-height: 64px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  font-weight: 500;
+  width: 100%;
+}
+
+.dark-mode .recipes-search-input {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.recipes-search-input:focus {
+  outline: none;
+  background: white;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.3), 0 6px 18px rgba(0, 0, 0, 0.18);
+  transform: translateY(-1px);
+}
+
+.dark-mode .recipes-search-input:focus {
+  background: var(--bg-card);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 4px rgba(255, 120, 73, 0.2), 0 6px 18px rgba(0, 0, 0, 0.36);
+}
+
+.recipes-search-input::placeholder {
+  color: #666;
+  font-size: 1.05rem;
+  font-weight: 400;
 } 

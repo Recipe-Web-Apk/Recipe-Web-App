@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './TrendingRecipes.css';
 import axiosInstance from '../api/axiosInstance';
@@ -10,19 +10,15 @@ function TrendingRecipes() {
   const navigate = useNavigate();
   const { token } = useAuth();
 
-  useEffect(() => {
-    fetchTrendingRecipes();
-  }, []);
-
-  async function fetchTrendingRecipes() {
+  const fetchTrendingRecipes = useCallback(async () => {
     try {
       setLoading(true);
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      const response = await axiosInstance.get('http://localhost:5000/api/spoonacular/search?query=popular&sort=popularity&offset=0', { headers });
+      const response = await axiosInstance.get('http://localhost:5000/api/trending', { headers });
       const data = response.data;
       
       if (response.status === 200) {
-        setTrendingRecipes(data.results?.slice(0, 6) || []);
+        setTrendingRecipes(data.slice(0, 6) || []);
       } else {
         console.error('Failed to fetch trending recipes:', data);
       }
@@ -31,7 +27,11 @@ function TrendingRecipes() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [token]);
+
+  useEffect(() => {
+    fetchTrendingRecipes();
+  }, [fetchTrendingRecipes]);
 
   if (loading) {
     return (

@@ -15,16 +15,12 @@ const { fetchRelevantRecipes, getUserWeights } = require('../similarity/storage'
  */
 router.post('/check-similarity', authenticateToken, async (req, res) => {
   try {
-    console.log('🔍 SIMILARITY CHECK: Route hit successfully');
     const { title, ingredients, cuisine, readyInMinutes } = req.body;
     const userId = req.user.id;
 
     if (!title) {
-      console.log('❌ SIMILARITY CHECK: No title provided');
       return res.status(400).json({ error: 'Title is required' });
     }
-
-    console.log('🔍 SIMILARITY CHECK: Processing request for:', { title, ingredients, cuisine, readyInMinutes, userId });
 
     // Create input recipe object
     const inputRecipe = {
@@ -35,14 +31,10 @@ router.post('/check-similarity', authenticateToken, async (req, res) => {
     };
 
     // Fetch relevant recipes (only user's own recipes)
-    console.log('🔍 SIMILARITY CHECK: Fetching relevant recipes...');
-    console.log('🔍 SIMILARITY CHECK: About to call fetchRelevantRecipes with:', { title, cuisine, userId });
     const candidates = await fetchRelevantRecipes(title, cuisine, userId);
-    console.log(`🔍 SIMILARITY CHECK: fetchRelevantRecipes returned ${candidates.length} candidates`);
-    console.log('🔍 SIMILARITY CHECK: Candidates:', candidates);
     
     if (candidates.length > 0) {
-      console.log('🔍 SIMILARITY CHECK: Candidate recipes:', candidates.map(r => r.title));
+      console.log('Found candidate recipes:', candidates.map(r => r.title));
     }
 
     // Get user's dynamic weights
@@ -53,19 +45,15 @@ router.post('/check-similarity', authenticateToken, async (req, res) => {
     };
 
     // Use the new optimized similarity computation with dynamic weights
-    console.log('🔍 SIMILARITY CHECK: Computing similarity with weights:', similarityWeights);
     const warning = generateSimilarityWarning(inputRecipe, candidates, similarityWeights, 0.3);
     
     if (warning) {
-      console.log('🔍 SIMILARITY CHECK: WARNING DETECTED!', warning.type, warning.message);
       return res.json({
         hasSimilarRecipes: true,
         warning,
         autofillSuggestion: null,
         allMatches: warning.matches,
       });
-    } else {
-      console.log('🔍 SIMILARITY CHECK: No similarity warning detected');
     }
 
     const response = {
@@ -74,12 +62,6 @@ router.post('/check-similarity', authenticateToken, async (req, res) => {
       autofillSuggestion: null,
       allMatches: []
     };
-
-    console.log('Similarity check response:', {
-      hasSimilarRecipes: response.hasSimilarRecipes,
-      warningType: warning?.type,
-      matchCount: warning?.matches?.length || 0
-    });
 
     res.json(response);
 

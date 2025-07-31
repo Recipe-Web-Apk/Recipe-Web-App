@@ -1,19 +1,11 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React from 'react';
+import { Link } from 'react-router-dom';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import DownshiftAutoComplete from './DownshiftAutoComplete';
 import './HomeHero.css';
 
 function HomeHero({ onOpenRecipeFinder }) {
-  const navigate = useNavigate();
   const { isDarkMode } = useDarkMode();
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const handleSearch = (query) => {
-    if (query && query.trim()) {
-      navigate(`/recipes?query=${encodeURIComponent(query.trim())}`);
-    }
-  };
 
   return (
     <div className={`home-hero ${isDarkMode ? 'dark-mode' : ''}`}>

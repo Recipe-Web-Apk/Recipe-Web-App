@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../supabaseClient'
@@ -36,29 +36,13 @@ function EditRecipe() {
   const [errors, setErrors] = useState({})
   const [error, setError] = useState(null)
 
-  const difficultyOptions = ['Easy', 'Medium', 'Hard']
-  const categoryOptions = ['Breakfast', 'Lunch', 'Dinner', 'Dessert', 'Snack', 'Appetizer']
-
-  useEffect(() => {
-    if (!id) {
-      setSubmitError('Invalid recipe id.')
-      setLoading(false)
-      return
-    }
-    if (user && user.id) {
-      fetchRecipe()
-    }
-  }, [user, id])
-
-  async function fetchRecipe() {
-    if (!user || !user.id) return
-    if (!id) return
-
-
+  const fetchRecipe = useCallback(async () => {
+    if (!user || !user.id) return;
+    if (!id) return;
 
     try {
-      setLoading(true)
-      setSubmitError(null)
+      setLoading(true);
+      setSubmitError(null);
 
       const { data, error: fetchError } = await supabase
         .from('recipes')
@@ -76,11 +60,11 @@ function EditRecipe() {
         return;
       }
 
-      setRecipe(data)
+      setRecipe(data);
       
       // Parse ingredients and instructions
-      const ingredients = Array.isArray(data.ingredients) ? data.ingredients : [data.ingredients || '']
-      const instructions = data.instructions ? data.instructions.split('\n\n') : ['']
+      const ingredients = Array.isArray(data.ingredients) ? data.ingredients : [data.ingredients || ''];
+      const instructions = data.instructions ? data.instructions.split('\n\n') : [''];
       
       setForm({
         title: data.title || '',
@@ -95,18 +79,29 @@ function EditRecipe() {
         prepTime: data.prepTime || '',
         tags: data.tags || '',
         youtube_url: data.youtube_url || ''
-      })
+      });
 
       if (data.image) {
-        setImagePreview(data.image)
+        setImagePreview(data.image);
       }
     } catch (error) {
-      console.error('Error fetching recipe:', error)
-      setSubmitError('Failed to load recipe')
+      console.error('Error fetching recipe:', error);
+      setSubmitError('Failed to load recipe');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  }, [user, id]);
+
+  useEffect(() => {
+    if (!id) {
+      setSubmitError('Invalid recipe id.');
+      setLoading(false);
+      return;
+    }
+    if (user && user.id) {
+      fetchRecipe();
+    }
+  }, [user, id, fetchRecipe]);
 
   function validateForm() {
     const newErrors = {}
@@ -226,7 +221,7 @@ function EditRecipe() {
 
 
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('recipes')
         .update(recipeData)
         .eq('id', id)
